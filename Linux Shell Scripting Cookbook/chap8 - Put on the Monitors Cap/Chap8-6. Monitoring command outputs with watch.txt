@@ -1,0 +1,43 @@
+Monitoring command outputs with watch
+
+
+We might need to continuously watch the output of a command for a period of time in equal intervals. For example, for a large file copy, we need to watch the growing file size. In order to do that, newbies repeatedly type commands and press return a number of times. Instead we can use the watch command to view output repeatedly. This recipe explains how to do that. 
+
+How to do it...
+The watch command? can be used to monitor the output of a command on the terminal at regular intervals. The syntax of the watch command is as follows:
+
+$ watch COMMAND
+
+
+For example:
+
+$ watch ls
+
+
+Or:
+
+$ watch 'COMMANDS'
+
+
+For example:
+
+$ watch 'ls -l | grep "^d"'
+# list only directories
+
+
+This command will update the output at a default interval of two seconds.
+
+We can also specify the time interval at which the output needs to be updated, by using -n SECONDS. For example: 
+
+$ watch -n 5 'ls -l'
+#Monitor the output of ls -l at regular intervals of 5 seconds
+
+
+There's more
+Let's explore an additional feature of the watch command.
+
+Highlighting the differences in watch output
+In watch, there is an option for updating the differences that occur during the execution of the command at an update interval to be highlighted using colors. Difference highlighting can be enabled by using the -d option as follows:
+
+$ watch -d 'COMMANDS'
+

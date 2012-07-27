@@ -1,0 +1,45 @@
+Text slicing and parameter operations
+
+
+This recipe walks through some of the simple text replacement techniques? and parameter expansion short hands available in Bash. A few simple techniques can often help us avoid having to write multiple lines of code. 
+
+How to do it...
+Let's get into the tasks.
+
+Replacing some text from a variable can be done as follows: 
+
+$ var="This is a line of text"
+$ echo ${var/line/REPLACED}
+This is a REPLACED of text"
+
+
+line is replaced with REPLACED.
+
+We can produce a sub-string by specifying the start position and string length, by using the following syntax:
+
+${variable_name:start_position:length}
+
+
+To print from the fifth character onward use the following command:
+
+$ string=abcdefghijklmnopqrstuvwxyz
+$ echo ${string:4}
+efghijklmnopqrstuvwxyz
+
+
+To print eight characters starting from the fifth character, use:
+
+$ echo ${string:4:8}
+efghijkl
+
+
+The index is specified by counting the start letter as 0. We can also specify counting from last letter as -1. It is but used inside a parenthesis. (-1) is the index for the last letter.
+
+echo ${string:(-1)}
+z
+$ echo ${string:(-2):2}
+yz
+
+
+See also
+Iterating through lines, words, and characters in a file, explains slicing of a character from a word

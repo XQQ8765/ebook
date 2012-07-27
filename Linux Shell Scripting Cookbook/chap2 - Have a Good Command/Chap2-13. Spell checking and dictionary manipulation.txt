@@ -1,0 +1,75 @@
+Spell checking and dictionary manipulation
+
+
+Most Linux distributions come with a dictionary file. However, I find few people are aware of the dictionary file and hence many people fail to make use of them. There is a command-line utility called aspell that functions as a spell checker. Let's go through few scripts that make use of the dictionary file and the spell checker. 
+
+How to do it...
+The /usr/share/dict/ directory contains some of the dictionary files. Dictionary files are text files that contain a list of dictionary words. We can use this list to check whether a word is a dictionary word or not. 
+
+$ ls /usr/share/dict/
+american-english british-english
+
+
+In order to check whether the given word is a dictionary word, use the following script: 
+
+#!/bin/bash
+#Filename: checkword.sh
+word=$1
+grep "^$1$" /usr/share/dict/british-english -q
+if [ $? -eq 0 ]; then
+echo $word is a dictionary word;
+else
+echo $word is not a dictionary word;
+fi
+
+
+The usage is as follows:
+
+$ ./checkword.sh ful
+ful is not a dictionary word
+$ ./checkword.sh fool
+fool is a dictionary word
+
+
+How it works...
+In grep, ^ is the word start marker character and the character $ is the word end marker. 
+
+-q is used to suppress any output and to be silent.
+
+Or, alternately, we can use the spell check, aspell, to check whether a word is in a dictionary or not as follows:
+
+#!/bin/bash
+#Filename: aspellcheck.sh
+word=$1
+output=`echo \"$word\" | aspell list`
+if [ -z $output ]; then
+echo $word is a dictionary word;
+else
+echo $word is not a dictionary word;
+fi
+
+
+The aspell list command returns output text when the given input is not a dictionary word, and does not output anything when a dictionary word is the input. A -z check ensures whether $output is an empty string or not. 
+
+List all words in a file starting with a given word as follows:
+
+$ look word filepath
+
+
+Or alternately, use:
+
+$ grep "^word" filepath
+
+
+By default, if the filename argument is not given to the look command, it uses the default dictionary (/usr/share/dict/words) and returns an output.
+
+$ look word
+# When used like this it takes default dictionary as file
+
+
+For example:
+
+$ look android
+android
+android's
+androids

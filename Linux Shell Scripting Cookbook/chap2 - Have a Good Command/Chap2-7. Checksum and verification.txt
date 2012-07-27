@@ -1,0 +1,80 @@
+Checksum and verification
+
+
+Checksum programs are used to generate checksum key strings from the files and verify the integrity of the files later by using that checksum string. A file might be distributed over the network or any storage media to different destinations. Due to many reasons, there are chances for the file being corrupted due to a few bits missing during the data transfer. These errors happen most often while downloading the files from the Internet, transferring through the network, CD ROM damage, and so on.
+
+Hence, we need to know whether the received file is the correct one or not by applying some kind of test. The special key string that is used for this file integrity test is known as checksum. 
+
+We calculate the checksum for the original file as well as the received file. By comparing both of the checksums, we can verify whether the received file is the correct one or not. If the checksums (calculated from original file at the source location and the one calculated from destination) are equal, it means that we have received the correct file without causing any erroneous data loss during the data transfer, or else, the user has to repeat the data transfer and try the checksum comparison again.
+
+Checksums are crucial while writing backup scripts or maintenance scripts that consist of transfer of files through the network. By using checksum verification, files corrupted during the data transfer over the network can be identified and those files can be resend again from the source to the destination. Thus the integrity of the data received can always be ensured. 
+
+Getting ready
+The most famous and widely-used checksum techniques are md5sum and sha1sum. They generate checksum strings by applying the corresponding algorithm to the file content. Let's see how can we generate a checksum and from a file and verify the integrity of a file.
+
+How to do it...
+In order to compute the md5sum, use the following command:
+
+$ md5sum filename
+68b329da9893e34099c7d8ad5cb9c940 filename
+
+
+An md5sum is a 32 character hexadecimal string, as given above. 
+
+We redirect the checksum output into a file and use that MD5 file for verification as follows:
+
+$ md5sum filename > file_sum.md5
+
+
+How it works...
+The syntax for md5sum checksum calculation is as follows: 
+
+$ md5sum file1 file2 file3 ..
+
+
+When multiple files are used, the output will contain a checksum for each of the file having one checksum string per line, as follows:
+
+[checksum1] file1
+[checksum1] file2
+[checksum1] file3
+
+
+The integrity of a file can be verified by using the generated file as follows:
+
+$ md5sum -c file_sum.md5
+# It will output message whether checksum matches or not
+
+
+Or, alternately, if we need to check all the files using all .md5 info available, use:
+
+$ md5sum *.md5
+
+
+SHA1 is another commonly used checksum algorithm like md5sum. It generates a 40-character hex code from a given input file. The command used for calculating a SHA1 string is sha1sum. Its usage is very similar to that of md5sum. Replace md5sum with sha1sum in all the commands mentioned previously in this recipe. Instead of file_sum.md5, change the output filename to file_sum.sha1. 
+
+Checksum verification is much useful to verify the integrity of files that we download from the Internet. The ISO images that we download from the Internet are usually much more prone to erroneous bits. Therefore, to check whether we received the file correctly, checksums are widely used. For the same file data the checksum program will always produce the same checksum string. 
+
+There's more...
+Checksum are also useful when used with a number of files. Let's see how to apply checksum to many files and verify correctness.
+
+Checksum for directories
+Checksums are calculated for files. Calculating the checksum for a directory would mean that we will need to calculate the checksums for all the files in the directory, recursively. 
+
+It can be achieved by the command md5deep or sha1deep. Install the package md5deep to make these commands available. An example of this command is as follows:
+
+Code View: Scroll / Show All
+$ md5deep -rl directory_path > directory.md5
+# -r for enable recursive.
+# -l for using relative path. By default it writes absolute file path in output
+
+
+					  
+
+Alternately, combine it with find to calculate checksums recursively:
+
+$ find directory_path -type f -print0 | xargs -0 md5sum >> directory.md5
+
+
+To verify, use the following command:
+
+$ md5sum -c directory.md5

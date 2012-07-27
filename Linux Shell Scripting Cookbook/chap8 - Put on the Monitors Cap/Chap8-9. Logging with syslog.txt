@@ -1,0 +1,50 @@
+Logging with syslog
+
+Logfiles are an important component of applications that provide services to the users. An applications writes status information to its logfile while it is running. If any crash occurs or we need to enquire some information about the service, we look into the logfile. You can find lots of logfiles related to different daemons and applications in the /var/log directory. It is the common directory for storing log files. If you read through a few lines of the logfiles, you can see that lines in the log are in a common format. In Linux, creating and writing log information to logfiles at /var/log are handled by a protocol called syslog. It is handled by the syslogd daemon. Every standard application makes use of syslog for logging information. In this recipe, we will discuss how to make use of syslogd for logging information from a shell script. 
+
+Getting ready
+Logfiles are useful for helping you deduce what is going wrong with a system. Hence while writing critical applications, it is always a good practice to log the progress of application with messages into a logfile. We will learn the command logger to log into log files with syslogd. Before getting to know how to write into logfiles, let's go through a list of important logfiles used in Linux:
+
+Log file  Description  
+/var/log/boot.log  Boot log information.?  
+/var/log/httpd  Apache web server log.?  
+/var/log/messages  Post boot kernel information.?  
+/var/log/auth.log  User authentication log.?  
+/var/log/dmesg  System boot up messages.?  
+/var/log/mail.log  Mail server log.?  
+/var/log/Xorg.0.log  X Server log.?  
+
+
+
+
+How to do it...
+In order to log to the syslog file /var/log/messages use:
+
+$ logger LOG_MESSAGE
+
+
+For example:
+
+$ logger This is a test log line
+$ tail -n 1 /var/log/messages
+Sep 29 07:47:44 slynux-laptop slynux: This is a test log line
+
+
+The logfile /var/log/messages is a general purpose logfile. When the logger command is used, it logs to /var/log/messages by default. In order to log to the syslog with a specified tag, use:
+
+$ logger -t TAG This is a message
+$ tail -n 1 /var/log/messages
+Sep 29 07:48:42 slynux-laptop TAG: This is a message
+
+
+syslog handles a number of logfiles in /var/log. However, while logger sends a message, it uses the tag string to determine in which logfile it needs to be logged. syslogd decides to which file the log should be made by using the TAG associated with the log. You can see the tag strings and associated logfiles from the configuration files located in the /etc/rsyslog.d/ directory. 
+
+In order to log to the system log with the last line from another logfile use:
+
+$ logger -f /var/log/source.log
+
+
+See also
+head and tail - printing the last or first 10 lines of Chapter 3, explains the head and tail commands
+
+

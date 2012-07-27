@@ -1,0 +1,6 @@
+Introduction
+
+
+Commands are beautiful components of UNIX-like systems. They help us achieve many tasks making our work easier. When you practise the use of commands everywhere, you will love it. Many circumstances make you say "wow!". Once you've had a chance to try some of the commands that Linux offers you to make your life easier and more productive, you'll wonder how you did without using them before. Some of my personal favorite commands are grep,? awk, sed?, and find?. 
+
+Using the UNIX/Linux command line is an art. You will get better at using it as you practice and gain experience. This chapter will introduce you to some of the most interesting and useful commands.

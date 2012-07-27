@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <dc:identifier opf:scheme="calibre" id="calibre_id">3</dc:identifier>
+        <dc:identifier opf:scheme="uuid" id="uuid_id">db6b6312-c368-401c-b4a6-f61e0c4078e8</dc:identifier>
+        <dc:title>linux-shell-scripting-cookbook</dc:title>
+        <dc:creator opf:role="aut">Unknown</dc:creator>
+        <dc:contributor opf:file-as="calibre" opf:role="bkp">calibre (0.8.24) [http://calibre-ebook.com]</dc:contributor>
+        <dc:date>2011-11-04T02:38:14+00:00</dc:date>
+        <dc:language>eng</dc:language>
+        <meta content="{&quot;Unknown&quot;: &quot;&quot;}" name="calibre:author_link_map"/>
+        <meta content="2011-11-04T02:38:14+00:00" name="calibre:timestamp"/>
+        <meta content="linux-shell-scripting-cookbook" name="calibre:title_sort"/>
+    </metadata>
+    <guide>
+        <reference href="linux-shell-scripting-cookbook - Unknown.jpg" type="cover" title="Cover"/>
+    </guide>
+</package>

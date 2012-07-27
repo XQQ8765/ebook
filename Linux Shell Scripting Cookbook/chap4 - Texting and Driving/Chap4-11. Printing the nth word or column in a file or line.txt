@@ -1,0 +1,29 @@
+Printing the nth word or column in a file or line
+
+
+We may get a file having a number of columns and only a few will actually be useful. In order to print only relevant columns or fields, we filter it. 
+
+Getting ready
+The most widely-used method is to use awk for doing this task. It can be also done using cut.
+
+How to do it...
+To print the fifth column use the following command:
+
+$ awk '{ print $5 }' filename
+
+
+We can also print multiple columns and we can insert our custom string in between columns.
+
+For example, to print the permission and filename of each file in the current directory, use:
+
+$ ls -l | awk '{ print $1" : " $8 }'
+-rw-r--r-- : delimited_data.txt
+-rw-r--r-- : obfuscated.txt
+-rw-r--r-- : paste1.txt
+-rw-r--r-- : paste2.txt
+
+
+See also
+Basic awk primer, explains the awk command
+
+Column-wise cutting of a file with cut, explains extracting data from text files

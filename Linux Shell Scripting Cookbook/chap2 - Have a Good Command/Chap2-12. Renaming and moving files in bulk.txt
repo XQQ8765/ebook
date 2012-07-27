@@ -1,0 +1,82 @@
+Renaming and moving files in bulk
+
+
+Renaming a number of files is one of the tasks we frequently come across. A simple example is, when you download photos from your digital camera to the computer you may delete unnecessary files and it causes discontinuous numbering of image files. Sometimes you many need to rename them with custom prefix and continuous numbering for filenames. We sometimes use third-party tools for performing rename operations. We can use Bash commands to perform a rename operation in a couple of seconds. 
+
+Moving all the files having a particular substring in the filename (for example, same prefix for filenames) or with a specific file type to a given directory is another use case we frequently perform. Let's see how to write scripts to perform these kinds of operations. 
+
+Getting ready
+The rename command helps to change file names using Perl regular expressions. By combining the commands find, rename, and mv, we can perform a lot of things. 
+
+How to do it...
+The easiest way of renaming image files in the current directory to our own filename with a specific format is by using the following script:
+
+#!/bin/bash
+#Filename: rename.sh
+#Description: Rename jpg and png files
+count=1;
+for img in *.jpg *.png
+do
+new=image-$count.${img##*.}
+mv "$img" "$new" 2> /dev/null
+if [ $? -eq 0 ];
+then
+echo "Renaming $img to $new"
+let count++
+fi
+done
+
+
+The output is as follows:
+
+$ ./rename.sh
+Renaming hack.jpg to image-1.jpg
+Renaming new.jpg to image-2.jpg
+Renaming next.jpg to image-3.jpg
+
+
+The script renames all the .jpg and .png files in the current directory to new filenames in the format image-1.jpg, image-2.jpg, image-3.jpg , image-4.png, and so on.
+
+How it works…
+In the above rename script, we have used a for loop to iterate through the names of all files ending with a .jpg extension. The wildcard *.jpg and *.png are used to match all the JPEG and PNG files. We can do a small improvisation over the extension match. The .jpg wildcard matches only the extension in lowercase. However, we can make it case insensitive by replacing .jpg with .[jJ][pP][gG]. Hence it can match files like file.jpg as well as file.JPG or file.Jpg. In Bash, when characters are enclosed in [], it means to match one character from the set of characters enclosed in []. 
+
+for img in *.jpg *.png in the above code will be expanded as follows:
+
+for img in hack.jpg new.jpg next.jpg 
+
+We have initialized a variable count=1 in order to keep track of the image number. The next step is to rename the file using the mv command. The new name of the file should be formulated for renaming. ${img##*.} in the script parses the extension of the filename currently in the loop (see the Slicing file names based on extension recipe for interpretation of ${img##*.}).
+
+let count++ is used to increment the file number for each execution of loop.
+
+You can see that error redirection (stderr) to /dev/null is done for the mv command using the 2> operator. This is to stop the error messages being printed into the terminal.
+
+Since we use *.png and *.jpg, if atleast one image for a wildcard match is not present, the shell will interpret the wildcard itself as a string. In the above output, you can see that .png files are not present. Hence it will take *.png as yet another filename and execute mv *.png image-X.png, which will cause an error. An if statement with [ $? eq 0 ] is used to check the exit status ($?). The value of $? will be 0 if the last executed command is successful, else it returns non-zero. When the mv command fails, it returns non-zero and, therefore, the message "Renaming file" will not be shown to the user, as well as the count will not be incremented.
+
+There are a variety of other ways to perform rename operations. Let's walk through a few of them. 
+
+Renaming *.JPG to *.jpg: 
+
+$ rename *.JPG *.jpg
+
+
+Replace space in the filenames with the"_" character as follows:
+
+$ rename 's/ /_/g' *
+
+
+# 's/ /_/g' is the replacement part in the filename and * is the wildcard for the target files. It can be *.txt or any other wildcard pattern.
+
+You can convert any filename of files from uppercase to lowercase and vice versa as follows:
+
+$ rename 'y/A-Z/a-z/' *
+$ rename 'y/a-z/A-Z/' *
+
+
+In order to recursively move all the.mp3 files to a given directory, use:
+
+$ find path -type f -name "*.mp3" -exec mv {} target_dir \;
+
+
+Recursively rename all the files by replacing space with "_" character as follows:
+
+$ find path -type f -exec rename 's/ /_/g' {} \;

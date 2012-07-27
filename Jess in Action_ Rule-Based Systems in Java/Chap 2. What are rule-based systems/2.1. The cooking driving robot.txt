@@ -1,0 +1,70 @@
+2. What are rule-based systems?
+In this chapter you¡¯ll...
+
+Be introduced to declarative programming
+
+Learn the architecture of a typical rule-based system
+
+See a method for developing rule-based systems
+
+Read about industry standards for rules and rule engine APIs
+
+There¡¯s an old saying that ¡°when all you¡¯ve got is a hammer, everything looks like a nail.¡± In computer programming, too, it¡¯s important to choose the right tool for the right job. Some problems can be solved easily using traditional programming techniques, whereas writing a rule-based system is the easiest way to solve others. Other problems are in the middle, and either technique will work equally well. This chapter will help you understand which problems are well suited to being solved with a rule-based system, and what this type of software is all about.
+
+2.1. The cooking/driving robot
+Imagine your first day on the job at Acme Advanced Robotics Corporation. Acme has built some great humanoid robot prototypes, but the company is having trouble teaching its robots to survive in the real world. You¡¯ve been brought in to write some high-level robot control software so that Acme can begin selling robot butlers to the masses. You decide to start with something simple: breakfast.
+
+How do you teach a robot to prepare a bowl of breakfast cereal? Assume for the moment that the robot knows how to recognize, pick up, and interact with objects, and that the robot will operate in a closed, controlled, optimal environment. It is be a straightforward program: Tell the robot to get a bowl, a spoon, and a napkin, and set them on the table. Then, the robot should open a box of cereal, fill the bowl, and add milk. If you were writing a computer program for a sophisticated cereal-serving robot, it might look something like this:
+
+START
+putOnTable(Bowl)
+putOnTable(Spoon)
+putOnTable(Napkin)
+open(Cereal)
+pour(Cereal)
+open(Milk)
+pour(Milk)
+eat(Cereal, Spoon)
+END
+
+The cereal program, with its predictable linear control flow, is typical of many small computer programs. Calculating the value of an equation, computing a customer¡¯s bill at a shopping mall, even rendering a single frame of a complex video game, are all variations on the same sort of linear, deterministic process, in which each step follows inevitably from the last. Such programs are often called procedural programs¡ªthey solve a problem in a straightforward, predictable way. Traditional software development techniques can be used to write programs such as the cereal program to good effect. You wouldn¡¯t write a rule-based program to solve the cereal problem. In general, problems that have a well-known algorithmic solution should be solved using a traditional procedural approach.
+
+Emboldened by your success, you now think about teaching the same robot how to drive a car in the real world. You have to tell the robot to search for its keys and driver¡¯s license¡ªbut only if it isn¡¯t already carrying them. You tell the robot how to start the car, put the car in reverse, and back out of the garage¡ªbut only if the garage door is already open! The instructions probably need to cover the different behaviors of cold motors and warm motors, how to use both manual and automatic transmissions, and different types of emergency brakes. And the instructions will become far more complex once the car begins to move.
+
+This time, the instructions are filled with many context-sensitive decisions¡ªin fact, there are more decisions than actions. The control flow includes many loops and branches. It would be next to impossible to write a single list of instructions covering every situation that might possibly arise, considering that circumstances interact to constantly change the correct outcomes of each decision. For example, seeing a child¡¯s ball roll into the road is not a serious situation when the car isn¡¯t moving, but it requires prompt and decisive action when the car is driving toward the bouncing ball.
+
+If it¡¯s impossible to write a procedural program to control your robot, how can you do it? You can use declarative programming instead.
+
+2.1.1. Declarative programming: a different approach
+Much of the programming we do is procedural. Rule-based programming, however, is declarative.
+
+In procedural programming, the programmer tells the computer what to do, how to do it, and in what order. Procedural programming is well suited for problems in which the inputs are well specified and for which a known set of steps can be carried out to solve the problem. Mathematical computations, for example, are best written procedurally.
+
+Note that I¡¯m using procedural in a slightly different way than is conventional. Although object-oriented programming is traditionally contrasted with the older procedural programming, for the purposes of this discussion, the two are equivalent. In both procedural and object-oriented programming, the programmer writes all the logic that controls the computer, although it is partitioned differently in an object-oriented program.
+
+A purely declarative program, in contrast, describes what the computer should do, but omits much of the instructions on how to do it. Declarative programs must be executed by some kind of runtime system that understands how to fill in the blanks and use the declarative information to solve problems. Because declarative programs include only the important details of a solution, they can be easier to understand than procedural programs. Furthermore, because the control flow is chosen by the runtime system, a declarative program can be more flexible in the face of fragmentary or poorly conditioned inputs (when you removed some of the information from Mrs. Rosencrantz¡¯s problem in chapter 1, the same program, unchanged, was still able to find the possible solutions). Declarative programming is often the natural way to tackle problems involving control, diagnosis, prediction, classification, pattern recognition, or situational awareness¡ªin short, many problems without clear algorithmic solutions. Programming a cooking, driving robot declaratively will be a breeze!
+
+Although the driving program would be hard to write in a procedural style, it is an ideal candidate to be written as a declarative program. A rule-based program doesn¡¯t consist of one long sequence of instructions; instead, it is made up of discrete rules, each of which applies to some subset of the problem. A few rules plucked from the robot¡¯s driving program might look like these:
+
+IF
+    the engine has stalled
+THEN
+    start car
+END
+
+IF
+    you hear sirens
+AND you are driving
+THEN
+    pull over to curb
+END
+
+IF
+    you see brake lights
+AND you are getting closer to them
+THEN
+    depress the brake pedal
+END
+
+In a rule-based program, you write only the individual rules. Another program, the rule engine, determines which rules apply at any given time and executes them as appropriate. As a result, a rule-based version of a complex program can be shorter and easier to understand than a procedural version. Writing the program is simpler, because you can concentrate on the rules for one situation at a time. Modifying the program is also simpler¡ªif you¡¯ve ever had to work on a program containing a dozen levels of nested if statements, you¡¯ll understand why. In the rest of this chapter, we¡¯ll formalize some of the ideas behind rule-based systems and see how they are constructed.
+

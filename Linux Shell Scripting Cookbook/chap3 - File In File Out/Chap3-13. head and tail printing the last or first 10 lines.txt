@@ -1,0 +1,123 @@
+head and tail printing the last or first 10 lines
+
+
+When looking into a large file, which consists of thousands of lines, we will not use a command like cat to print the entire file contents. Instead we look for a sample (for example, the first 10 lines of the file or the last 10 lines of the file). We may also need to print the first n lines or last n lines. Also we may need to print all the lines except the last "n" lines or all lines except first "n" lines. 
+
+Another use case is to print lines from n-th to m-th lines.
+
+The commands head and tail can help us do this.
+
+How to do it...
+The head command always reads the header portion of the input file. 
+
+Print first 10 lines as follows:
+
+$ head file
+
+
+Read the data from stdin as follows:
+
+$ cat text | head
+
+
+Specify the number of first lines to be printed as follows:
+
+$ head -n 4 file
+
+
+This command prints four lines.
+
+Print all lines excluding the last N lines as follows:
+
+$ head -n -N file
+
+
+Note that it is negative N.
+
+For example, to print all the lines except the last 5 lines use the following code:
+
+$ seq 11 | head -n -5
+1
+2
+3
+4
+5
+6
+
+
+The following command will, however, print from 1 to 5: 
+
+$ seq 100 | head -n 5
+
+
+Printing by excluding the last lines is a very important usage of head. But people always look at some other complex methods to do the same.
+
+Print the last 10 lines of a file as follows:
+
+$ tail file
+
+
+In order to read from stdin, you can use the following code:
+
+$ cat text | tail
+
+
+Print the last 5 lines as follows:
+
+$ tail -n 5 file
+
+
+In order to print all lines excluding first N lines, use the following code:
+
+$ tail -n +(N+1)
+
+
+For example, to print all lines except the first 5 lines, N + 1 = 6, therefore the command will be as follows:
+
+$ seq 100 | tail -n +6
+
+
+This will print from 6 to 100.
+
+One of the important usages of tail is to read a constantly growing file. Since new lines are constantly appended to the end of the file, tail can be used to display all new lines as they are written to the file. When we run tail simply, it will read the last 10 lines and exit. However, by that time, new lines would have been appended to the file by some process. In order to constantly monitor the growth of file, tail has a special option -f or --follow, which enables tail to follow the appended lines and keep being updated with the data growth: 
+
+$ tail -f growing_file
+
+
+An example of such growing files are logfiles. The command to monitor the growth of the files would be:
+
+# tail -f /var/log/messages
+
+
+or
+
+$ dmesg | tail -f
+
+
+We frequently run dmesg to look at kernel ring buffer messages either to debug the USB devices or to look at the sdX (X is the minor number for the sd device). The tail -f can also add a sleep interval -s, so that we can set the interval during which the file updates are monitored.
+
+tail has the interesting property that allows it to terminate after a given process ID dies. 
+
+Suppose we are reading a growing file, and a process Foo is appending data to the file, tail -f should be executed until process Foo dies.
+
+$ PID=$(pidof Foo)
+$ tail -f file --pid $PID
+
+
+When the process Foo terminates, tail also terminates.
+
+Let's work on an example.
+
+Create a new file file.txt and open the file in gedit (You can use any text editor).
+
+Add new lines to the file and make frequent file saves in gedit.
+
+Now run:
+
+$ PID=$(pidof gedit)
+$ tail -f file.txt --pid $PID
+
+
+When you make frequent changes to the file, it will be written to the terminal by the tail command. When you close the gedit, the tail command will get terminated.
+
+

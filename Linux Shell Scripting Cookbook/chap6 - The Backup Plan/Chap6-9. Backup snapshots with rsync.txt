@@ -1,0 +1,128 @@
+Backup snapshots with rsync
+
+
+Backing up data is something that most sysadmins need to do regularly. We may need to backup data in a web server or from remote locations. rsync is a command that can be used to synchronize files and directories from one location to another while minimizing data transfer using file difference calculations and compression. The advantage of rsync over the cp command is that rsync uses strong difference algorithms. Also, it supports data transfer across networks. While making copies, it compares the files in the original and destination locations and will only copy the files that are newer. It also supports compression, encryption, and a lot more. Let's see how we can work with rsync. 
+
+How to do it...
+In order to copy a source directory to a destination (to create a mirror) use: 
+
+$ rsync -av source_path destination_path
+
+
+In this command:
+
+-a stands for archiving
+
+-v (verbose) prints the details or progress on stdout 
+
+The above command will recursively copy all the files from the source path to the destination path. We can specify paths as remote or localhost paths.
+
+It can be in the format /home/slynux/data, slynux@192.168.0.6:/home/backups/data, and so on.
+
+/home/slynux/data specifies the absolute path in the machine in which the rsync command is executed. slynux@192.168.0.6:/home/backups/data specifies that the path is/home/backups/data in the machine with IP address 192.168.0.6 and is logged in as user slynux.
+
+In order to back up data to a remote server or host, use:
+
+$ rsync -av source_dir username@host:PATH
+
+
+To keep a mirror at the destination, run the same rsync command scheduled at regular intervals. It will copy only changed files to the destination.
+
+Restore the data from remote host to localhost as follows:
+
+$ rsync -av username@host:PATH destination
+
+
+The rsync command uses SSH to connect to another remote machine. Provide the remote machine address in the format user@host, where user is the username and host is the IP address or domain name attached to the remote machine. PATH is the absolute path address where the data needs to be copied. rsync will ask for the user password as usual for SSH logic. This can be automated (avoid user password probing) by using SSH keys.
+
+Make sure that the OpenSSH is installed and running on the remote machine.
+
+Compressing data while transferring through the network can significantly optimize the speed of the transfer. We can use the rsync option z to specify to compress data while transferring through a network. For example:
+
+$ rsync -avz source destination
+
+
+
+For the PATH format, if we use / at the end of the source, rsync will copy contents of that end directory specified in the source_path to the destination.
+
+If / not at the end of the source, rsync will copy that end directory itself to the destination.
+
+
+
+
+For example, the following command copies the content of the test directory:
+
+$ rsync -av /home/test/ /home/backups
+
+
+The following command copies the test directory to the destination: 
+
+$ rsync -av /home/test /home/backups
+
+
+
+If / is at the end of destination_path, rsync will copy the source to the destination directory.
+
+If / is not used at the end of the destination path, rsync will create a folder, named similar to the source directory, at the end of the destination path and copy the source into that directory.
+
+
+
+
+For example:
+
+$ rsync -av /home/test /home/backups/
+
+
+This command copies the source (/home/test) to an existing folder called backups.
+
+$ rsync -av /home/test /home/backups
+
+
+This command copies the source (/home/test) to a directory named backups by creating that directory.
+
+There's more...
+The rsync command has several additional functionalities that can be specified using its command-line options. Let's go through them.
+
+Excluding files while archiving with rsync
+Some files need not be updated while archiving to a remote location. It is possible to tell rsync to exclude certain files from the current operation. Files can be excluded by two options: 
+
+--exclude PATTERN
+
+
+We can specify a wildcard pattern of files to be excluded. For example:
+
+$ rsync -avz /home/code/some_code /mnt/disk/backup/code --exclude "*.txt"
+
+
+This command excludes .txt files from backing up.
+
+Or, we can specify a list of files to be excluded by providing a list file.
+
+Use --exclude-from FILEPATH.
+
+Deleting non-existent files while updating rsync backup
+We archive files as tarball and transfer the tarball to the remote backup location. When we need to update the backup data, we create a TAR file again and transfer the file to the backup location. By default, rsync does not remove files from the destination if they no longer exist at the source. In order to remove the files from the destination that do not exist at the source, use the rsync --delete option: 
+
+$ rsync -avz SOURCE DESTINATION --delete
+
+
+Scheduling backups at intervals
+You can create a cron job to schedule backups at regular intervals. 
+
+A sample is as follows:
+
+$ crontab -e
+
+
+Add the following line:
+
+0 */10 * * * rsync -avz /home/code user@IP_ADDRESS:/home/backups
+
+
+The above crontab entry schedules the rsync to be executed every 10 hours.
+
+*/10 is the hour position of the crontab syntax. /10 specifies to execute the backup every 10 hours. If */10 is written in the minutes position, it will execute every 10 minutes.
+
+Have a look at the Scheduling with cron recipe in Chapter 9 to understand how to configure crontab.
+
+

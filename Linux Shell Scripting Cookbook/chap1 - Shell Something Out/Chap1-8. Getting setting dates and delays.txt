@@ -1,0 +1,113 @@
+Getting, setting dates, and delays
+
+
+Many applications require printing dates in different formats, setting the date and time, and performing manipulations based on the date and time. Delays are commonly used to provide a wait time (for example, 1 second) during the program\'s execution. Scripting contexts, such as performing a monitoring task every five seconds, demand the understanding of writing delays in a program. This recipe will show you how to work with dates and time delays. 
+
+Getting ready
+Dates can be printed in a variety of formats. We can also set dates from the command line. In UNIX-like systems, dates are stored as an integer in seconds since 1970-01-01 00:00:00 UTC. This is called epoch or UNIX time. Let\'s see how to read dates and set them.
+
+How to do it...
+You can read the date as follows:
+
+$ date
+Thu May 20 23:09:04 IST 2010
+
+
+The epoch time can be printed as follows:
+
+$ date +%s
+1290047248
+
+
+Epoch? is defined as the number of seconds that have elapsed since midnight proleptic Coordinated Universal Time (UTC) of January 1, 1970, not counting leap seconds. Epoch time is useful when you need to calculate the difference between two dates or time. You may find out the epoch times for two given timestamps and take the difference between the epoch values. Therefore, you can find out the total number of seconds between two dates. 
+
+We can find out epoch from a given formatted date string. You can use dates in multiple date formats as input. Usually, you don\'t need to bother about the date string format that you use if you are collecting the date from a system log or any standard application generated output. You can convert a date string into epoch as follows:
+
+$ date --date "Thu Nov 18 08:07:21 IST 2010" +%s
+1290047841
+
+
+The --date option is used to provide a date string as input. However, we can use any date formatting options to print output. Feeding input date from a string can be used to find out the weekday, given the date. 
+
+For example:
+
+$ date --date "Jan 20 2001" +%A
+Saturday
+
+
+The date format strings are listed in the following table: 
+
+Date component  Format  
+Weekday  %a (for example:. Sat) %A (for example: Saturday)  
+Month  %b (for example: Nov) %B (for example: November)  
+Day  %d (for example: 31)  
+Date in format (mm/dd/yy)  %D (for example: 10/18/10)  
+Year  %y (for example: 10) %Y (for example: 2010)  
+Hour  %I or %H (for example: 08)  
+Minute  %M (for example: 33)  
+Second  %S (for example: 10)  
+Nano second  %N (for example:695208515)  
+epoch UNIX time in seconds?  %s (for example: 1290049486)  
+
+
+
+
+Use a combination of format strings prefixed with + as an argument for the date command to print the date in the format of your choice. For example:
+
+$ date "+%d %B %Y"
+20 May 2010
+
+
+We can set the date and time as follows: 
+
+# date -s "Formatted date string"
+
+
+For example:
+
+# date -s "21 June 2009 11:01:22"
+
+
+Sometimes we need to check the time taken by a set of commands. We can display it as follows:
+
+#!/bin/bash
+#Filename: time_take.sh
+start=$(date +%s)
+commands;
+statements;
+end=$(date +%s)
+difference=$(( end - start))
+echo Time taken to execute commands is $difference seconds.
+
+
+An alternate method would be to use timescriptpath to get the time that it took to execute the script.
+
+There's more...
+Producing time intervals are essential when writing monitoring scripts that execute in a loop. Let's see how to generate time delays.
+
+Producing delays in a script
+In order to delay execution in a script for some period of time, use sleep: $ sleep no_of_seconds. 
+
+For example, the following script counts from 0 to 40 by using tput and sleep: 
+
+#!/bin/bash
+#Filename: sleep.sh
+echo -n Count:
+tput sc
+count=0;
+while true;
+do
+if [ $x -lt 40 ];
+then let count++;
+sleep 1;
+tput rc
+tput ed
+echo -n $count;
+else exit 0;
+fi
+done
+
+
+In the above example, a variable count is initialized to 0 and is incremented on every loop execution. The echo statement prints the text. We use tput sc to store the cursor position. On every loop execution we write the new count in the terminal by restoring the cursor position for the number. The cursor position is restored using tput rc. tput ed clears text from the current cursor position to the end of the line, so that the older number can be cleared and the count can be written. A delay of 1 second is provided in the loop by using the sleep command.
+
+

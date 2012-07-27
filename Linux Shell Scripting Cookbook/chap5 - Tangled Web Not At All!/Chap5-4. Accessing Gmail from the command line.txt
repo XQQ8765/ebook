@@ -1,0 +1,62 @@
+Accessing Gmail from the command line
+
+
+Gmail is a widely-used free e-mail service from Google: http://mail.google.com/. Gmail allows you to read your mail via authenticated RSS feeds. We can parse the RSS feeds with the sender's name and an e-mail with subject. It will help to have a look at unread mails in the inbox without opening the web browser. 
+
+How to do it...
+Let's go through the shell script to parse the RSS feeds for Gmail to display the unread mails: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+Filename: fetch_gmail.sh
+#Description: Fetch gmail tool
+username="PUT_USERNAME_HERE"
+password="PUT_PASSWORD_HERE"
+SHOW_COUNT=5 # No of recent unread mails to be shown
+echo
+curl -u $username:$password --silent "https://mail.google.com/mail/feed/atom" | \
+tr -d '\n' | sed 's:</entry>:\n:g' |\
+sed 's/.*<title>\(.*\)<\/title.*<author><name>\([^<]*\)<\/name><email> \([^<]*\).*/Author: \2 [\3] \nSubject: \1\n/' | \
+head -n $(( $SHOW_COUNT * 3 ))
+
+
+					  
+
+The output will be as follows:
+
+$ ./fetch_gmail.sh
+Author: SLYNUX [ slynux@slynux.com ]
+Subject: Book release - 2
+Author: SLYNUX [ slynux@slynux.com ]
+Subject: Book release - 1
+.
+бн 5 entries
+
+
+How it works...
+The script uses cURL to download the RSS feed by using user authentication. User authentication is provided by the -u username:password argument. You can use -u user without providing the password. Then while executing cURL it will interactively ask for the password.
+
+Here we can split the piped commands into different blocks to illustrate how they work.
+
+tr -d '\n' removes the newline character so that we restructure each mail entry with \n as the delimiter. sed 's:</entry>:\n:g' replaces every</entry> with a newline so that each mail entry is delimited by a newline and hence mails can be parsed one by one. Have a look at the source of https://mail.google.com/mail/feed/atom for XML tags used in the RSS feeds.<entry> TAGS </entry> corresponds to a single mail entry.
+
+The next block of script is as follows:
+
+Code View: Scroll / Show All
+sed 's/.*<title>\(.*\)<\/title.*<author><name>\([^<]*\)<\/name><email> \([^<]*\).*/Author: \2 [\3] \nSubject: \1\n/'
+
+
+					  
+
+This script matches the substring title using<title>\(.*\)<\/title, the sender name using<author><name>\([^<]*\)<\/name>, and e-mail using<email>\([^<]*\). Then back referencing is used as follows: 
+
+Author: \2 [\3] \nSubject: \1\n is used to replace an entry for a mail with the matched items in an easy-to-read format. \1 corresponds to the first substring match, \2 for the second substring match, and so on.
+
+The SHOW_COUNT=5 variable is used to take the number of unread mail entries to be printed on terminal.
+
+head is used to display only SHOW_COUNT*3 lines from the first line. SHOW_COUNT is used three times in order to show three lines of the output.
+
+See also
+A primer on cURL, explains the curl command
+
+Basic sed primer of Chapter 4, explains the sed command

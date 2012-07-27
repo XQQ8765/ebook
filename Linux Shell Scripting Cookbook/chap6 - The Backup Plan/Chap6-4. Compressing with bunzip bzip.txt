@@ -1,0 +1,116 @@
+Compressing with bunzip (bzip)
+
+
+bunzip2 is another compression technique which is very similar to gzip. bzip2 typically produces smaller (more compressed) files than gzip. It comes with all Linux distributions. Let's see how to use bzip2. 
+
+How to do it...
+In order to compress with bzip2 use: 
+
+$ bzip2 filename
+$ ls
+filename.bz2
+
+
+Then it will remove the file and produce a compressed file called filename.bzip2.
+
+Extract a bzipped file as follows:
+
+$ bunzip2 filename.bz2
+
+
+It will remove filename.bz2 and produce an uncompressed version of filename.
+
+bzip2 can read a file from stdin and also write a compressed file into stdout.
+
+In order to read from stdin and read out as stdout use:
+
+$ cat file | bzip2 -c > file.tar.bz2
+
+
+-c is used to specify output to stdout.
+
+We usually use bzip2 with tarballs. A tarball can be compressed by using the -j option passed to the tar command while archiving and extracting.
+
+Creating a bzipped tarball can be done by using the following methods:
+
+Method - 1 
+
+$ tar -cjvvf archive.tar.bz2 [FILES]
+
+
+
+Or: 
+
+
+$ tar -cavvf archive.tar.bz2 [FILES]
+
+
+
+The -a option specifies to automatically detect compression format from the extension. 
+
+
+
+Method - 2 
+
+First create the tarball: 
+
+
+$ tar -cvvf archive.tar [FILES]
+
+
+
+Compress it after tarballing: 
+
+
+$ bzip2 archive.tar
+
+
+If we need to add hundreds of files to the archive, the above commands may fail. To fix that issue, use a loop to append files to the archive one by one using the r option. See the similar section from the recipe, Compressing with gunzip (gzip).
+
+Extract a bzipped tarball as follows:
+
+$ tar -xjvvf archive.tar.bz2 -C extract_directory
+
+
+In this command:
+
+-x is used for extraction
+
+-j is for bzip2 specification
+
+-C is for specifying the directory to which the files are to be extracted
+
+Or, you can use the following command: 
+
+$ tar -xavvf archive.tar.bz2 -C extract_directory
+
+
+-a will automatically detect the compression format.
+
+There's more...
+bunzip has several additional options to carry out different functions. Let's go through few of them.
+
+Keeping input files without removing them
+While using bzip2 or bunzip2, it will remove the input file and produce a compressed output file. But we can prevent it from removing input files by using the k option. 
+
+For example:
+
+$ bunzip2 test.bz2 -k
+$ ls
+test test.bz2
+
+
+Compression ratio
+We can specify the compression ratio, which is available in the range of 1 to 9 (where 1 is the least compression, but fast, and 9 is the highest possible compression but much slower).
+
+For example:
+
+$ bzip2 -9 test.img
+
+
+This command provides maximum compression.
+
+See also
+Archiving with tar, explains the tar command
+
+

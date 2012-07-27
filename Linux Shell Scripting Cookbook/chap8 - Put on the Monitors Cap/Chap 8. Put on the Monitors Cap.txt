@@ -1,0 +1,33 @@
+Chapter 8. Put on the Monitor's Cap
+In this chapter, we will cover:
+
+Disk usage hacks
+
+Calculating the execution time for a command
+
+Information about logged users, boot logs, failure boots
+
+Printing the 10 most frequently-used commands
+
+Listing the top 10 CPU consuming process in 1 hour
+
+Monitoring command outputs with watch
+
+Logging access to files and directories
+
+Logfile management with logrotate
+
+Logging with syslog
+
+Monitoring user logins to find intruders
+
+Remote disk usage health monitoring
+
+Finding out active user hours on a system
+
+Introduction
+An operating system consists of a collection of system software, designed for different purposes, serving different task sets. Each of these programs requires to be monitored by the operating system or the system administrator in order to know whether it is working properly or not. We will also use a technique called logging by which important information is written to a file while the application is running. By reading this file, we can understand the timeline of the operations that are taking place with a particular software or a daemon. If an application or a service crashes, this information helps to debug the issue and enables us to fix any issues. Logging and monitoring also helps to gather information from a pool of data. Logging and monitoring are important tasks for ensuring security in the operating system and for debugging purposes.
+
+This chapter deals with different commands that can be used to monitor different activities. It also goes through logging techniques and their usages.
+
+

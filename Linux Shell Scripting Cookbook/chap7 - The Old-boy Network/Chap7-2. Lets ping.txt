@@ -1,0 +1,97 @@
+Let's ping!
+ping is the most basic network command, and one that every user should first know. It is a universal command that is available on major Operating Systems. It is also a diagnostic tool used for verifying the connectivity between two hosts on a network. It can be used to find out which machines are alive on a network. Let us see how to use ping. 
+
+How to do it...
+In order to check the connectivity of two hosts on a network, the ping command uses Internet Control Message Protocol (ICMP) echo packets. When these echo packets are sent towards a host, the host responds back with a reply if it is reachable or alive. 
+
+Check whether a host is reachable as follows:
+
+$ ping ADDRESS
+
+
+The ADDRESS can be a hostname, domain name, or an IP address itself.
+
+ping will continuously send packets and the reply information is printed on the terminal. Stop the pinging by pressing Ctrl + C. 
+
+For example:
+
+When the host is reachable the output will be similar to the following:
+
+Code View: Scroll / Show All
+$ ping 192.168.0.1
+PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
+64 bytes from 192.168.0.1: icmp_seq=1 ttl=64 time=1.44 ms
+^C
+--- 192.168.0.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 1.440/1.440/1.440/0.000 ms
+$ ping google.com
+PING google.com (209.85.153.104) 56(84) bytes of data.
+64 bytes from bom01s01-in-f104.1e100.net (209.85.153.104): icmp_seq=1 ttl=53 time=123 ms
+^C
+--- google.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 123.388/123.388/123.388/0.000 ms
+
+
+					  
+
+When a host is unreachable the output will be similar to:
+
+$ ping 192.168.0.99
+PING 192.168.0.99 (192.168.0.99) 56(84) bytes of data.
+From 192.168.0.82 icmp_seq=1 Destination Host Unreachable
+From 192.168.0.82 icmp_seq=2 Destination Host Unreachable
+
+
+Once the host is not reachable, the ping returns a Destination Host Unreachable error message.
+
+There's more
+In addition to checking the connectivity between two points in a network, the ping command can be used with additional options to get useful information. Let's go through the additional options of ping.
+
+Round trip time
+The ping command can be used to find out the Round Trip Time (RTT) between two hosts on a network. RTT is the time required for the packet to reach the destination host and come back to the source host. The RTT in milliseconds can be obtained from ping. An example is as follows: 
+
+--- google.com ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4000ms
+rtt min/avg/max/mdev = 118.012/206.630/347.186/77.713 ms
+
+
+Here the minimum RTT is 118.012ms, the average RTT is 206.630ms, and the maximum RTT is 347.186ms. The mdev (77.713ms) parameter in the ping output stands for mean deviation.
+
+Limiting number of packets to be sent
+The ping command sends echo packets and waits for the reply of echo indefinitely until it is stopped by pressing Ctrl + C. However, we can limit the count of echo packets to be sent by using the -c flag. 
+
+The usage is as follows:
+
+-c COUNT
+
+
+For example:
+
+$ ping 192.168.0.1 -c 2
+PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
+64 bytes from 192.168.0.1: icmp_seq=1 ttl=64 time=4.02 ms
+64 bytes from 192.168.0.1: icmp_seq=2 ttl=64 time=1.03 ms
+--- 192.168.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 1.039/2.533/4.028/1.495 ms
+
+
+In the previous example, the ping command sends two echo packets and stops.
+
+This is useful when we need to ping multiple machines from a list of IP addresses through a script and checks its statuses. 
+
+Return status of ping command
+The ping command returns exit status 0 when it succeeds and returns non-zero when it fails. Successful means, destination host is reachable, where failure is when destination host is unreachable. 
+
+The return status can be easily obtained as follows:
+
+$ ping ADDRESS -c2
+if [ $? -eq 0 ];
+then
+echo Successful ;
+else
+echo Failure
+fi
+

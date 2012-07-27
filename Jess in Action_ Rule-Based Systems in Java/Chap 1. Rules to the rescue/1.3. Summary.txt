@@ -1,0 +1,5 @@
+1.3. Summary
+Rule-based programs are everywhere. Their applications include everything from mail filtering to order configuration, and from monitoring chemical plants to diagnosing medical problems. Rule-based programs excel at solving problems that are difficult to solve using traditional algorithmic methods, and they work even when the input data is incomplete.
+
+In the next chapter, we¡¯ll refine our definition of a rule-based system. You¡¯ll learn about the history of rule-based systems and about their architecture. We¡¯ll also look at the development cycle for rule-based programs. By the end of the next chapter you¡¯ll be ready to begin learning how to write your own rule-based software.
+

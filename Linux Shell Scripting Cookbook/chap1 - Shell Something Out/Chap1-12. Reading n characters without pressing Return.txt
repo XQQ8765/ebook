@@ -1,0 +1,53 @@
+Reading "n" characters without pressing Return
+
+
+read is an important Bash command that can be used to read text from keyboard or standard input. We can use read to interactively read an input from the user, but read is capable of much more. Let's look at a new recipe to illustrate some of the most important options available with the read command. 
+
+Getting ready
+Most of the input libraries in any programming language read the input from the keyboard; but string input termination is done when Return is pressed. There are certain critical situations when Return cannot be pressed, but the termination is done based on number of characters or a single character. For example, in a game a ball is moved up when up + is pressed. Pressing + and then pressing Return everytime to acknowledge the + press is not efficient. The read command provides a way to accomplish this task without having to press Return. 
+
+How to do it...
+The following statement will read "n" characters from input into the variable variable_name: 
+
+read -n number_of_chars variable_name 
+
+For example:
+
+$ read -n 2 var
+$ echo $var
+
+
+Many other options are possible with read. Let's see take a look at these.
+
+Read a password in non-echoed mode as follows:
+
+read -s var
+
+
+Display a message with read using:
+
+read -p "Enter input:" var
+
+
+Read the input after a timeout as follows:
+
+read -t timeout var
+
+
+For example:
+
+$ read -t 2 var
+#Read the string that is typed within 2 seconds into variable var.
+
+
+Use a delimiter character to end the input line as follows:
+
+read -d delim_charvar
+
+
+For example:
+
+$ read -d ":" var
+hello:#var is set to hello
+
+

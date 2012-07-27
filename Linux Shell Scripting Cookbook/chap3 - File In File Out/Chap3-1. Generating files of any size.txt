@@ -1,0 +1,40 @@
+Generating files of any size
+
+
+For various reasons, you may need to generate a file filled with random data. It may be for creating a test file to perform tests, such as an application efficiency test that uses a large file as input, or to test the splitting of files into many, or to create loopback filesystems (loopback files are files that can contain a filesystem itself and these files can be mounted similar to a physical device using the mount command). It is hard to create such files by writing specific programs. So we use general utilities. 
+
+How to do it...
+The easiest way to create a large sized file with a given size is to use the dd command. The dd command clones the given input and writes an exact copy to the output. Input can be stdin, a device file, a regular file, or so on. Output can be stdout, a device file, a regular file, and so on. An example of the dd command is as follows: 
+
+$ dd if=/dev/zero of=junk.data bs=1M count=1
+dd commanddd commandexample1+0 records in
+1+0 records out
+1048576 bytes (1.0 MB) copied, 0.00767266 s, 137 MB/s
+
+
+The above command will create a file called junk.data that is exactly 1MB in size. Let's go through the parameters: if stands for input file, of stands for output file, bs stands for BYTES for a block, and count stands for the number of blocks of bs specified to be copied.
+
+Here we are only creating a file 1MB in size by specifying bs as 1MB with a count of 1. If bs was set to 2M and a count to 2, the total file size would be 4MB.
+
+We can use various units for Block Size (BS) as follows. Append any of the following characters to the number to specify the size in bytes: 
+
+Unit size  Code  
+Byte (1B)  c  
+Word (2B)  w  
+Block (512B)  b  
+Kilo Byte (1024B)  k  
+Mega Byte (1024 KB)  M  
+Giga Byte (1024 MB)  G  
+
+
+
+
+We can generate a file of any size using this. Instead of MB we can use any other unit notations such as the ones mentioned in the previous table. 
+
+/dev/zero is a character special device, which infinitely returns the zero byte (\0).
+
+If the input parameter (if) is not specified, it will read the input from stdin by default. Similarly, if the output parameter (of) is not specified, it will use stdout as the default output sink.
+
+The dd command can also be used to measure the speed of memory operations by transferring a large quantity of data and checking the command output (for example, 1048576 bytes (1.0 MB) copied, 0.00767266 s, 137 MB/s as seen the previous example). 
+
+

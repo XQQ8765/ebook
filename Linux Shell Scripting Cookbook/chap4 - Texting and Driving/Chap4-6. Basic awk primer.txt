@@ -1,0 +1,271 @@
+Basic awk primer
+
+
+awk is a tool designed to work with data streams. It is very interesting as it can operate on columns and rows. It supports many inbuilt functionalities such as arrays, functions, and so on, as in the C programming language. Flexibility is the greatest advantage of it. 
+
+How to do it¡­
+The structure of an awk script looks like this:
+
+awk ' BEGIN{ print "start" } pattern { commands } END{ print "end" } file
+
+
+The awk command can read from stdin also.
+
+An awk script usually consists of three parts: BEGIN, END, and a common statements block with the pattern match option. The three of them are optional and any of them can be absent in the script. The script is usually enclosed in single-quotes or double-quotes as follows:
+
+awk 'BEGIN { statements } { statements } END { end statements }'
+
+
+Or, alternately, use:
+
+awk "BEGIN { statements } { statements } END { end statements }"
+
+
+For example:
+
+$ awk 'BEGIN { i=0 } { i++ } END{ print i}' filename
+
+
+Or:
+
+$ awk "BEGIN { i=0 } { i++ } END{ print i }" filename
+
+
+How it works¡­
+The awk command works in the following manner: 
+
+1. Execute the statements in the BEGIN { commands }block.
+
+2. Read one line from the file or stdin, and execute pattern { commands }. Repeat this step until the end of the file is reached.
+
+3. When the end of the input stream is reached, execute the END { commands } block.
+
+The BEGIN block is executed before awk starts reading lines from the input stream. It is an optional block. The statements such as variable initialization, printing the output header for an output table, and so on are common statements that are written in the BEGIN block.
+
+The END block is similar to the BEGIN block. The END block gets executed when awk has completed reading all the lines from the input stream. The statements like printing results after analyzing all the values calculated for all the lines or printing the conclusion are the commonly-used statements in the END block (for example, after comparing all the lines, print the maximum number from a file). This is an optional block.
+
+The most important block is the common commands with the pattern block. This block is also optional. If this block is not provided, by default { print } gets executed so as to print each of the lines read. This block gets executed for each line read by awk.
+
+It is like a while loop for line read with provided statements inside the body of the loop.
+
+When a line is read, it checks whether the provided pattern matches the line. The pattern can be a regular expression match, conditions, range of lines match, and so on. If the current read line matches with the pattern, it executes the statements enclosed in { }.
+
+The pattern is optional. If pattern is not used, all the lines are matched and statements inside { } are executed.
+
+Let's go through the following example: 
+
+Code View: Scroll / Show All
+$ echo -e "line1\nline2" | awk 'BEGIN{ print "Start" } { print } END{ print "End" } '
+Start
+line1
+line2
+End
+
+
+					  
+
+When print is used without an argument, it will print the current line. There are two important things to be kept in mind about print. When the arguments of the print are separated by commas, they are printed with a space delimiter. Double-quotes are used as the concatenation operator in the context of print in awk.
+
+For example:
+
+$ echo | awk '{ var1="v1"; var2="v2"; var3="v3"; \
+print var1,var2,var3 ; }'
+
+
+The above statement will print the values of the variables as follows:
+
+v1 v2 v3
+
+
+The echo command? writes a single line into the standard output. Hence the statements in the { } block of awk are executed once. If standard input to awk contains multiple lines, the commands in awk will be executed multiple times. 
+
+Concatenation can be used as follows:
+
+$ echo | awk '{ var1="v1"; var2="v2"; var3="v3"; \
+print var1"-"var2"-"var3 ; }'
+
+
+The output will be:
+
+v1-v2-v3
+
+
+{ } is like a block in a loop iterating through each line of a file.
+
+
+Usually, we place initial variable assignments, such as var=0; and statements to print the file header in the BEGIN block. In the END{} block, we place statements such as printing results and so on.
+
+
+
+
+There's more¡­
+The awk command comes with lot of rich features. In order to master the art of awk programming you should be familiar with the important awk options and functionalities. Let's go through the essential functionalities of awk.
+
+Special variables
+Some special variables that can be used with awk are as follows: 
+
+NR: It stands for number of records and corresponds to current line number under execution.
+
+NF: It stands for number of fields and corresponds to number of fields in the current line under execution (Fields are delimited by space).
+
+$0: It is a variable that contain the text content of current line under execution.
+
+$1: It is a variable that holds the text of the first field.
+
+$2: It is the variable that holds the test of the second field text.
+
+For example:
+
+$ echo -e "line1 f2 f3\nline2 f4 f5\nline3 f6 f7" | \
+awk '{
+print "Line no:"NR",No of fields:"NF, "$0="$0, "$1="$1,"$2="$2,"$3="$3
+}'
+Line no:1,No of fields:3 $0=line1 f2 f3 $1=line1 $2=f2 $3=f3
+Line no:2,No of fields:3 $0=line2 f4 f5 $1=line2 $2=f4 $3=f5
+Line no:3,No of fields:3 $0=line3 f6 f7 $1=line3 $2=f6 $3=f7
+
+
+We can print last field of a line as print $NF, last but second as $(NF-1)and so on.
+
+awk provides the printf()function with same syntax as in C. We can also use that instead of print.
+
+Let's see some basic awk usage examples.
+
+Print the second and third field of every line as follows:
+
+$awk '{ print $3,$2 }' file
+
+
+In order to count the number of lines in a file, use the following command:
+
+$ awk 'END{ print NR }' file
+
+
+Here we only use the END block. NR will be updated on entering each line by awk with its line number. When it reaches the end line it will have the value of last line number. Hence, in the END block NR will have the value of last line number.
+
+You can sum up all the numbers from each line of field 1 as follows: 
+
+$ seq 5 | awk 'BEGIN{ sum=0; print "Summation:" }
+{ print $1"+"; sum+=$1 } END { print "=="; print sum }'
+Summation:
+1+
+2+
+3+
+4+
+5+
+==
+15
+
+
+Passing a variable value from outside to awk
+By using the -v argument, we can pass external values (other than from stdin) to awk as follows:
+
+$ VAR=10000
+$ echo | awk -v VARIABLE=$VAR'{ print VARIABLE }'
+1
+
+
+There is a flexible alternate method to pass many variable values from outside awk. For example:
+
+$ var1="Variable1" ; var2="Variable2"
+$ echo | awk '{ print v1,v2 }' v1=$var1 v2=$var2
+Variable1 Variable2
+
+
+When input is given through a file rather than standard input, use:
+
+$ awk '{ print v1,v2 }' v1=$var1 v2=$var2 filename
+
+
+In the above method, variables are specified as key-value pairs separated by space (v1=$var1 v2=$var2) as command arguments to awk soon after the BEGIN, { } and END blocks.
+
+Reading a line explicitly using getline
+Usually, grep reads all lines in a file by default. If you want to read one specific line, you can use the getline function. Sometimes we may need to read the first line from the BEGIN block. 
+
+The syntax is: getline var 
+
+The variable var will contain the content for the line.
+
+If the getline is called without an argument, we can access the content of the line by using $0, $1, and $2.
+
+For example:
+
+Code View: Scroll / Show All
+$ seq 5 | awk 'BEGIN { getline; print "Read ahead first line", $0 } { print $0 }'
+Read ahead first line 1
+2
+3
+4
+5
+
+
+					  
+
+Filtering lines processed by awk with filter patterns
+We can specify some conditions for lines to be processed. For example: 
+
+$ awk 'NR < 5' # Line number less than 5
+$ awk 'NR==1,NR==4' #Line numbers from 1-5
+$ awk '/linux/' # Lines containing the pattern linux (we can specify regex)
+$ awk '!/linux/' # Lines not containing the pattern linux
+
+
+Setting delimiter for fields
+By default, the delimiter for fields is space. We can explicitly specify a delimiter using -F "delimiter": 
+
+$ awk -F: '{ print $NF }' /etc/passwd
+
+
+Or:
+
+awk 'BEGIN { FS=":" } { print $NF }' /etc/passwd
+
+
+We can set the output fields separator by setting OFS="delimiter" in the BEGIN block.
+
+Reading command output from awk
+In the following code, echo will produces a single blank line. The cmdout variable will contain output of command grep root /etc/passwd and it will print the line containing root: 
+
+The syntax for reading out of the 'command' in a variable 'output' is as follows:
+
+"command" | getline output ;
+
+
+For example:
+
+$ echo | awk '{ "grep root /etc/passwd" | getline cmdout ; print cmdout }'
+root:x:0:0:root:/root:/bin/bash
+
+
+By using getline we can read the output of external shell commands in a variable called cmdout.
+
+awk supports associative arrays, which can use text as the index.
+
+Using loop inside awk
+A for loop is available in awk. It has the format: 
+
+for(i=0;i<10;i++) { print $i ; }
+
+
+Or:
+
+for(i in array) { print array[i]; }
+
+
+awk comes with many built-in string manipulation functions. Let's have a look at a few of them:
+
+length(string): It returns the string length.
+
+index(string, search_string): It returns the position at which the search_string is found in the string.
+
+split(string, array, delimiter): It stores the list of strings generated by using the delimiter in the array.
+
+substr(string, start-position, end-position): It returns the substring created from the string by using start and end character offets.
+
+sub(regex, replacement_str, string): It replaces the first occurring regular expression match from the string with replacment_str.
+
+gsub(regex, replacment_str, string: It is similar to sub(). But it replaces every regular expression match.
+
+match(regex, string): It returns the result of whether a regular expression (regex) match is found in the string or not. It returns non-zero if match is found, else it returns zero. Two special variables are associated with match(). They are RSTART and RLENGTH. The RSTART variable contains the position at which the regular expression match starts. The RLENGTH variable contains the length of the string matched by the regular expression.
+
+

@@ -1,0 +1,110 @@
+Arrays and associative arrays
+
+
+Arrays are a very important component for storing a collection of data as separate entities using indexes. 
+
+Getting ready
+Bash supports regular arrays as well as associative arrays. Regular arrays are arrays which can use only integers as its array index. But associative arrays are arrays which can take a string as its array index.
+
+Associative arrays are very useful in many types of manipulations. Associative array support came with version 4.0 of Bash. Therefore, older versions of Bash will not support associative arrays. 
+
+How to do it...
+An array can be defined in many ways. Define an array using a list of values in a line, as follows: 
+
+array_var=(1 2 3 4 5 6)
+#Values will be stored in consecutive locations starting from index 0.
+
+
+Alternately, define an array as a set of index-value pairs as follows:
+
+array_var[0]="test1"
+array_var[1]="test2"
+array_var[2]="test3"
+array_var[3]="test4"
+array_var[4]="test5"
+array_var[5]="test6"
+
+
+Print the contents of an array at a given index using:
+
+$ echo ${array_var[0]}
+test1
+index=5
+$ echo ${array_var[$index]}
+test6
+
+
+Print all of the values in an array as a list using:
+
+$ echo ${array_var[*]}
+test1 test2 test3 test4 test5 test6
+
+
+Alternately, you can use:
+
+$ echo ${array_var[@]}
+test1 test2 test3 test4 test5 test6
+
+
+Print the length of an array (the number of elements in an array), as follows:
+
+$ echo ${#array_var[*]}
+6
+
+
+There's more...
+Associative arrays have been introduced to Bash from version 4.0. They are useful entities to solve many problems using the hashing technique. Let's go into more details.
+
+Defining associative arrays
+In an associative array, we can use any text data as an array index. However, ordinary arrays can only use integers for array indexing. 
+
+Initially, a declaration statement is required to declare a variable name as an associative array. A declaration can be made as follows:
+
+$ declare -A ass_array
+
+
+After the declaration, elements can be added to the associative array using two methods, as follows:
+
+1. By using inline index-value list method, we can provide a list of index-value pairs:
+
+$ ass_array=([index1]=val1 [index2]=val2)
+
+
+2. Alternately, you could use separate index-value assignments:
+
+$ ass_array[index1]=val1
+$ ass_array[index2]=val2
+
+
+For example, consider the assignment of prices for fruits using an associative array:
+
+$ declare -A fruits_value
+$ fruits_value=([apple]='100dollars' [orange]='150 dollars')
+
+
+Display the content of an array as follows:
+
+$ echo "Apple costs ${fruits_value[apple]}"
+Apple costs 100 dollars
+
+
+Listing of array indexes
+Arrays have indexes for indexing each of the elements. Ordinary and associative arrays differ in terms of index type. We can obtain the list of indexes in an array as follows: 
+
+$ echo ${!array_var[*]}
+
+
+Or, we can also use:
+
+$ echo ${!array_var[@]}
+
+
+In the previous fruits_value array example, consider the following: 
+
+$ echo ${!fruits_value[*]}
+orange apple
+
+
+This will work for ordinary arrays too.
+
+

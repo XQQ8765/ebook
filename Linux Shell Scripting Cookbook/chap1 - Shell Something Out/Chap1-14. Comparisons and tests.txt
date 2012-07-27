@@ -1,0 +1,158 @@
+Comparisons and tests
+Flow control in a program is handled by comparison and test statements. Bash also comes with several options to perform tests that are compatible with the UNIX system-level features. 
+
+Getting ready
+We can use if, if else, and logical operators to perform tests and certain comparison operators to compare data items. There is also a command called test available to perform tests. Let's see how to use those commands.
+
+How to do it...
+If condition: 
+
+if condition;
+then
+commands;
+fi
+
+
+else if and else:
+
+if condition;
+then
+commands;
+elif condition;
+then
+commands
+else
+commands
+fi
+
+
+Nesting is also possible with if and else. if conditions can be lengthy. We can use logical operators to make them shorter as follows:
+
+[ condition ] && action; # action executes if condition is true.
+[ condition ] || action; # action executes if condition is false.
+
+
+&& is the logical AND operation and || is the logical OR operation. This is a very helpful trick while writing Bash scripts. Now let's go into conditions and comparisons operations.
+
+Mathematical comparisons: 
+
+Usually, conditions are enclosed in square brackets []. Note that there is a space between [ or] and operands. It will show an error if no space is provided. An example is as follows: 
+
+[ $var -eq 0 ] or [ $var -eq 0 ]
+
+
+Performing mathematical conditions over variables or values can be done as follows:
+
+[ $var -eq 0 ] # It returns true when $var equal to 0.
+[ $var -ne 0 ] # It returns true when $var not equals 0
+
+
+Other important operators are:
+
+-gt: Greater than
+
+-lt: Less than
+
+-ge: Greater than or equal to
+
+-le: Less than or equal to
+
+Multiple test conditions can be combined as follows:
+
+[ $var1 -ne 0 -a $var2 -gt 2 ] # using AND -a
+[ $var -ne 0 -o var2 -gt 2 ] # OR -o
+
+
+Filesystem related tests: 
+
+We can test different filesystem related attributes using different condition flags as follows:
+
+[ -f $file_var ]: Returns true if the given variable holds a regular filepath or filename.
+
+[ -x $var ]: Returns true if the given variable holds a file path or filename which is executable.
+
+[ -d $var ]: Returns true if the given variable holds a directory path or directory name.
+
+[ -e $var ]: Returns true if the given variable holds an existing file.
+
+[ -c $var ]: Returns true if the given variable holds path of a character device file.
+
+[ -b $var ]: Returns true if the given variable holds path of a block device file.
+
+[ -w $var ]: Returns true if the given variable holds path of a file which is writable.
+
+[ -r $var ]: Returns true if the given variable holds path of a file which is readable.
+
+[ -L $var ]: Returns true if the given variable holds path of a symlink.
+
+An example of the usage is as follows:
+
+fpath="/etc/passwd"
+if [ -e $fpath ]; then
+echo File exists;
+else
+echo Does not exist;
+fi
+
+
+String comparisons: 
+
+While using string comparison, it is best to use double square brackets since use of single brackets can sometimes lead to errors. Usage of single brackets sometimes lead to error. So it is better to avoid them.
+
+Two strings can be compared to check whether they are the same as follows;
+
+[[ $str1 = $str2 ]]: Returns true when str1 equals str2, that is, the text contents of str1 and str2 are the same
+
+[[ $str1 == $str2 ]]: It is alternative method for string equality check
+
+We can check whether two strings are not the same as follows:
+
+[[ $str1 != $str2 ]]: Returns true when str1 and str2 mismatches
+
+We can find out the alphabetically smaller or larger string as follows:
+
+[[ $str1 > $str2 ]]: Returns true when str1 is alphabetically greater than str2
+
+[[ $str1 < $str2 ]]: Returns true when str1 is alphabetically lesser than str2
+
+
+Note that a space is provided after and before =. If space is not provided, it is not a comparison, but it becomes an assignment statement.
+
+
+
+
+[[ -z $str1 ]]: Returns true if str1 holds an empty string
+
+[[ -n $str1 ]]: Returns true if str1 holds a non-empty string
+
+It is easier to combine multiple conditions using the logical operators&& and || as follows:
+
+if [[ -n $str1 ]] && [[ -z $str2 ]] ;
+then
+commands;
+fi
+
+
+For example:
+
+str1="Not empty "
+str2=""
+if [[ -n $str1 ]] && [[ -z $str2 ]];
+then
+echo str1 is non-empty and str2 is empty string.
+fi
+
+
+The output is as follows:
+
+str1 is non-empty and str2 is empty string.
+
+
+The test command can be used for performing condition checks. It helps to avoid usage of many braces. The same set of test conditions enclosed within [] can be used for the test command.
+
+For example:
+
+if [ $var -eq 0 ]; then echo "True"; fi
+can be written as
+if test $var -eq 0 ; then echo "True"; fi
+

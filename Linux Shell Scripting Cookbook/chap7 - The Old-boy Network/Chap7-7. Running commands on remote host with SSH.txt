@@ -1,0 +1,149 @@
+Running commands on remote host with SSH
+
+
+SSH is an interesting system administration tool that enables to control remote hosts by login with a shell. SSH stands for Secure Shell. Commands can be executed on the shell received by login to remote host as if we run commands on localhost. It runs the network data transfer over an encrypted tunnel. This recipe will introduce different ways in which commands can be executed on the remote host. 
+
+Getting ready
+S?SH doesn't come by default with all GNU/Linux distributions. Therefore, you may have to install the openssh-server and openssh-client packages using a package manager. SSH service runs by default on port number 22. 
+
+How to do it...
+To connect to a remote host with the SSH server running, use:
+
+$ ssh username@remote_host
+
+
+In this command:
+
+username is the user that exist at the remote host.
+
+remote_host can be domain name or IP address.
+
+For example:
+
+$ ssh mec@192.168.0.1
+The authenticity of host '192.168.0.1 (192.168.0.1)' can't be established.
+RSA key fingerprint is 2b:b4:90:79:49:0a:f1:b3:8a:db:9f:73:2d:75:d6:f9.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '192.168.0.1' (RSA) to the list of known hosts.
+Password:
+Last login: Fri Sep 3 05:15:21 2010 from 192.168.0.82
+mec@proxy-1:~$
+
+
+It will interactively ask for a user password and upon successful authentication it will return the shell for the user.
+
+By default, the SSH server runs at Port 22. But certain servers run the SSH service at different ports. In that case use -p port_no with the ssh command to specify the port.
+
+In order to connect to an SSH server running at port 422, use:
+
+$ ssh user@locahost -p 422
+
+
+You can execute commands in the shell that corresponds to the remote host. Shell is an interactive tool in which a user types and runs commands. However, in shell scripting contexts, we do not need an interactive shell. We need to automate several tasks. We require to execute several commands at the remote shell and display or store its output at localhost. Issuing a password every time is not practical for an automated script, hence autologin for SSH should be configured.
+
+The recipe, Password-less auto-login with SSH, explains the SSH commands.
+
+Make sure that auto-login is configured before running automated scripts that use SSH.
+
+To run a command on the remote host and display its output on the localhost shell, use the following syntax:
+
+$ ssh user@host 'COMMANDS'
+
+
+For example:
+
+$ ssh mec@192.168.0.1 'whoami'
+Password:
+mec
+
+
+Multiple commands can be given by using semicolon delimiter in between the commands as: 
+
+$ ssh user@host 'command1 ; command2 ; command3'
+
+
+Commands can be sent through stdin and the output of the commands will be available to stdout.
+
+The syntax will be as follows:
+
+$ ssh user@remote_host "COMMANDS" > stdout.txt 2> errors.txt
+
+
+The COMMANDS string should be quoted in order to prevent a semicolon character to act as delimiter in the localhost shell. We can also pass any command sequence that involves piped statements to the SSH command through stdin as follows:
+
+$ echo "COMMANDS" | sshuser@remote_host> stdout.txt 2> errors.txt
+
+
+For example:
+
+$ ssh mec@192.168.0.1 "echo user: $(whoami);echo OS: $(uname)"
+Password:
+user: slynux
+OS: Linux
+
+
+In this example, the commands executed on the remote host are:
+
+echo user: $(whoami);
+echo OS: $(uname)
+
+
+It can be generalized as:
+
+COMMANDS="command1; command2; command3"
+$ ssh user@hostname "$COMMANDS"
+
+
+We can also pass a more complex subshell in the command sequence by using the ( ) subshell operator.
+
+Let's write an SSH based shell script that collects the uptime of a list of remote hosts. Uptime is the time for which the system is powered on. The uptime command is used to display how long the system has been powered on.
+
+It is assumed that all systems in the IP_LIST have a common user test. 
+
+#!/bin/bash
+#Filename: uptime.sh
+#Description: Uptime monitor
+IP_LIST="192.168.0.1 192.168.0.5 192.168.0.9"
+USER="test"
+for IP in $IP_LIST;
+do
+utime=$(ssh $USER@$IP uptime | awk '{ print $3 }' )
+echo $IP uptime: $utime
+done
+
+
+The expected output is:
+
+$ ./uptime.sh
+192.168.0.1 uptime: 1:50,
+192.168.0.5 uptime: 2:15,
+192.168.0.9 uptime: 10:15,
+
+
+There's more...
+The ssh command can be executed with several additional options. Let's go through them.
+
+SSH with compression
+The SSH protocol also supports data transfer with compression, which comes in handy when bandwidth is an issue. Use the -C option with the ssh command to enable compression as follows: 
+
+$ ssh -C user@hostname COMMANDS
+
+
+Redirecting data into stdin of remote host shell commands
+Sometimes we need to redirect some data into stdin of remote shell commands. Let's see how to do it. An example is as follows: 
+
+$ echo "text" | ssh user@remote_host 'cat >> list'
+
+
+Or:
+
+# Redirect data from file as:
+$ ssh user@remote_host 'cat >> list' < file
+
+
+cat >> list appends the data received through stdin to the file list. Here this command is executed at the remote host. But the data is passed to stdin from localhost. 
+
+See also
+Password-less auto-login with SSH, explains how to configure auto-login to execute commands without prompting for password.
+
+

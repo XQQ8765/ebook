@@ -1,0 +1,104 @@
+Splitting files and data
+
+
+Splitting of files into many smaller pieces becomes essential in certain situations. Earlier, when memory was limited with devices like floppy disks, it was crucial to split files into smaller file sizes to transfer data in many disks. However, nowadays we split files for other purposes, such as readability, for generating logs, and so on. 
+
+How to do it...
+Generate a test file (data.file) of 100kb as follows:
+
+$ dd if=/dev/zero bs=100k count=1 of=data.file
+
+
+The above command creates a file filled with zeros with the size of 100kb.
+
+You can split files into smaller files by specifying the split size as follows:
+
+$ split -b 10k data.file
+$ ls
+data.file xaa xab xac xad xae xaf xag xah xai xaj
+
+
+It will split data.file into many files, each of a 10k chunk. The chunks will be named in the manner xab, xac, xad, and so on. This means it will have alphabetic suffixes. To use the numeric suffixes, use an additional -d argument. It is also possible to specify a suffix length using -a length as follows:
+
+$ split -b 10k data.file -d -a 4
+$ ls
+data.file x0009 x0019 x0029 x0039 x0049 x0059 x0069 x0079
+
+
+Instead of the k (kilobyte) suffix we can use M for MB, G for GB, c for byte, w for word, and so on.
+
+There's more…
+The split command has more options. Let's go through them. 
+
+Specifying filename prefix for the split files
+The above split files have a filename prefix "x". We can also use our own filename prefix by providing a prefix filename. The last command argument for the split command is PREFIX. It is in the format: 
+
+$ split [COMMAND_ARGS] PREFIX
+
+
+Let's run the previous command with the prefix filename for split files:
+
+$ split -b 10k data.file -d -a 4 split_file
+$ ls
+data.file split_file0002 split_file0005 split_file0008 strtok.c
+split_file0000 split_file0003 split_file0006 split_file0009
+split_file0001 split_file0004 split_file0007
+
+
+In order to split files based on number of lines in each split rather than chunk size, use -l no_of_lines as follows:
+
+$ split -l 10 data.file
+# Splits into files of 10 lines each.
+
+
+There is another interesting utility called csplit. It can be used to split log file-based specified conditions and string match options. Let's see how to work with it.
+
+csplit is a variant of the split utility. The split utility can only split files based on chunk size or based on the number of lines. csplit makes the split based on context based split. It can be used to split files based on existence of a certain word or text content. 
+
+Look at the example log:
+
+$ cat server.log
+SERVER-1
+[connection] 192.168.0.1 success
+[connection] 192.168.0.2 failed
+[disconnect] 192.168.0.3 pending
+[connection] 192.168.0.4 success
+SERVER-2
+[connection] 192.168.0.1 failed
+[connection] 192.168.0.2 failed
+[disconnect] 192.168.0.3 success
+[connection] 192.168.0.4 failed
+SERVER-3
+[connection] 192.168.0.1 pending
+[connection] 192.168.0.2 pending
+[disconnect] 192.168.0.3 pending
+[connection] 192.168.0.4 failed
+
+
+We may need to split the files into server1.log, server2.log, and server3.log from the contents for each SERVER in each file. This can be done as follows: 
+
+Code View: Scroll / Show All
+$ csplit server.log /SERVER/ -n 2 -s {*} -f server -b "%02d.log" ; rm server00.log
+$ ls
+server01.log server02.log server03.log server.log
+
+
+					  
+
+The details of the command are as follows:
+
+/SERVER/ is the line used to match a line by which the split is to be carried out.
+
+/[REGEX]/ is the format. It copies from current line (first line) upto the matching line that contains"SERVER" excluding match line.
+
+{*} is used to specify to repeat splitting based on match upto the end of the file. By using {integer}, we can specify no of times it is to be continued.
+
+-s is the flag to make the command silent rather than printing other messages.
+
+-n is used to specify the number of digits to be used as suffix. 01, 02, 03, and so on.
+
+-f is used for specifying the filename prefix for split files ("server" is the prefix in the previous example).
+
+-b is used to specify the suffix format."%02d.log" is similar to the printf argument format in C. Here the filename = prefix + suffix ="server" + "%02d.log".
+
+We remove server00.log since the first split file is an empty file (the match word is the first line of the file).

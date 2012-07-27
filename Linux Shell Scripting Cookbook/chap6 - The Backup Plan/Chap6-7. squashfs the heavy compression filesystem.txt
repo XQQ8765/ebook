@@ -1,0 +1,57 @@
+squashfs the heavy compression filesystem
+
+
+squashfs is a heavy-compression based read-only filesystem that is capable of compressing 2 to 3GB of data onto a 700 MB file. Have you ever thought of how Linux Live CDs work? When a Live CD is booted it loads a complete Linux environment. Linux Live CDs make use of a read-only compressed filesystem called squashfs. It keeps the root filesystem on a compressed filesystem file. It can be loopback mounted and files can be accessed. Thus when some files are required by processes, they are decompressed and loaded onto the RAM and used. Knowledge of squashfs can be useful when building a custom live OS or when required to keep files heavily compressed and to access them without entirely extracting the files. For extracting a large compressed file, it will take a long time. However, if a file is loopback mounted, it will be very fast since the required portion of the compressed files are only decompressed when the request for files appear. In regular decompression, all the data is decompressed first. Let's see how we can use squashfs. 
+
+Getting ready
+If you have an Ubuntu CD just locate a .squashfs file at CDRom ROOT/casper/filesystem.squashfs. squashfs internally uses compression algorithms such as gzip and lzma. squashfs support is available in all of the latest Linux distros. However, in order to create squashfs files, an additional package squashfs-tools needs to be installed from package manager.
+
+How to do it...
+In order to create a squashfs file by adding source directories and files, use: 
+
+$ mksquashfs SOURCES compressedfs.squashfs
+
+
+Sources can be wildcards, or file, or folder paths.
+
+For example:
+
+$ sudo mksquashfs /etc test.squashfs
+Parallel mksquashfs: Using 2 processors
+Creating 4.0 filesystem on test.squashfs, block size 131072.
+[=======================================] 1867/1867 100%
+More details will be printed on terminal. They are limited to save space
+
+
+In order to mount the squashfs file to a mount point, use loopback mounting as follows: 
+
+# mkdir /mnt/squash
+# mount -o loop compressedfs.squashfs /mnt/squash
+
+
+You can copy contents by accessing /mnt/squashfs.
+
+There's more...
+The squashfs file system can be created by specifying additional parameters. Let's go through the additional options.
+
+Excluding files while creating a squashfs file
+While creating a squashfs file, we can exclude a list of files or a file pattern specified using wildcards. 
+
+Exclude a list of files specified as command-line arguments by using the -e option. For example:
+
+$ sudo mksquashfs /etc test.squashfs -e /etc/passwd /etc/shadow
+
+
+The e option is used to exclude passwd and shadow files.
+
+It is also possible to specify a list of exclude files given in a file with ef as follows:
+
+$ cat excludelist
+/etc/passwd
+/etc/shadow
+$ sudo mksquashfs /etc test.squashfs -ef excludelist
+
+
+If we want to support wildcards in excludes lists, use? -wildcard as an argument.
+
+

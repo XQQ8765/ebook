@@ -1,0 +1,256 @@
+Playing with file descriptors and redirection
+
+
+File descriptors are integers that are associated with file input and output. They keep track of opened files. The best-known file descriptors are stdin?, stdout?, and stderr?. We can redirect the contents of one file descriptor to another. The following recipe will give examples on how to manipulate and redirect with file descriptors. 
+
+Getting ready
+While writing scripts we use standard input (stdin), standard output (stdout), and standard error (stderr) frequently. Redirection of output to a file by filtering the contents is one of the essential things we need to perform. While a command outputs some text, it can be either an error or an output (non-error) message. We cannot distinguish whether it is output text or an error text by just looking at it. However, we can handle them with file descriptors. We can extract text that is attached to a specific descriptor.
+
+File descriptors are integers associated with an opened file or data stream. File descriptors 0, 1, and 2 are reserved as follows:
+
+0 stdin (standard input)
+
+1 stdout (standard output)
+
+2 stderr (standard error)
+
+How to do it...
+Redirecting or saving output text to a file can be done as follows: 
+
+$ echo "This is a sample text 1" > temp.txt
+
+
+This would store the echoed text in temp.txt by truncating the file, the contents will be emptied before writing.
+
+Next, consider the following example:
+
+$ echo "This is sample text 2" >> temp.txt
+
+
+This would append the text into the file.
+
+> and>> operators are different. Both of them redirect text to a file, but the first one empties the file and then writes to it, whereas the later one adds the output to the end of the existing file.
+
+View the contents of the file as follows:
+
+$ cat temp.txt
+This is sample text 1
+This is sample text 2
+
+
+When we use a redirection operator, it won't print in the terminal but it is directed to a file. When redirection operators are used, by default, it takes standard output. In order to explicitly take a specific file descriptor, you must prefix the descriptor number to the operator. 
+
+> is equivalent to 1> and similarly it applies for>> (equivalent to 1>>).
+
+Let's see what a standard error is and how you can redirect it. stderr messages are printed when commands output an error message. Consider the following example:
+
+$ ls +
+ls: cannot access +: No such file or directory
+
+
+Here + is an invalid argument and hence an error is returned.
+
+
+Successful and unsuccessful command
+
+When a command returns after error, it returns a non-zero exit status. The command returns zero when it terminates after successful completion. Return status can be read from special variable $? (run echo $? immediately after the command execution statement to print the exit status).
+
+
+
+
+The following command prints the stderr text to the screen rather than to a file: 
+
+$ ls + > out.txt
+ls: cannot access +: No such file or directory
+
+
+However, in the following command the stdout output is empty, so an empty file out.txt is generated:
+
+$ ls + 2> out.txt # works
+
+
+You can redirect stderr exclusively to a file and stdout to another file as follows:
+
+$ cmd 2>stderr.txt 1>stdout.txt
+
+
+It is also possible to redirect stderr and stdout to a single file by converting stderr to stdout using this preferred method:
+
+$ cmd 2>&1 output.txt
+
+
+or an alternate approach:
+
+$ cmd &> output.txt
+
+
+Sometimes the output may contain unnecessary information (such as debug messages). If you don't want the output terminal burdened with the stderr details, then you should redirect stderr output to /dev/null, which removes it completely. For example, consider that we have three files a1, a2, and a3. However, a1 does not have read-write-execute permission for the user. When you need to print the contents of files starting with a, you can use the cat command.
+
+Set up the test files as follows: 
+
+$ echo a1 > a1
+$ cp a1 a2 ; cp a2 a3;
+$ chmod 000 a1 #Deny all permissions
+
+
+While displaying contents of the files using wildcards (a*), it will show an error message for file a1 as it does not have the proper read permission:
+
+$ cat a*
+cat: a1: Permission denied
+a1
+a1
+
+
+Here cat: a1: Permission denied belongs to stderr data. We can redirect stderr data into a file, whereas stdout remains printed in the terminal. Consider the following code: 
+
+$ cat a* 2> err.txt #stderr is redirected to err.txt
+a1
+a1
+$ cat err.txt
+cat: a1: Permission denied
+
+
+Take a look at the following code:
+
+$ some_command 2> /dev/null
+
+
+In this case, the stderr output is dumped to the /dev/null file. /dev/null is a special device file where any data received by the file is discarded. The null device is often called the bit bucket or black hole.
+
+When redirection is performed for stderr or stdout, the redirected text flows into a file. As the text has already been redirected and has gone into the file, no text remains to flow to the next command through pipe (|), and it appears to the next set of command sequence through stdin.
+
+However, there is a tricky way to redirect data to a file as well as provide a copy of redirected data as stdin for the next set of commands. This can be done using the tee command. For example, to print the stdout in the terminal as well as redirect stdout into a file, the syntax for tee is as follows:
+
+command | tee FILE1 FILE2 
+
+In the following code, stdin data is received by the tee command. It writes a copy of stdout to the file out.txt and sends another copy as stdin for the next command. The cat n command puts a line number for each line received from stdin and writes it into stdout: 
+
+$ cat a* | tee out.txt | cat -n
+cat: a1: Permission denied
+1a1
+2a1
+
+
+Examine the contents of out.txt as follows:
+
+$ cat out.txt
+a1
+a1
+
+
+Note that cat: a1: Permission denied does not appear because it belongs to stdin. tee can read from stdin only. 
+
+By default, the tee command overwrites the file, but it can be used with appended options by providing the -a option, for example:
+
+$ cat a* | tee a out.txt | cat n.
+
+
+Commands appear with arguments in the format: command FILE1 FILE2… or simply command FILE.
+
+We can use stdin as a command argument. It can be done by using as the filename argument for the command as follows:
+
+$ cmd1 | cmd2 | cmd -
+
+
+For example:
+
+$ echo who is this | tee -
+who is this
+who is this
+
+
+Alternately, we can use /dev/stdin as the output filename to use stdin.
+
+Similarly, use /dev/stderr for standard error and /dev/stdout for standard output. These are special device files that correspond to stdin, stderr, and stdout.
+
+There's more...
+A command that reads stdin for input can receive data in multiple ways. Also, it is possible to specify file descriptors of our own using cat and pipes, for example:
+
+$ cat file | cmd
+$ cmd1 | cmd2
+
+
+Redirection from file to command
+By using redirection, we can read data from a file as stdin as follows: 
+
+$ cmd < file
+
+
+Redirecting from a text block enclosed within a script
+Sometimes we need to redirect a block of text (multiple lines of text) as standard input. Consider a particular case where the source text is placed within the shell script. A practical usage example is writing a log file header data. It can be performed as follows:
+
+#!/bin/bash
+cat <<EOF>log.txt
+LOG FILE HEADER
+This is a test log file
+Function: System statistics
+EOF
+
+
+The lines that appear between cat <<EOF >log.txt and the next EOF line will appear as stdin data. Print the contents of log.txt as follows:
+
+$ cat log.txt
+LOG FILE HEADER
+This is a test log file
+Function: System statistics
+
+
+Custom file descriptors
+A file descriptor is an abstract indicator for accessing a file. Each file access is associated with a special number called a file descriptor. 0, 1, and 2 are reserved descriptor numbers for stdin, stdout, and stderr. 
+
+We can create our own custom file descriptors using the exec command. If you are already familiar with file programming with any other programming languages, you might have noticed modes for opening files. Usually, three modes are used:
+
+Read mode
+
+Write with truncate mode
+
+Write with append mode
+
+< is an operator used to read from the file to stdin. > is the operator used to write to a file with truncation (data is written to the target file after truncating the contents).>> is an operator used to write to a file with append (data is appended to the existing file contents and the contents of the target file will not be lost). File descriptors can be created with one of the three modes.
+
+Create a file descriptor for reading a file, as follows:
+
+$ exec 3<input.txt # open for reading with descriptor number 3
+
+
+We could use it as follows:
+
+$ echo this is a test line > input.txt
+$ exec 3<input.txt
+
+
+Now you can use file descriptor 3 with commands. For example, cat <&3 as follows: 
+
+$ cat <&3
+this is a test line
+
+
+If a second read is required, we cannot reuse file descriptor 3. It is needed to reassign file descriptor 3 for read using exec for making a second read.
+
+Create a file descriptor for writing (truncate mode) as follows:
+
+$ exec 4>output.txt # open for writing
+
+
+For example:
+
+$ exec 4>output.txt
+$ echo newline >&4
+$ cat output.txt
+newline
+
+
+Create a file descriptor for writing (append mode) as follows:
+
+$ exec 5>>input.txt
+
+
+For example:
+
+$ exec 5>>input.txt
+$ echo appended line >&5
+$ cat input.txt
+newline
+appended line
+
+

@@ -1,0 +1,163 @@
+A primer on cURL
+
+
+cURL is a powerful utility that supports many protocols including HTTP, HTTPS, FTP, and much more. It supports many features including POST, cookie, authentication, downloading partial files from a specified offset, referers, user agent strings, extra headers, limit speed, maximum file size, progress bars, and so on. cURL is useful for when we want to play around with automating a web page usage sequence and to retrieve data. This recipe is a list of the most important features of cURL. 
+
+Getting ready
+cURL doesn't come with any of the main Linux distros by default, so you may have to install it using the package manager. By default, most distributions ship with wget.
+
+cURL usually dumps downloaded files to stdout and progress information to stderr. To avoid progress information from being shown, we always use the--silent option.
+
+How to do it¡­
+The curl command can be used to perform different activities such as downloading, sending different HTTP requests, specifying HTTP headers, and so on. Let's see how to perform different tasks with cURL. 
+
+$ curl URL --silent
+
+
+The above command dumps the downloaded file into the terminal (the downloaded data is written to stdout).
+
+The --silent option is used to prevent the curl command from displaying progress information. If progress information is required, remove --silent.
+
+$ curl URL -silent -O
+
+
+The -O option is used to write the downloaded data into a file with the filename parsed from the URL rather than writing into the standard output.
+
+For example:
+
+$ curl http://slynux.org/index.html --silent -O
+
+
+index.html will be created.
+
+It writes a web page or file to the filename as in the URL instead of writing to stdout. If filenames are not there in the URL, it will produce an error. Hence, make sure that the URL is a URL to a remote file. curl http://slynux.org -O --silent will display an error since the filename cannot be parsed from the URL.
+
+$ curl URL -silent -o new_filename
+
+
+The -o option is used to download a file and write to a file with a specified file name.
+
+In order to show the # progress bar while downloading, use -progress instead of -silent.
+
+$ curl http://slynux.org -o index.html --progress
+################################## 100.0%
+
+
+There's more...
+In the previous sections we have learned how to download files and dump HTML pages to the terminal. There several advanced options that come along with cURL. Let's explore more on cURL.
+
+Continue/Resume downloading
+cURL has advanced resume download features? to continue at a given offset unlike wget. It helps to download portions of files by specifying an offset. 
+
+$ curl URL/file -C offset
+
+
+The offset is an integer value in bytes.
+
+cURL doesn't require us to know the exact byte offset if we want to resume downloading a file. If you want cURL to figure out the correct resume point, use the -C - option, like this: 
+
+$ curl -C - URL
+
+
+cURL will automatically figure out where to restart the download of the specified file.
+
+Set referer string with cURL
+Referer is a string in the HTTP header used to identify the page from which the user reaches the current web page. When a user clicks on a link from web page A and it reaches web page B, the referer header string in the page B will contain a URL of page A. 
+
+Some dynamic pages check the referer string before returning HTML data. For example, a web page shows a Google logo attached page when a user navigates to a website by searching on Google, and shows a different page when they navigate to the web page by manually typing the URL. 
+
+The web page can write a condition to return a Google page if the referer is www.google.com or else return a different page.
+
+You can use --referer with the curl command to specify the referer string as follows:
+
+$ curl -referer Referer_URL target_URL
+
+
+For example:
+
+$ curl -referer http://google.com http://slynux.org
+
+
+Cookies with cURL
+Using curl we can specify as well as store cookies encountered during HTTP operations. 
+
+In order to specify cookies, use the --cookie "COOKIES" option.
+
+Cookies should be provided as name=value. Multiple cookies should be delimited by a semicolon ";". For example:
+
+$ curl http://example.com -cookie "user=slynux;pass=hack"
+
+
+In order to specify a file to which cookies encountered are to be stored, use the --cookie-jar option. For example:
+
+$ curl URL -cookie-jar cookie_file
+
+
+Setting a user agent string with cURL
+Some web pages that check the user-agent won't work if there is no user-agent specified. You may have noticed that certain websites work well only in Internet Explorer (IE). If a different browser is used, the website will show a message that it will work only on IE. This is because the website checks for a user agent. You can set the user agent as IE with curl and see that it returns a different web page in this case. 
+
+Using cURL it can be set using --user-agent or A as follows:
+
+$ curl URL -user-agent "Mozilla/5.0"
+
+
+Additional headers can be passed with cURL. Use H "Header" to pass multiple additional headers. For example:
+
+$ curl -H "Host: www.slynux.org" -H "Accept-language: en" URL
+
+
+Specifying bandwidth limit on cURL
+When the available bandwidth is limited and multiple users are sharing the Internet, in order to perform the sharing of bandwidth smoothly, we can limit the download rate to a specified limit from curl by using the --limit-rate option as follows: 
+
+$ curl URL --limit-rate 20k
+
+
+In this command k (kilobyte) and m (megabyte) specify the download rate limit.
+
+Specifying the maximum download size
+The maximum download file size for cURL can be specified using the --max-filesize option as follows: 
+
+$ curl URL --max-filesize bytes
+
+
+It will return a non-zero exit code if the file size exceeds. It will return zero if it succeeds.
+
+Authenticating with cURL
+HTTP authentication or FTP authentication can be done using cURL with the -u argument. 
+
+The username and password can be specified using -u username:password. It is possible to not provide a password such that it will prompt for password while executing.
+
+If you prefer to be prompted for the password, you can do that by using only -u username. For example:
+
+$ curl -u user:pass http://test_auth.com
+
+
+In order to be prompted for the password use: 
+
+$ curl -u user http://test_auth.com
+
+
+Printing response headers excluding data
+It is useful to print only response headers to apply many checks or statistics. For example, to check whether a page is reachable or not, we don't need to download the entire page contents. Just reading the HTTP response header can be used to identify if a page is available or not. 
+
+An example usage case for checking the HTTP header is to check the file size before downloading. We can check the Content-Length parameter in the HTTP header to find out the length of a file before downloading. Also, several useful parameters can be retrieved from the header. The Last-Modified parameter? enables to know the last modification time for the remote file.
+
+Use the I or head option with curl to dump only HTTP headers without downloading the remote file. For example:
+
+Code View: Scroll / Show All
+$ curl -I http://slynux.org
+HTTP/1.1 200 OK
+Date: Sun, 01 Aug 2010 05:08:09 GMT
+Server: Apache/1.3.42 (Unix) mod_gzip/1.3.26.1a mod_log_bytes/1.2 mod_bwlimited/1.4 mod_auth_passthrough/1.8 FrontPage/5.0.2.2635 mod_ssl/2.8.31 OpenSSL/0.9.7a
+Last-Modified: Thu, 19 Jul 2007 09:00:58 GMT
+ETag: "17787f3-3bb0-469f284a"
+Accept-Ranges: bytes
+Content-Length: 15280
+Connection: close
+Content-Type: text/html
+
+
+					  
+
+See also
+Posting to a web page and reading response 

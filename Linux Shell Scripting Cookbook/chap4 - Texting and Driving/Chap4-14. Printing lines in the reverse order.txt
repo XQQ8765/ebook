@@ -1,0 +1,41 @@
+Printing lines in the reverse order
+
+
+This is a simple recipe. It may not seem very useful but it can be used to emulate the stack data structure in Bash. This is something interesting. Let's print the lines of text in a file in reverse order. 
+
+Getting ready
+A little hack with awk can do the task. However, there is a direct command tac to do the same as well. tac is the reverse of cat.
+
+How to do it...
+Let's do it with tac first. The syntax is as follows:
+
+tac file1 file2 бн
+
+
+It can also read from stdin as follows:
+
+$ seq 5 | tac
+5
+4
+3
+2
+1
+
+
+In tac, \n is the line separator. But we can also specify our own separator by using the -s"separator" option. 
+
+Let's do it in awk as follows:
+
+$ seq 9 | \
+awk '{ lifo[NR]=$0; lno=NR }
+END{ for(;lno>-1;lno--){ print lifo[lno]; }
+}'
+
+
+\ in the shell script is used to conveniently break a single line command sequence into multiple lines.
+
+How it works...
+The awk script is very simple. We store each of the lines into an associative array with the line number as array index (NR gives line number). In the end, awk executes the END block. In order to get last line number lno=NR is used in the { } block. Hence it iterates from the last line number to 0 and prints the lines stored in the array in reverse order.
+
+See also
+Implementing head, tail, and tac with awk, explains writing tac using awk

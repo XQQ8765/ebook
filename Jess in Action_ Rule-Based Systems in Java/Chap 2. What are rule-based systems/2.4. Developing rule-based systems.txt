@@ -1,0 +1,39 @@
+2.4. Developing rule-based systems
+This book is a hands-on guide to building useful rule-based systems. Each individual project in this book covers some aspect of this task, presenting realistic examples of every step along the way. In this section, we look at an overview of the development process we will follow in later chapters.
+
+2.4.1. Knowledge engineering
+The first step in the development of any rule-based system is to begin collecting the knowledge from which the rules will be derived. People who do this for a living are called knowledge engineers. Knowledge engineering can be tricky, particularly if the knowledge has to come from human experts. Experts aren¡¯t always cooperative, and even if they are, they don¡¯t always know how to explain the procedures they follow. On the other hand, many experts respond well to interviews, and you can ask questions to fill in gaps in the expert¡¯s explanations.
+
+If you are developing a rule-based system that is strictly based on a procedures manual or other document, or if a human expert is not available, then the knowledge may be collected directly from written sources. Collecting knowledge from books and other reference material has its own advantages and disadvantages. Although books are generally more organized than human experts, they can be lacking in the kind of practical rules of thumb (or heuristics) that a practitioner can supply. On the other hand, you rarely have scheduling and other logistical problems when attempting to read a book, but these can be annoying obstacles when working with a human expert.
+
+Another important aspect of knowledge engineering is organizing and structuring knowledge. A typical rule-based system contains hundreds or thousands of rules. Organizing the collected knowledge so that translation to rules will be straightforward is a challenging task for the knowledge engineer.
+
+We¡¯ll discuss the knowledge engineering process in greater detail in chapter 9.
+
+2.4.2. Structuring data
+When all the knowledge has been collected, the task of programming the system begins. The best first step is to examine the knowledge and design data structures that will make it easy to implement the rules clearly and directly. This process resembles object-oriented analysis. First, the major concepts are identified. For an employee benefits consultant, these might include employee, health plan, claim, time, and money. The important thing at this stage is to identify all the concepts referred to in the collected knowledge¡ªthe irrelevant ones can be removed later.
+
+Then, you list all the variable characteristics of each concept: Employees have a name, a health plan, years of service, and a salary, among other things. Again, at this stage you try to identify all the characteristics mentioned in the collected knowledge. The pants-color and position templates in chapter 1 were simple examples of data structures for working memory elements. Designing data structures for rule-based systems is discussed in chapter 10.
+
+2.4.3. Testing
+You may wonder why I¡¯m mentioning testing now, when you haven¡¯t written any code yet. Actually, this is the perfect time to begin testing a rule-based system: at the beginning. If rigorous tests are applied to the system at every stage of its development, it will naturally be more robust, more modular, and better understood than a system that wasn¡¯t tested until the end. Therefore, before writing a group of rules, you should develop an automated test to exercise them. You can write tests in Java, in your rule language, or in a convenient scripting language. You should run all the tests you have written quite often, ideally each time a change is made to the system. When the final system is delivered, the tests can be part of the deliverable¡ªthey will be a great help to anyone who needs to modify the system in the future.
+
+How do you develop tests? Some tests will be very small and check intermediate results, whereas others will be fully worked problems. In the former case, you might develop the test by yourself. The larger tests, though, should be based when possible on actual case studies of how problems were solved in the past.
+
+It is important that the tests be automated, so no human checking of results is required; otherwise the tests will require too much effort to run and will not be used. It helps to have an automated test framework¡ªyou can often quickly develop one yourself using Perl, shell scripts, or similar scripting facilities. This testing technique, known as test-driven development, is one facet of eXtreme Programming,[4] a methodology that is rapidly gaining acceptance in many computer programming fields. An automated test framework that I use for testing Jess programs is described in appendix C.
+
+[4] K. Beck, Extreme Programming Explained: Embrace Change (Reading, Mass.: Addison-Wesley), 2000.
+
+2.4.4. Interface building
+For most rule-based systems to do any useful work, they need to be connected in some way to their environment. Sometimes this means database access; other times it means directly reading values from sensors and sending commands to embedded hardware. Before you begin to code your rules, you try to develop a picture of what your system will need to realize these connections. Depending on your development environment, your rules may already have a built-in ability to connect to all the data sources and sinks they¡¯ll need to reach, directly from the rule language. In other situations, you may need to write interface code in another language. If you do, I hope you¡¯ll use test-first programming to develop it. We¡¯ll look at interface building many times throughout this book.
+
+2.4.5. Writing the rules
+Once the data structures are defined, the interfaces are specified, and the tests are in place, it¡¯s time to begin writing the rules. As in all programming, this process involves a significant amount of art; there are always multiple ways to accomplish a task. The good news is that because each rule can be independent of the others, rule-based programs can be developed iteratively: code a little, test a little, and then code some more. The bad news is that it¡¯s relatively easy to write unstructured rule-based programs, which can become hard to understand.
+
+You can give structure to your rule-based programs by thinking in terms of phases or modules, groups of rules that are the only ones relevant at specific phases of the execution of your system. Most rule development languages offer explicit support for this kind of modularity, and it¡¯s a good idea to use it whenever possible. The driving robot¡¯s rules might be divided into separate modules devoted to starting the car, parking the car, city driving, highway driving, passing other cars, and so on. By breaking rules into small groups, you can make a rule-based program easier to write and to understand. We¡¯ll first study writing rules for a real application (an information kiosk) in chapter 11.
+
+2.4.6. Iterative development
+Once you¡¯ve developed some rules, you¡¯ll often find that you don¡¯t have all the information you need to write more. When this happens, you¡¯ll need to go back to the source and do some more knowledge engineering. The development of a rule-based system lends itself well to this sort of iterative procedure. You can show the early incarnations of the system to the human experts, if they exist, and ask them for corroboration of the results. You might have to change your tests, if the experts disagree with what they are testing.
+
+It¡¯s also worthwhile to have another knowledge engineer look over your work at this point. Code reviews are amazingly effective at finding problems with software before a release, and they work for rule-based software as well. Whether you hold formal code reviews or just ask a friend for advice, a second pair of eyes can really help to increase the quality of your work.
+

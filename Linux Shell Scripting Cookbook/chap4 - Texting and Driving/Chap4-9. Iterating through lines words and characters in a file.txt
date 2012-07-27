@@ -1,0 +1,57 @@
+Iterating through lines, words, and characters in a file
+
+
+Iterating through character, word, and lines in a file is a frequently required script element while writing different text processing and file operation scripts. Even though it is simple to perform, we make simple mistakes and it gets erroneous without getting the expected output. This recipe will help you out to learn how to do it. 
+
+Getting ready
+Iteration with a simple loop and redirection from stdin or file are basic components of performing the mentioned tasks.
+
+How to do it...
+In this recipe we discuss about performing three tasks of iterating through line, word, and characters. Let's see how each of these tasks can be performed.
+
+1. Iterate through each line in a file: 
+
+We can use a while loop to read from standard input. Hence it will read a line in each iteration. 
+
+Use file redirection to stdin as follows: 
+
+while read line;
+do
+echo $line;
+done < file.txt
+Use subshell as follows: 
+
+cat file.txt | ( while read line; do echo $line; done )
+Here cat file.txt can be replaced with the output of any command sequence. 
+
+2. Iterate through each word in a line 
+
+We can use a while loop to iterate through words in a line as follows: 
+
+for word in $line;
+do
+echo $word;
+done
+
+
+3. Iterate through each character in a word 
+
+We can use a for loop to iterate a variable i from 0 to the length of string. A character can be extracted from the string in each iteration using the special notation ${string:start_position:No_of_characters}. 
+
+for((i=0;i<${#word};i++))
+do
+echo ${word:i:1} ;
+done
+
+
+How it works...
+Reading lines of a file and reading words in a line are direct ways. But reading a character of a word is a little hack. We use the substring extraction technique.
+
+${word:start_position:no_of_characters} returns a substring of a string held in variable word.
+
+${#word} returns the length of the variable word.
+
+See also
+Field separators and iterators of Chapter 1, explains different loops in Bash.
+
+Text slicing and parameter operations, explains extracting characters from a string.

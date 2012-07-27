@@ -1,0 +1,31 @@
+2.2. Rules and rule engines
+A rule is a kind of instruction or command that applies in certain situations. ¡°No chewing gum in school,¡± ¡°no running with scissors,¡± and other rules of that ilk, are some of the first explicit rules we learn. ¡°Where there is smoke, there¡¯s fire¡± and Murphy¡¯s Law (¡°Whatever can go wrong, will go wrong¡±) are others that we learn throughout our lives.[1] Using this very general definition, you might conclude that all the knowledge you have about the world can be encoded as rules. Experience shows that this is often (but not always) the case. In general, any information you can think about in logical terms can be expressed as rules.
+
+[1] One reviewer pointed out that this popular proverb is properly called Finagle¡¯s Law, and that the original formulation of Murpny¡¯s Law was, ¡°If there are two or more ways to do something, and one of those ways can result in a catastrophe, then someone will do it.¡± I chose not to go against popular usage here, but the pedant in me appreciated this fact enough to add a footnote. For more information, see The Jargon File¡ªfor instance, http://info.astrian.net/jargon/terms/f/Finagle_s_Law.html.
+
+Rules are a lot like the if-then statements of traditional programming languages. You might write a gum-chewing rule like this, in an English-like pseudocode:
+
+IF
+    I am in school
+AND I am chewing gum
+THEN
+    spit out the gum
+END
+
+The if part of a rule written in this form is often called its left-hand side (often abbreviated LHS), predicate, or premises; and the then part is the right hand side (RHS), actions, or conclusions.
+
+The domain of a rule is the set of all information the rule could possibly work with. In this hypothetical case, the domain of the chewing rule is a set of facts about the location and oral fixations of one particular person.
+
+A rule-based system is a system that uses rules to derive conclusions from premises: Given the gum-chewing rule and the premise that you are in school, you (as an advanced kind of rule-based system yourself) might conclude that it¡¯s time to spit out your gum. In this book, the systems we¡¯re talking about are a specific category of computer programs. These programs are sometimes called rule engines. A rule engine doesn¡¯t contain any rules until they are programmed in. A rule engine knows how to follow rules, without containing any specific knowledge itself.
+
+A rule engine is generally part of a rule development and deployment environment. The features offered by these environments vary widely, depending on the intended applications for the rule engine and on the type of programmer intended to develop the systems. This book will show you how to develop and deploy rule-based systems in general. To do so, it will use the Jess rule engine in all its examples.
+
+2.2.1. Expert systems
+Expert systems, rule-based computer programs that capture the knowledge of human experts in their own fields of expertise, were a success story for artificial intelligence research in the 1970s and 1980s. Early, successful expert systems were built around rules (sometimes called heuristics) for medical diagnosis, engineering, chemistry, and computer sales. One of the early expert system successes was MYCIN,[2] a program for diagnosing bacterial infections of the blood. Expert systems had a number of perceived advantages over human experts. For instance, unlike people, they could perform at peak efficiency, 24 hours a day, forever. There are numerous dramatic examples in the computer science literature of these early systems matching or exceeding the performance of their human counterparts in specific, limited situations. Predictions were made that someday, sophisticated expert systems would be able to reproduce general human intelligence and problem-solving abilities.
+
+[2] R. Davis, B. G. Buchanan, and E. H. Shortliffe, ¡°Production Systems as a Representation for a Knowledge-Based Consultation Program,¡± Artifical Intelligence 8 (1977): 15¨C45.
+
+Over time, of course, the drama receded, and it became clear that researchers had vastly underestimated the complexity of the common-sense knowledge that underpins general human reasoning. Nevertheless, excellent applications for expert systems remain to this day. Modern expert systems advise salespeople, scientists, medical technicians, engineers, and financiers, among others.
+
+Today, general rule-based systems, both those intended to replace human expertise and those intended to automate or codify business practices or other activities, are a part of virtually every enterprise. These systems are routinely used to order supplies, monitor industrial processes, prescreen r¨¦sum¨¦s, route telephone calls, and process web forms. Many commercial application servers incorporate a rule engine, and most others explicitly or implicitly offer integration with one. Expert systems really have become ubiquitous¡ªwe just don¡¯t call them by that name anymore.
+

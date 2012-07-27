@@ -1,0 +1,40 @@
+Removing a sentence in a file containing a word
+
+
+Removing a sentence containing a word is a simple task when a correct regular expression is identified. This is just an exercise on solving similar problems. 
+
+Getting ready
+sed is the best utility for making substitutions. Hence let's use sed to replace the matched sentence with a blank. 
+
+How to do it...
+Let's create a file with some text to carry out the substitutions. For example:
+
+Code View: Scroll / Show All
+$ cat sentence.txt
+Linux refers to the family of Unix-like computer operating systems that use the Linux kernel. Linux can be installed on a wide variety of computer hardware, ranging from mobile phones, tablet computers and video game consoles, to mainframes and supercomputers. Linux is predominantly known for its use in servers. It has a server market share ranging between 20 40%. Most desktop computers run either Microsoft Windows or Mac OS X, with Linux having anywhere from a low of an estimated 1 2% of the desktop market to a high of an estimated 4.8%. However, desktop use of Linux has become increasingly popular in recent years, partly owing to the popular Ubuntu, Fedora, Mint, and openSUSE distributions and the emergence of netbooks and smart phones running an embedded Linux.
+
+
+					  
+
+We will remove the sentence containing the words "mobile phones". Use the following sed expression for this task:
+
+Code View: Scroll / Show All
+$ sed 's/ [^.]*mobile phones[^.]*\.//g' sentence.txt
+Linux refers to the family of Unix-like computer operating systems that use the Linux kernel. Linux is predominantly known for its use in servers. It has a server market share ranging between 20 40%. Most desktop computers run either Microsoft Windows or Mac OS X, with Linux having anywhere from a low of an estimated 1 2% of the desktop market to a high of an estimated 4.8%. However, desktop use of Linux has become increasingly popular in recent years, partly owing to the popular Ubuntu, Fedora, Mint, and openSUSE distributions and the emergence of netbooks and smart phones running an embedded Linux.
+
+
+					  
+
+How it works...
+Let's evaluate the sed regex's/ [^.]*mobile phones[^.]*\.//g'. 
+
+It has the format's/substitution_pattern/replacement_string/g.
+
+It replaces every occurrence of substitution_pattern with the replacement string.
+
+Here the substitution pattern is the regex for a sentence. Every sentence is delimited by "." and the first character is a space. Therefore, we need to match the text that is in the format "space" some text MATCH_STRING some text "dot". A sentence may contain any characters except a "dot", which is the delimiter. Hence we have used [^.]. [^.]* matches a combination of any characters except dot. In between the text match string "mobile phones" is placed. Every match sentence is replaced by // (nothing).
+
+See also
+Basic sed primer, explains the sed command
+
+Basic regular expression primer, explains how to use regular expressions

@@ -1,0 +1,47 @@
+Printing the 10 most frequently-used commands
+
+
+Terminal is the tool used to access the shell prompt where we type and execute commands. Users run many commands in the shell. Many of them are frequently used. A user's nature can be identified easily by looking at the commands he frequently uses. This recipe is a small exercise to find out 10 most frequently-used commands. 
+
+Getting ready
+Bash keeps track of previously typed commands by the user and stores in the file ~/.bash_history. But it only keeps a specific number (say 500) of the recently executed commands. The history of commands can be viewed by using the command history or cat ~/.bash_history. We will use this for finding out frequently-used commands.
+
+How to do it...
+We can get the list of commands from ~/.bash_history, take only the command excluding the arguments, count the occurrence of each command, and find out the 10 commands with the highest count.
+
+The following script can be used to find out frequently-used commands:
+
+#!/bin/bash
+#Filename: top10_commands.sh
+#Description: Script to list top 10 used commands
+printf "COMMAND\tCOUNT\n" ;
+cat ~/.bash_history | awk '{ list[$1]++; } \
+END{
+for(i in list)
+{
+printf("%s\t%d\n",i,list[i]); }
+}'| sort -nrk 2 | head
+
+
+A sample output is as follows:
+
+$ ./top10_commands.sh
+COMMAND COUNT
+ping 80
+ls 56
+cat 35
+ps 34
+sudo 26
+du 26
+cd 26
+ssh 22
+sftp 22
+clear 21
+
+
+How it works...
+In the above script, the history file ~/.bash_history is the source file used. The source input is passed to awk through a pipe. Inside awk, we have an associative array list. This array can use command names as index and it stores the count of the commands in array locations. Hence for each arrival or occurrence of a command it will increment by one (list[$1]++). $1 is used as the index. $1 is the first word of text in a line input. If $0 were used it would contain all the arguments for the command also. For example, if ssh 192.168.0.4 is a line from .bash_history, $0 equals to ssh 192.168.0.4 and $1 equals to ssh. 
+
+Once all the lines of the history files are traversed, we will have the array with command names as indexes and their count as the value. Hence command names with maximum count values will be the commands most frequently used. Hence in the END{} block of awk, we traverse through the indexes of commands and print all command names and their counts. sort -nrk 2 will perform a numeric sort based on the second column (COUNT) and reverse it. Hence we use the head command to extract only the first 10 commands from the list. You can customize the top 10 to top 5 or any other number by using the argument head -n NUMBER.
+
+

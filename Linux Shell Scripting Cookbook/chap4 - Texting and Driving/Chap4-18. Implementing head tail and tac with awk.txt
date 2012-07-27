@@ -1,0 +1,47 @@
+Implementing head, tail, and tac with awk
+
+
+Mastering text-processing operations comes with practice. This recipe will help us practice incorporating some of the commands that we have just learned with some that we already know. 
+
+Getting ready
+The commands head, tail, uniq, and tac operate line by line. Whenever we need line by line processing, we can always use awk. Let's emulate these commands with awk.
+
+How to do it...
+Let's see how different commands can be emulated with different basic text processing commands, such as head, tail, and tac.
+
+The head command reads the first ten lines of a file and prints them out: 
+
+$ awk 'NR <=10' filename
+
+
+The tail command prints the last ten lines of a file: 
+
+Code View: Scroll / Show All
+$ awk '{ buffer[NR % 10] = $0; } END { for(i=1;i<11;i++) { print buffer[i%10] } }' filename
+
+
+					  
+
+The tac command? prints the lines of input file in reverse order: 
+
+Code View: Scroll / Show All
+$ awk '{ buffer[NR] = $0; } END { for(i=NR; i>0; i--) { print buffer[i] } }' filename
+
+
+					  
+
+How it works...
+In the implementation of head using awk, we print the lines in the input stream having a line number less than or equal to 10. The line number is available using the special variable NR. 
+
+In the implementation of the tail command a hashing technique is used. The buffer array index is determined by a hashing function NR % 10, where NR is the variable that contains the Linux number of current execution. $0 is the line in the text variable. Hence % maps all the lines having the same remainder in the hash function to a particular index of an array. In the END{} block, it can iterate through ten index values of an array and print the lines stored in a buffer.
+
+In the tac command emulation, it simply stores all the lines in an array. When it appears in the END{} block, NR will be holding the line number of the last line. Then it is decremented in a for loop until it reaches 1 and it prints the lines stored in each iteration statement. 
+
+See also
+Basic awk primer, explains the awk command
+
+head and tail - printing the last or first 10 lines of Chapter 3, explains the commands head and tail
+
+Sorting, unique and duplicates of Chapter 2, explains the uniq command
+
+Printing lines in reverse order, explains the tac command

@@ -1,0 +1,100 @@
+Concatenating with cat
+
+
+cat is one of the first commands which a command line warrior must learn. cat is a beautiful and simple command. It is usually used to read, display, or concatenate the contents of a file, but cat is capable of more than just that. 
+
+Getting ready
+We scratch our heads when we need to combine standard input data as well as data from a file using a single-line command. The regular way of combining stdin data as well as file data is to redirect stdin to a file and then append two files. But we can use the cat command to do it easily in a single invocation. 
+
+How to do it...
+The cat command is a very simple command that is used very frequently in daily life. cat stands for concatenate. 
+
+The general syntax of cat for reading a file's contents is: 
+
+$ cat file1 file2 file3 ...
+
+
+This command outputs concatenated data from the files with file names provided as command-line arguments. For example:
+
+$ cat file.txt
+This is a line inside file.txt
+This is the second line inside file.txt
+
+
+How it works…
+There are a lot of features that come along with cat. Let's walk through several usage techniques that are possible with cat. 
+
+The cat command not only can read from files and concatenate the data, but also can read the input from the standard input.
+
+In order to read from the standard input, use a? pipe operator as follows: 
+
+OUTPUT_FROM_SOME COMMANDS | cat 
+
+Similarly, we can concatenate content from input files along with standard input using cat. Combine stdin and data from another file, as follows: 
+
+$ echo 'Text through stdin' | cat file.txt
+
+
+In this code - acts as filename for stdin text.
+
+There's more...
+The cat command has few other options for viewing files. Let's go through them.
+
+Squeezing blank lines
+Sometimes many empty lines in text need to be squeezed into one to make it readable or for some other purpose. Squeeze adjacent blank lines in a text file by using the following syntax: 
+
+$ cat -s file
+
+
+For example:
+
+$ cat multi_blanks.txt
+line 1
+line2
+line3
+line4
+$ cat -s multi_blanks.txt # Squeeze adjacent blank lines
+line 1
+line2
+line3
+line4
+
+
+Alternately, we can remove all blank lines by using tr as follows: 
+
+$ cat multi_blanks.txt | tr -s '\n'
+line 1
+line2
+line3
+line4
+
+
+In the above usage of tr, it squeezes adjacent '\n' characters into a single '\n' (newline character). 
+
+Displaying tabs as ^I
+It is hard to distinguish tabs and repeated space characters. While writing programs in languages like Python, it keeps special meaning for tabs and spaces for indentation purposes. They are treated differently. Therefore, the use of tab instead of spaces causes problems in indentation. It may become difficult to track where the misplacement of the tab or space occurred by looking through a text editor. cat has a feature that can highlight tabs. This is very helpful in debugging indentation errors. Use the? T option with cat to highlight tab characters as ^I. An example is as follows: 
+
+$ cat file.py
+def function():
+var = 5
+next = 6
+third = 7
+$ cat -T file.py
+def function():
+^Ivar = 5
+next = 6
+^Ithird = 7^I
+
+
+Line numbers
+Using the n flag for the cat command will output each line with a line number prefixed. It is to be noted that the cat command never changes a file; instead it produces an output on stdout with modifications to input according to the options provided. For example: 
+
+$ cat lines.txt
+line
+line
+line
+$ cat -n lines.txt
+1 line
+2 line
+3 line
+

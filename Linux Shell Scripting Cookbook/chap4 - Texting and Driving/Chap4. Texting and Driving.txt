@@ -1,0 +1,49 @@
+Chapter 4. Texting and Driving
+
+
+In this chapter, we will cover:
+
+A basic regular expression primer
+
+Searching and mining "text" inside a file with grep
+
+Column-wise cutting of a file with cut
+
+Determining the frequency of words used in a given file
+
+A basic sed primer
+
+A basic awk primer
+
+Replacing strings from a text or file
+
+Compressing or decompressing JavaScript
+
+Iterating through lines, words, and characters in a file
+
+Merging multiple files as columns
+
+Printing the nth word or column in a file or line
+
+Printing text between line numbers or patterns
+
+Checking palindrome strings with a script
+
+Printing lines in the reverse order
+
+Parsing e-mail address and URLs from text
+
+Printing a set number of lines before or after a pattern in a file
+
+Removing a sentence in a file containing a word
+
+Implementing head, tail, and tac with awk
+
+Text slicing and parameter operations
+
+Introduction
+The Shell Scripting language is packed with essential problem-solving components for UNIX/Linux systems. Bash can always provide some quick solutions to the problems in a UNIX environment.? Text processing is one of the key areas where shell scripting is used. It comes with beautiful utilities such as sed, awk, grep, cut, and so on, which can be combined to solve text processing related problems. Most of the programming languages are designed to be generic, and hence it takes a lot of effort to write programs that can process text and produce the desired output. Since Bash is a language that is designed by also keeping text processing in mind, it has a lot of functionalities. 
+
+Various utilities help to process a file in fine detail as a character, line, word, column, row, and so on. Hence we can manipulate a text file in many ways. Regular expressions are the core of pattern matching techniques. Most of the text processing utilities come with regular expression support. By using suitable regular expression strings, we can produce the desired output such as filtering, stripping, replacing, searching, and much more.
+
+This chapter includes a collection of recipes, which walks through many contexts of problems based on text processing that will be helpful in writing real scripts.

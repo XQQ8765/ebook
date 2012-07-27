@@ -1,0 +1,245 @@
+Sorting, unique and duplicates
+
+
+Sorting is a common task that we always encounter with text files. Hence, in text processing tasks, sort is very useful. sort commands help us to perform sort operations over text files and stdin. Most often, it can also be coupled with many other commands to produce the required output. uniq is another command that is often used along with a sort command. It helps to extract unique lines from a text or stdin. sort and uniq can be coupled to find duplicates. This recipe illustrates most of the use cases with sort and uniq commands. 
+
+Getting ready
+The sort command accepts input as filenames as well as from stdin (Standard input) and outputs the result by writing into stdout. The uniq command follows the same sequence of operation. 
+
+How to do it...
+We can easily sort a given set of files (for example, file1.txt and file2.txt) as follows:
+
+$ sort file1.txt file2.txt .. > sorted.txt
+
+
+Or:
+
+$ sort file1.txt file2.txt .. -o sorted.txt
+
+
+In order to find the unique lines from a sorted file, use:
+
+$ cat sorted_file.txt | uniq> uniq_lines.txt
+
+
+How it works…
+There are numerous scenarios where sort and uniq commands can be used. Let's go through various options and usage techniques. 
+
+For numerical sort use:
+
+$ sort -n file.txt
+
+
+To sort in reverse order use:
+
+$ sort -r file.txt
+
+
+For sorting by months (in the order Jan, Feb, March) use:
+
+$ sort -M months.txt
+
+
+A file can be tested whether sorted or not as follows:
+
+#!/bin/bash
+#Desc: Sort
+sort -C file ;
+if [ $? -eq 0 ]; then
+echo Sorted;
+else
+echo Unsorted;
+fi
+# If we are checking numerical sort, it should be sort -nC
+
+
+In order to merge two sorted files without sorting again, use: 
+
+$ sort -m sorted1 sorted2
+
+
+There's more...
+Sort according to the keys or columns
+We use sort by column if we need to sort a text as follows: 
+
+$ cat data.txt
+1 mac 2000
+2 winxp 4000
+3 bsd 1000
+4 linux 1000
+
+
+We can sort this in many ways; currently it is numeric sorted by serial number (the first column). We can also sort by second column and third column.
+
+-k specifies the key by which the sort is to be performed. Key is the column number by which sort is to be done. -r? specifies the sort command to sort in the reverse order. For example:
+
+# Sort reverse by column1
+$ sort -nrk 1 data.txt
+4 linux 1000
+3 bsd 1000
+2 winxp 4000
+1 mac 2000
+# -nr means numeric and reverse
+# Sort by column 2
+$ sort -k 2 data.txt
+3 bsd 1000
+4 linux 1000
+1 mac 2000
+2 winxp 4000
+
+
+
+Always be careful about the -n option for numeric sort. The sort command treats alphabetical sort and numeric sort differently. Hence, in order to specify numeric sort the n option should be provided.
+
+
+
+
+Usually, by default, keys are columns in the text file. Columns are separated by space characters. But in certain circumstances, we will need to specify keys as a group of characters in the given character number range (for example, key1= character4-character8). In such cases where keys are to be specified explicitly as a range of characters, we can specify the keys as ranges with the character position at key starts and key ends as follows: 
+
+$ cat data.txt
+1010hellothis
+2189ababbba
+7464dfddfdfd
+$ sort -nk 2,3 data.txt
+
+
+The highlighted characters are to be used as numeric keys. In order to extract them, use their start-pos and end-pos as the key format.
+
+In order to use the first character as the key, use:
+
+$ sort -nk 1,1 data.txt
+
+
+Make the sort's output xargs compatible with \0 terminator, by using the following command:
+
+$ sort -z data.txt | xargs -0
+#Zero terminator is used to make safe use with xargs
+
+
+Sometimes the text may contain unnecessary extraneous characters like spaces. To sort by ignoring them in dictionary order by ignoring punctuations and folds, use:
+
+$ sort -bd unsorted.txt
+
+
+The option b is used to ignore leading blanks from the file and the d option is used to specify sort in the dictionary order. 
+
+uniq
+uniq is a command used to find out the unique lines from the given input (stdin or from filename as command argument) by eliminating the duplicates. It can also be used to find out the duplicate lines from the input. uniq can be applied only for sorted data input. Hence, uniq is to be used always along with the sort command using pipe or using a sorted file as input. 
+
+You can produce the unique lines (unique lines means that all lines in the input are printed, but the duplicate lines are printed only once) from the given input data as follows:
+
+$ cat sorted.txt
+bash
+foss
+hack
+hack
+$ uniq sorted.txt
+bash
+foss
+hack
+
+
+Or:
+
+$ sort unsorted.txt | uniq
+
+
+Or:
+
+$ sort -u unsorted.txt
+
+
+Display only unique lines (the lines which are not repeated or duplicate in input file) as follows: 
+
+$ uniq -u sorted.txt
+bash
+foss
+
+
+Or:
+
+$ sort unsorted.txt | uniq -u
+
+
+In order to count how many times each of the line appears in the file, use the following command:
+
+$ sort unsorted.txt | uniq -c
+1 bash
+1 foss
+2 hack
+
+
+Find duplicate lines in the file as follows:
+
+$ sort unsorted.txt | uniq -d
+hack
+
+
+To specify keys, we can use the combination of -s and -w arguments.
+
+-s specifies the number for the first N characters to be skipped
+
+-w specifies the maximum number of characters to be compared
+
+This comparison key is used as the index for the uniq operation as follows:
+
+$ cat data.txt
+u:01:gnu
+d:04:linux
+u:01:bash
+u:01:hack
+
+
+We need to use the highlighted characters as the uniqueness key. This is used to ignore the first 2 characters (-s 2) and the max number of comparison characters is specified using the w option (-w 2): 
+
+$ sort data.txt | uniq -s 2 -w 2
+d:04:linux
+u:01:bash
+
+
+While we use output from one command as input to the xargs command, it is always preferable to use a zero byte terminator for each of the lines of the output, which acts as source for xargs. While using the uniq commands output as the source for xargs, we should use a zero terminated output. If a zero byte terminator is not used, space characters are by default taken as delimiter to split the arguments in the xargs command. For example, a line with text "this is a line" from stdin will be taken as four separate arguments by the xargs. But, actually, it is a single line. When a zero byte terminator is used, \0 is used as the delimiter character and hence, a single line including space is interpreted as a single argument.
+
+Zero byte terminated output can be generated from the uniq command as follows:
+
+$ uniq -z file.txt
+
+
+The following command removes all the files, with filenames read from files.txt: 
+
+$ uniq z file.txt | xargs -0 rm
+
+
+If multiple line entries of filenames exist in the file, the uniq command writes the filename only once to stdout.
+
+String pattern generation with uniq
+Here is an interesting question for you: We have a string containing repeated characters. How can we find the number of times each of the character appears in the string and output a string in the following format? 
+
+Input: ahebhaaa
+
+Output: 4a1b1e2h
+
+Each of the characters is repeated once, and each of them is prefixed with the number of times they appear in the string. We can solve this using uniq and sort as follows:
+
+Code View: Scroll / Show All
+INPUT= "ahebhaaa"
+OUTPUT=` echo $INPUT | sed 's/[^\n]/&\n/g' | sed '/^$/d' | sort | uniq -c | tr -d ' \n'`
+echo $OUTPUT
+
+
+					  
+
+In the above code, we can split each of the piped commands as follows:
+
+echo $INPUT # Print the input to stdout
+sed 's/./&\n/g'
+
+
+Append a newline character to each of the characters so that only one character appears in one line. This is done to make the characters sortable by using the sort command. The sort command can take only items delimited by newline. 
+
+sed '/^$/d': Here the last character is replaced as character +\n. Hence an extra newline is formed and it will form a blank line at the end. This command removes the blank line from the end.
+
+sort: Since each character appears in each line, it can be sorted so that it can serve as input to uniq.
+
+uniq c: This command prints each of the line with how many times they got repeated(count).
+
+tr d ' \n': This removes the space characters and newline characters from the input so that output can be produced in the given format.

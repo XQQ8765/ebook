@@ -1,0 +1,31 @@
+Chapter 5. Tangled Web? Not At All!
+
+
+In this chapter, we will cover:
+
+Downloading from a web page
+
+Downloading a web page as formatted plain text
+
+A primer on cURL
+
+Accessing unread Gmail mails from the command line
+
+Parsing data from a website
+
+Creating an image crawler and downloader
+
+Creating a web photo album generator
+
+Building a Twitter command-line client
+
+Define utility with Web backend
+
+Finding broken links in a website
+
+Tracking changes to a website
+
+Posting to a web page and reading response
+
+Introduction
+The Web is becoming the face of technology. It is the central access point for data processing. Though shell scripting cannot do everything that languages like PHP can do on the Web, there are still many tasks to which shell scripts are ideally suited. In this chapter we will explore some recipes that can be used to parse website content, download and obtain data, send data to forms, and automate website usage tasks and similar activities. We can automate many activities that we perform interactively through a browser with a few lines of scripting. Access to the functionalities provided by the HTTP protocol with command-line utilities enables us to write scripts that are suitable to solve most of the web-automation utilities. Have fun while going through the recipes of this chapter. 

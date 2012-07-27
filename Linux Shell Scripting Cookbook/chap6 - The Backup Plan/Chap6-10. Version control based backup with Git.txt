@@ -1,0 +1,157 @@
+Version control based backup with Git
+People use different strategies in backing up data. Differential backups are more efficient than making copies of the entire source directory to a target the backup directory with the version number using date or time of a day. It causes wastage of space. We only need to copy the changes that occurred to files from the second time that the backups occur. This is called incremental backups. We can manually create incremental backups using tools like rsync. But restoring this sort of backup can be difficult. The best way to maintain and restore changes is to use version control systems. They are very much used in software development and maintenance of code, since coding frequently undergoes changes. Git (GNU it) is a very famous and is the most efficient version control systems available. Let's use Git for backup of regular files in non-programming context. Git can be installed by your distro's package manager. It was written by Linus Torvalds. 
+
+Getting ready
+Here is the problem statement:
+
+We have a directory that contains several files and subdirectories. We need to keep track of changes occurring to the directory contents and back them up. If data becomes corrupted or goes missing, we must be able to restore a previous copy of that data. We need to backup the data at regular intervals to a remote machine. We also need to take the backup at different locations in the same machine (localhost). Let's see how to implement it using Git. 
+
+How to do it...
+In the directory which is to be backed up use:
+
+$ cd /home/data/source
+
+
+Let it be the directory source to be tracked.
+
+Set up and initiate the remote backup directory. In the remote machine, create the backup destination directory:
+
+$ mkdir -p /home/backups/backup.git
+$ cd /home/backups/backup.git
+$ git init --bare
+
+
+The following steps are to be performed in the source host machine:
+
+1. Add user details to Git in the source host machine:
+
+$ git config --global user.name "Sarath Lakshman"
+#Set user name to "Sarath Lakshman"
+$ git config --global user.email slynux@slynux.com
+# Set email to slynux@slynux.com
+
+
+
+Initiate the source directory to backup from the host machine. In the source directory in the host machine whose files are to be backed up, execute the following commands: 
+
+
+$ git init
+Initialized empty Git repository in /home/backups/backup.git/
+# Initialize git repository
+$ git commit --allow-empty -am "Init"
+[master (root-commit) b595488] Init
+
+
+2. In the source directory, execute the following command to add the remote git directory and synchronize backup:
+
+$ git remote add origin user@remotehost:/home/backups/backup.git
+$ git push origin master
+Counting objects: 2, done.
+Writing objects: 100% (2/2), 153 bytes, done.
+Total 2 (delta 0), reused 0 (delta 0)
+To user@remotehost:/home/backups/backup.git
+* [new branch] master -> master
+
+
+3. Add or remove files for Git tracking. 
+
+The following command adds all files and folders in the current directory to the backup list: 
+
+$ git add *
+
+
+
+We can conditionally add certain files only to the backup list as follows: 
+
+
+$ git add *.txt
+$ git add *.py
+
+
+
+We can remove the files and folders not required to be tracked by using: 
+
+
+$ git rm file
+
+
+
+It can be a folder or even a wildcard as follows: 
+
+
+$ git rm *.txt
+
+
+4. Check-pointing or marking backup points.
+
+We can mark checkpoints for the backup with a message using the following command: 
+
+$ git commit -m "Commit Message"
+
+
+
+We need to update the backup at the remote location at regular intervals. Hence, set up a cron job (for example, backing up every five hours). 
+
+Create a file crontab entry with lines: 
+
+
+0 */5 * * * /home/data/backup.sh
+
+
+
+Create a script /home/data/backup.sh as follows: 
+
+#!/bin/ bash
+cd /home/data/source
+git add .
+git commit -am "Commit - @ $(date)"
+git push
+
+
+Now we have set up the backup system. 
+
+
+5. Restoring data with Git. 
+
+In order to view all backup versions use: 
+
+$ git log
+
+
+
+Update the current directory to the last backup by ignoring any recent changes. 
+
+To revert back to any previous state or version, look into the commit ID, which is a 32-character hex string. Use the commit ID with git checkout.
+
+For commit ID 3131f9661ec1739f72c213ec5769bc0abefa85a9 it will be:
+
+Code View: Scroll / Show All
+$ git checkout 3131f9661ec1739f72c213ec5769bc0abefa85a9
+$ git commit -am "Restore @ $(date) commit ID: 3131f9661ec1739f72c213ec5769bc0abefa85a9"
+$ git push
+
+
+					  
+
+
+
+In order to view the details about versions again, use:
+
+$ git log
+
+
+
+
+If the working directory is broken due to some issues, we need to fix the directory with the backup at the remote location. 
+
+Then we can recreate the contents from the backup at the remote location as follows: 
+
+
+$ git clone user@remotehost:/home/backups/backup.git
+
+
+
+This will create a directory backup with all contents. 
+
+
+

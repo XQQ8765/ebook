@@ -1,0 +1,89 @@
+Information about logged users, boot logs, and failure boot
+
+
+Collecting information about the operating environment, logged in users, the time for which the computer has been powered on, and any boot failures are very helpful. This recipe will go through a few commands used to gather information about a live machine. 
+
+Getting ready
+This recipe will introduce the commands who, w, users, uptime, last, and lastb.
+
+How to do it...
+To obtain information about users currently logged in to the machine use:
+
+$ who
+slynux pts/0 2010-09-29 05:24 (slynuxs-macbook-pro.local)
+slynux tty7 2010-09-29 07:08 (:0)
+
+
+Or:
+
+$ w
+07:09:05 up 1:45, 2 users, load average: 0.12, 0.06, 0.02
+USER TTY FROM LOGIN@ IDLE JCPU PCPU WHAT
+slynux pts/0 slynuxs 05:24 0.00s 0.65s 0.11s sshd: slynux
+slynux tty7 :0 07:08 1:45m 3.28s 0.26s gnome-session
+
+
+It will provide information about logged in users, the pseudo TTY used by the users, the command that is currently executing from the pseudo terminal, and the IP address from which the users have logged in. If it is localhost, it will show the hostname. who and w format outputs with slight difference. The w command? provides more detail than who?.
+
+TTY is the device file associated with a text terminal. When a terminal is newly spawned by the user, a corresponding device is created in /dev/ (for example, /dev/pts/3). The device path for the current terminal can be found out by typing and executing the command tty.
+
+In order to list the users currently logged in to the machine, use:
+
+$ users
+Slynux slynux slynux hacker
+
+
+If a user has opened multiple pseudo terminals, it will show that many entries for the same user. In the above output, the user slynux has opened three pseudo terminals. The easiest way to print unique users is to use sort and uniq to filter as follows:
+
+$ users | tr ' ' '\n' | sort | uniq
+slynux
+hacker
+
+
+We have used tr to replace' ' with'\n'. Then combination of sort and uniq will produce unique entries for each user.
+
+In order to see how long the system has been powered on, use:
+
+$ uptime
+21:44:33 up 3:17, 8 users, load average: 0.09, 0.14, 0.09
+
+
+The time that follows the word up indicates the time for which the system has been powered on. We can write a simple one-liner to extract the uptime only. 
+
+Load average in uptime's output is a parameter that indicates system load. This is explained in more detail in the chapter, Administration Calls!. In order to get information about previous boot and user logged sessions, use:
+
+$ last
+slynux tty7 :0 Tue Sep 28 18:27 still logged in
+reboot system boot 2.6.32-21-generi Tue Sep 28 18:10 - 21:46 (03:35)
+slynux pts/0 :0.0 Tue Sep 28 05:31 - crash (12:39)
+
+
+The last command? will provide information about logged in sessions. It is actually a log of system logins that consists of information such as tty from which it has logged in, login time, status, and so on.
+
+The last command uses the log file /var/log/wtmp for input log data. It is also possible to explicitly specify the log file for the last command using the f option. For example:
+
+$ last f /var/log/wtmp
+
+
+In order to obtain info about login sessions for a single user, use:
+
+$ last USER
+
+
+Get information about reboot sessions as follows:
+
+$ last reboot
+reboot system boot 2.6.32-21-generi Tue Sep 28 18:10 - 21:48 (03:37)
+reboot system boot 2.6.32-21-generi Tue Sep 28 05:14 - 21:48 (16:33)
+
+
+In order to get information about failed user login sessions use:
+
+# lastb
+test tty8 :0 Wed Dec 15 03:56 - 03:56 (00:00)
+slynux tty8 :0 Wed Dec 15 03:55 - 03:55 (00:00)
+
+
+You should run lastb? as the root user. 
+
+

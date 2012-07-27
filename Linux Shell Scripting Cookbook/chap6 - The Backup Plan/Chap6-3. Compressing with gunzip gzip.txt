@@ -1,0 +1,133 @@
+Compressing with gunzip (gzip)
+
+
+gzip is a commonly used compression format in GNU/Linux platforms. Utilities such as gzip, gunzip, and zcat are available to handle gzip compression file types. gzip can be applied on a file only. It cannot archive directories and multiple files. Hence we use a tar archive and compress it with gzip. When multiple files are given as input it will produce several individually compressed (.gz) files. Let's see how to operate with gzip. 
+
+How to do it...
+In order to compress a file with gzip use the following command: 
+
+$ gzip filename
+$ ls
+filename.gz
+
+
+Then it will remove the file and produce a compressed file called filename.gz.
+
+Extract a gzip compressed file as follows:
+
+$ gunzip filename.gz
+
+
+It will remove filename.gz and produce an uncompressed version of filename.gz.
+
+In order to list out the properties of a compressed file use:
+
+$ gzip -l test.txt.gz
+compressed uncompressed ratio uncompressed_name
+35 6 -33.3% test.txt
+
+
+The gzip command can read a file from stdin and also write a compressed file into stdout.
+
+Read from stdin and out as stdout as follows:
+
+$ cat file | gzip -c > file.gz
+
+
+The -c option is used to specify output to stdout.
+
+We can specify the compression level for gzip. Use --fast or the --best option to provide low and high compression ratios, respectively. 
+
+There's more...
+The gzip command is often used with other commands. It also has advanced options to specify the compression ratio. Let's see how to work with these features.
+
+Gzip with tarball
+We usually use gzip with tarballs. A tarball can be compressed by using the z option passed to the tar command while archiving and extracting. 
+
+You can create gzipped tarballs using the following methods: 
+
+Method - 1 
+
+$ tar -czvvf archive.tar.gz [FILES]
+
+
+
+Or: 
+
+
+$ tar -cavvf archive.tar.gz [FILES]
+
+
+
+The -a option specifies that the compression format should automatically be detected from the extension. 
+
+
+
+Method - 2 
+
+First, create a tarball: 
+
+
+$ tar -cvvf archive.tar [FILES]
+
+
+
+Compress it after tarballing as follows: 
+
+
+$ gzip archive.tar
+
+
+If many files (a few hundreds) are to be archived in a tarball and need to be compressed, we use Method - 2 with few changes. The issue with giving many files as command arguments to tar is that it can accept only a limited number of files from the command line. In order to solve this issue, we can create a tar file by adding files one by one using a loop with an append option (-r) as follows:
+
+FILE_LIST="file1 file2 file3 file4 file5"
+for f in $FILE_LIST;
+do
+tar -rvf archive.tar $f
+done
+gzip archive.tar
+
+
+In order to extract a gzipped tarball, use the following: 
+
+-x for extraction
+
+-z for gzip specification
+
+Or:
+
+$ tar -xavvf archive.tar.gz -C extract_directory
+
+
+In the above command, the -a option is used to detect the compression format automatically.
+
+zcat reading gzipped files without extracting
+zcat is a command that can be used to dump an extracted file from a .gz file to stdout without manually extracting it. The .gz file remains as before but it will dump the extracted file into stdout as follows: 
+
+$ ls
+test.gz
+$ zcat test.gz
+A test file
+# file test contains a line "A test file"
+$ ls
+test.gz
+
+
+Compression ratio
+We can specify compression ratio, which is available in range 1 to 9, where:
+
+1 is the lowest, but fastest
+
+9 is the best, but slowest
+
+You can also specify the ratios in between as follows:
+
+$ gzip -9 test.img
+
+
+This will compress the file to the maximum.
+
+See also
+Archiving with tar, explains the tar command
+
+

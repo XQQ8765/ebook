@@ -1,0 +1,133 @@
+Listing all the machines alive on a network
+
+
+When we deal with a large local area network, we may need to check the availability of other machines in the network, whether alive or not. A machine may not be alive in two conditions: either it is not powered on or due to a problem in the network. By using shell scripting, we can easily find out and report which machines are alive on the network. Let's see how to do it. 
+
+Getting ready
+In this recipe, we use two methods. The first method uses ping and the second method uses fping. fping doesn't come with a Linux distribution by default. You may have to manually install fping using a package manager.
+
+How to do it...
+Let's go through the script to find out all the live machines on the network and alternate methods to find out the same.
+
+Method 1: 
+
+We can write our own script using the ping command to query list of IP addresses and check whether they are alive or not as follows: 
+
+#!/bin/bash
+#Filename: ping.sh
+# Change base address 192.168.0 according to your network.
+for ip in 192.168.0.{1..255} ;
+do
+ping $ip -c 2 &> /dev/null ;
+if [ $? -eq 0 ];
+then
+echo $ip is alive
+fi
+done
+The output is as follows: 
+
+$ ./ping.sh
+192.168.0.1 is alive
+192.168.0.90 is alive
+
+
+Method 2: 
+
+We can use an existing command-line utility to query the status of machines on a network as follows: 
+
+$ fping -a 192.160.1/24 -g 2> /dev/null
+192.168.0.1
+192.168.0.90
+
+
+
+Or, use: 
+
+
+$ fping -a 192.168.0.1 192.168.0.255 -g
+
+
+How it works...
+In Method 1, we used the? ping command to find out the alive machines on the network. We used a for loop for iterating through the list of IP addresses. The list is generated as 192.168.0.{1..255}. The {start..end} notation will expand and will generate a list of IP addresses, such as 192.168.0.1, 192.168.0.2, 192.168.0.3 till 192.168.0.255. 
+
+ping $ip -c 2 &> /dev/null will run a ping to the corresponding IP address in each execution of loop. -c 2 is used to restrict the number of echo packets to be sent to two packets.&> /dev/null is used to redirect both stderr and stdout to /dev/null so that it won't be printed on the terminal. Using $? we evaluate the exit status. If it is successful, the exit status is 0 else non-zero. Hence the successful IP addresses are printed. We can also print the list of unsuccessful IP addresses to give the list of unreachable IP addresses.
+
+
+Here is an exercise for you. Instead of using a range of IP addresses hard-coded in the script, modify the script to read a list of IP addresses from a file or stdin.
+
+
+
+
+In this script, each ping is executed one after the other. Even though all the IP addresses are independent each other, the ping command is executed due to a sequential program, it takes a delay of sending two echo packets and receiving them or the timeout for a reply for executing the next ping command.
+
+When it comes to 255 addresses, the delay is large. Let's run all the ping commands in parallel to make it much faster. The core part of the script is the loop body. To make the ping commands in parallel, enclose the loop body in ( )&. ( ) encloses a block of commands to run as the sub-shell and& sends it to the background by leaving the current thread. For example: 
+
+(
+ping $ip -c2 &> /dev/null ;
+if [ $? -eq 0 ];
+then
+echo $ip is alive
+fi
+)&
+wait
+
+
+The for loop body executes many background process and it comes out of the loop and it terminates the script. In order to present the script to terminate until all its child process end, we have a command called wait. Place a wait at the end of the script so that it waits for the time until all the child ( ) subshell processes complete.
+
+
+The wait command enables a script to be terminated only after all its child process or background processes terminate or complete.
+
+Have a look at fast_ping.sh from the code provided with the book.
+
+
+
+
+Method 2 uses a different command called fping. It can ping a list of IP addresses simultaneously and respond very quickly. The options available with fping are as follows:
+
+The -a option with fping specifies to print all alive machine's IP addresses
+
+The -u option with fping specifies to print all unreachable machines
+
+The -g option specifies to generate a range of IP addresses from slash-subnet mask notation specified as IP/mask or start and end IP addresses as:
+
+$ fping -a 192.160.1/24 -g
+
+
+
+Or 
+
+
+$ fping -a 192.160.1 192.168.0.255 -g
+
+
+2>/dev/null is used to dump error messages printed due to unreachable host to a null device
+
+It is also possible to manually specify a list of IP addresses as command-line arguments or as a list through stdin. For example:
+
+$ fping -a 192.168.0.1 192.168.0.5 192.168.0.6
+# Passes IP address as arguments
+$ fping -a <ip.list
+# Passes a list of IP addresses from a file
+
+
+There's more...
+The fping command can be used for querying DNS data from a network. Let's see how to do it. 
+
+DNS lookup with fping
+fping has an option -d that returns host names by using DNS lookup for each echo reply. It will print out host names rather than IP addresses on ping replies. 
+
+$ cat ip.list
+192.168.0.86
+192.168.0.9
+192.168.0.6
+$ fping -a -d 2>/dev/null <ip.list
+www.local
+dnss.local
+
+
+See also
+Playing with file descriptors and redirection of Chapter 1, explains the data redirection
+
+Comparisons and tests of Chapter 1, explains numeric comparisons
+
+

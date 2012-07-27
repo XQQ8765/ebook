@@ -1,0 +1,80 @@
+Reading the output of a sequence of commands
+
+
+One of the best-designed features of shell scripting is the ease of combining many commands or utilities to produce output. The output of one command can appear as the input of another, which passes its output to another command, and so on. The output of this combination can be read in a variable. This recipe illustrates how to combine multiple commands and how its output can be read.
+
+Getting ready
+Input is usually fed into a command through stdin or arguments. Output appears as stderr or stdout. While we combine multiple commands, we usually use stdin to give input and stdout for output. 
+
+Commands are called as filters. We connect each filter using pipes. The piping operator is "|". An example is as follows:
+
+$ cmd1 | cmd2 | cmd3
+
+
+Here we combine three commands. The output of cmd1 goes to cmd2 and output of cmd2 goes to cmd3 and the final output (which comes out of cmd3) will be printed or it can be directed to a file.
+
+How to do it...
+Have a look at the following code:
+
+$ ls | cat -n > out.txt
+
+
+Here the output of ls (the listing of the current directory) is passed to cat -n. cat n puts line numbers to the input received through stdin. Therefore, its output is redirected to the out.txt file.
+
+We can read the output of a sequence of commands combined by pipes as follows:
+
+cmd_output=$(COMMANDS)
+
+
+This is called the subshell method. For example:
+
+cmd_output=$(ls | cat -n)
+echo $cmd_output
+
+
+Another method, called back-quotes can also be used to store the command output as follows:
+
+cmd_output=`COMMANDS`
+
+
+For example:
+
+cmd_output=`ls | cat -n`
+echo $cmd_output
+
+
+Back quote is different from the single quote character. It is the character on the ~ button in the keyboard.
+
+There's more...
+There are multiple ways of grouping commands. Let's go through few of them.
+
+Spawning a separate process with subshell
+Subshells are separate processes. A subshell can be defined using the ( )operators as follows: 
+
+pwd;
+(cd /bin; ls);
+pwd;
+
+
+When some commands are executed in a subshell none of the changes occur in the current shell; changes are restricted to the subshell. For example, when the current directory in a subshell is changed using the cd command, the directory change is not reflected in the main shell environment.
+
+The pwd command prints the path of the working directory. 
+
+The cd command changes the current directory to the given directory path. 
+
+Subshell quoting to preserve spacing and newline character
+Suppose we are reading the output of a command to a variable using a subshell or the back-quotes method, we always quote them in double-quotes to preserve the spacing and newline character (\n). For example:
+
+$ cat text.txt
+1
+2
+3
+$ out=$(cat text.txt)
+$ echo $out
+1 2 3 # Lost \n spacing in 1,2,3
+$ out="$(cat tex.txt)"
+$ echo $out
+1
+2
+3
+

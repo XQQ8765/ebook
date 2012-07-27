@@ -1,0 +1,182 @@
+Playing with variables and environment variables
+Variables are essential components of every programming language and are used to hold varying data. Scripting languages usually do not require variable type declaration before its use. It can be assigned directly. In Bash, the value for every variable is string. If we assign variables with quotes or without quotes, they are stored as string. There are special variables used by the shell environment and the operating system environment to store special values, which are called environment variables. 
+
+Let's look at the recipes.
+
+Getting ready
+Variables are named with usual naming constructs. When an application is executing, it will be passed with a set of variables called environment variables. From the terminal, to view all the environment variables related to that terminal process, issue the env command. For every process, environment variables in its runtime can be viewed by: 
+
+cat /proc/$PID/environ
+
+
+Set the PID with the process ID of the relevant process (PID is always an integer).
+
+For example, assume that an application called gedit is running. We can obtain the process ID of gedit with the pgrep command as follows: 
+
+$ pgrep gedit
+12501
+
+
+You can obtain the environment variables associated with the process by executing the following command:
+
+$ cat /proc/12501/environ
+GDM_KEYBOARD_LAYOUT=usGNOME_KEYRING_PID=1560USER=slynuxHOME=/home/slynux
+
+
+Note that many environment variables are stripped off for convenience. The actual output may contain numerous variables.
+
+The above mentioned command returns a list of environment variables and their values. Each variable is represented as a name=value pair and are separated by a null character (\0). If you can substitute the \0 character with \n, you can reformat the output to show each variable=value pair in each line. Substitution can be made using the tr command as follows:
+
+$ cat /proc/12501/environ | tr '\0' '\n'
+
+
+Now, let's see how to assign and manipulate variables and environment variables.
+
+How to do it...
+A variable can be assigned as follows: 
+
+var=value
+
+
+var is the name of a variable and value is the value to be assigned. If value does not contain any white space characters (like a space), it need not be enclosed in quotes, else it must be enclosed in single or double quotes.
+
+Note that var = value and var=value are different. It is a common mistake to write var =value instead of var=value. The later is the assignment operation, whereas the former is an equality operation.
+
+Printing the contents of a variable is done using by prefixing $ with the variable name as follows:
+
+var="value" #Assignment of value to variable var.
+echo $var
+
+
+Or:
+
+echo ${var}
+
+
+The output is as follows:
+
+value
+
+
+We can use variable values inside printf or echo in double quotes. 
+
+#!/bin/bash
+#Filename :variables.sh
+fruit=apple
+count=5
+echo "We have $count ${fruit}(s)"
+
+
+The output is as follows:
+
+We have 5 apple(s)
+
+
+Environment variables are variables that are not defined in the current process, but are received from the parent processes. For example, HTTP_PROXY is an environment variable. This variable defines which proxy server should be used for an Internet connection.
+
+Usually, it is set as:
+
+HTTP_PROXY=http://192.168.0.2:3128
+export HTTP_PROXY
+
+
+The export command is used to set the? env variable. Now any application, executed from the current shell script will receive this variable. We can export custom variables for our own purposes in an application or shell script that is executed. There are many standard environment variables that are available for the shell by default.
+
+For example, PATH. A typical PATH variable will contain:
+
+Code View: Scroll / Show All
+$ echo $PATH
+/home/slynux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+
+
+					  
+
+When given a command for execution, shell automatically searches for the executable in the list of directories in the PATH environment variable (directory paths are delimited by the ":" character). Usually, $PATH is defined in /etc/environment or /etc/profile or ~/.bashrc. When we need to add a new path to the PATH environment, we use: 
+
+export PATH="$PATH:/home/user/bin"
+
+
+Or, alternately, we can use:
+
+Code View: Scroll / Show All
+$ PATH="$PATH:/home/user/bin"
+$ export PATH
+$ echo $PATH
+/home/slynux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/home/user/bin
+
+
+					  
+
+Here we have added /home/user/bin to PATH.
+
+Some of the well-known environment variables are: HOME, PWD, USER, UID, SHELL, and so on.
+
+There's more...
+Let's see some more tips associated with regular and environment variables.
+
+Finding length of string
+Get the length of a variable value as follows: 
+
+length=${#var}
+
+
+For example:
+
+$ var=12345678901234567890
+$ echo ${#var}
+20
+
+
+length is the number of characters in the string.
+
+Identifying the current shell
+Display the currently used shell as follows: 
+
+echo $SHELL
+
+
+Or, you can also use:
+
+echo $0
+
+
+For example: 
+
+$ echo $SHELL
+/bin/bash
+$ echo $0
+bash
+
+
+Check for super user
+UID is an important environment variable that can be used to check whether the current script has been run as root user or regular user. For example: 
+
+if [ $UID -ne 0 ]; then
+echo Non root user. Please run as root.
+else
+echo "Root user"
+fi
+
+
+The UID for the root user is 0.
+
+Modifying the Bash prompt string (username@hostname:~$)
+When we open a terminal or run a shell, we see a prompt string like user@hostname: /home/$. Different GNU/Linux distributions have slightly different prompts and different colors. We can customize the prompt text using the PS1 environment variable. The default prompt text for the shell is set using a line in the ~/.bashrc file. 
+
+We can list the line used to set the PS1 variable as follows:
+
+$ cat ~/.bashrc | grep PS1
+PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+
+
+In order to set a custom prompt string, enter:
+
+slynux@localhost: ~$ PS1="PROMPT>"
+PROMPT> Type commands here # Prompt string changed.
+
+
+We can use colored text by using the special escape sequences like \e[1;31 (refer to the Printing in the terminal recipe of this chapter).
+
+There are also certain special characters that expand to system parameters. For example, \u expands to username, \h expands to hostname, and \w expands to the current working directory.
+
+

@@ -1,0 +1,108 @@
+Calculating execution time for a command
+
+
+While testing an application or comparing different algorithms for a given problem, execution time taken by a program is very critical. A good algorithm should execute in minimum amount of time. There are several situations in which we need to monitor the time taken for execution by a program. For example, while learning about sorting algorithms, how do you practically state which algorithm is faster? The answer to this is to calculate the execution time for the same data set. Let's see how to do it. 
+
+How to do it...
+time is a command that is available with any UNIX-like operating systems. You can prefix time with the command you want to calculate execution time, for example: 
+
+$ time COMMAND
+
+
+The command will execute and its output will be shown. Along with output, the time command appends the time taken in stderr. An example is as follows: 
+
+$ time ls
+test.txt
+next.txt
+real 0m0.008s
+user 0m0.001s
+sys 0m0.003s
+
+
+It will show real, user, and system times for execution. The three different times can be defined as follows:
+
+Real is wall clock time¡ª??the time from start to finish of the call. This is all elapsed time including time slices used by other processes and the time that the process spends when blocked (for example, if it is waiting for I/O to complete). 
+
+User is the amount of CPU time spent in user-mode code (outside the kernel) within the process. This is only the actual CPU time used in executing the process. Other processes and the time that the process spends when blocked do not count towards this figure. 
+
+Sys? is the amount of CPU time spent in the kernel within the process. This means executing the CPU time spent in system calls within the kernel, as opposed to library code, which is still running in the user space. Like 'user time', this is only the CPU time used by the process. 
+
+
+An executable binary of the time command is available at /usr/bin/time as well as a shell built-in named time exists. When we run time, it calls the shell built-in by default. The shell built-in time has limited options. Hence, we should use an absolute path for the executable (/usr/bin/time) for performing additional functionalities.
+
+
+
+
+We can write this time statistics to a file using the -o filename option as follows:
+
+$ /usr/bin/time -o output.txt COMMAND
+
+
+The filename should always appear after the o flag.
+
+In order to append the time statistics to a file without overwriting, use the -a flag along with the -o option as follows:
+
+$ /usr/bin/time a -o output.txt COMMAND
+
+
+We can also format the time outputs using format strings with the -f option. A format string consists of parameters corresponding to specific options prefixed with %. The format strings for real time, user time, and sys time are as follows: 
+
+Real time - %e 
+
+User - %U 
+
+sys - %S 
+
+By combining parameter strings, we can create formatted output as follows:
+
+$ /usr/bin/time -f "FORMAT STRING" COMMAND
+
+
+For example:
+
+$ /usr/bin/time -f "Time: %U" -a -o timing.log uname
+Linux
+
+
+Here %U is the parameter for user time.
+
+When formatted output is produced, the formatted output of the command is written to the standard output and the output of the COMMAND, which is timed, is written to standard error. We can redirect the formatted output using a redirection operator (>) and redirect the time information output using the (2>) error redirection operator. For example:
+
+$ /usr/bin/time -f "Time: %U" uname> command_output.txt 2>time.log
+$ cat time.log
+Time: 0.00
+$ cat command_output.txt
+Linux
+
+
+Many details regarding a process can be collected using the time command. The important details include, exit status, number of signals received, number of context switches made, and so on. Each parameter can be displayed by using a suitable format string.? 
+
+The following table shows some of the interesting parameters that can be used:
+
+Parameter  Description  
+%C  Name and command-line arguments of the command being timed.  
+%D  Average size of the process's unshared data area, in kilobytes.  
+%E  Elapsed real (wall clock) time used by the process in [hours:]minutes:seconds.  
+%x  Exit status of the command.  
+%k  Number of signals delivered to the process.  
+%W  Number of times the process was swapped out of the main memory.  
+%Z  System's page size in bytes. This is a per-system constant, but varies between systems.  
+%P  Percentage of the CPU that this job got. This is just user + system times divided by the total running time. It also prints a percentage sign.  
+%K  Average total (data + stack + text) memory usage of the process, in kilobytes.  
+%w  Number of times that the program was context-switched voluntarily, for instance while waiting for an I/O operation to complete.  
+%c  Number of times the process was context-switched involuntarily (because the time slice expired).  
+
+
+
+
+For example, the page size can be displayed using the %Z parameters as follows:
+
+$ /usr/bin/time -f "Page size: %Z bytes" ls> /dev/null
+Page size: 4096 bytes
+
+
+Here the output of the timed command is not required and hence the standard output is directed to the /dev/null device in order to prevent it from writing to the terminal. 
+
+More format strings parameters are available. Read man time for more details.
+
+

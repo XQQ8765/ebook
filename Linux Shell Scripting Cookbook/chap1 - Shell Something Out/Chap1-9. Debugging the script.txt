@@ -1,0 +1,70 @@
+Debugging the script
+
+
+Debugging is one of the critical features every programming language should implement to produce race-back information when something unexpected happens. Debugging information can be used to read and understand what caused the program to crash or to act in an unexpected fashion. Bash provides certain debugging options that every sysadmin should know. There are also some other tricky ways to debug. 
+
+Getting ready
+No special utilities are required to debug shell scripts. Bash comes with certain flags that can print arguments and inputs taken by the scripts. Let's see how to do it.
+
+How to do it...
+Add the -x option to enable debug tracing of a shell script as follows:
+
+$ bash -x script.sh
+
+
+Running the script with the -x flag will print each source line with current status. Note that you can also use sh x script. 
+
+The -x flag outputs every line of script as it is executed to stdout. However, we may require only some portions of the source lines to be observed such that commands and arguments are to be printed at certain portions. In such conditions we can use set built-in to enable and disable debug printing within the script.
+
+set -x: Displays arguments and commands upon their execution
+
+set +x: Disables debugging
+
+set v: Displays input when they are read
+
+set +v: Disables printing input
+
+For example:
+
+#!/bin/bash
+#Filename: debug.sh
+for i in {1..6}
+do
+set -x
+echo $i
+set +x
+done
+echo "Script executed"
+
+
+In the above script, debug information for echo $i will only be printed as debugging is restricted to that section using -x and +x.
+
+The above debugging methods are provided by bash built-ins. But they always produce debugging information in a fixed format. In many cases, we need debugging information in our own format. We can set up such a debugging style by passing the _DEBUG environment variable.
+
+Look at the following example code: 
+
+#!/bin/bash
+function DEBUG()
+{
+[ "$_DEBUG" == "on" ] && $@ || :
+}
+for i in {1..10}
+do
+DEBUG echo $i
+done
+
+
+We can run the above script with debugging set to "on" as follows:
+
+$ _DEBUG=on ./script.sh
+
+
+We prefix DEBUG before every statement where debug information is to be printed. If _DEBUG=on is not passed to script, debug information will not be printed. In Bash the command ':' tells the shell to do nothing.
+
+There's more...
+We can also use other convenient ways to debug scripts. We can make use of shebang in a trickier way to debug scripts.
+
+Shebang hack
+The shebang can be changed from #!/bin/bash to #!/bin/bash xv to enable debugging without any additional flags (-xv flags themselves).
+
+

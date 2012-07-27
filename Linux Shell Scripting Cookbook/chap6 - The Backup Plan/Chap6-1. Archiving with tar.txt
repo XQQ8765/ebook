@@ -1,0 +1,244 @@
+Archiving with tar
+The tar command can be used to archive files. It was originally designed for storing data on tape archives (tar). It allows you to store multiple files and directories as a single file. It can retain all the file attributes, such as owner, permissions, and so on. The file created by the tar command is often referred to as a tarball. 
+
+Getting ready
+The tar command comes by default with all UNIX like operating systems. It has a simple syntax and is a portable file format. Let's see how to do it.
+
+tar has got a list of arguments: A, c, d, r, t, u, x, f, and v. Each of these letters can be used independently for different purposes corresponding to it. 
+
+How to do it...
+To archive files with tar, use the following syntax: 
+
+$ tar -cf output.tar [SOURCES]
+
+
+For example: 
+
+$ tar -cf output.tar file1 file2 file3 folder1 ..
+
+
+In this command, -c stands for "create file" and f stands for "specify filename".
+
+We can specify folders and filenames as SOURCES. We can use a list of file names or wildcards such as *.txt to specify the sources.
+
+It will archive the source files into a file called output.tar.
+
+The filename must appear immediately after the f and should be the last option in the argument group (for example, -cvvf filename.tar and -tvvf filename.tar).
+
+We cannot pass hundreds of files or folders as command-line arguments because there is a limit. So it is safer to use the append option if many files are to be archived.
+
+There's more...
+Let's go through additional features that are available with the tar command.
+
+Appending files to an archive
+Sometimes we may need to add files to an archive that already exists (an example usage is when thousands of files are to be archived and when they cannot be specified in one line as command-line arguments). 
+
+Append option: -r 
+
+In order to append a file into an already existing archive use:
+
+$ tar -rvf original.tar new_file
+
+
+List the files in an archive as follows:
+
+$ tar -tf archive.tar
+yy/lib64/
+yy/lib64/libfakeroot/
+yy/sbin/
+
+
+In order to print more details while archiving or listing, use the -v or the vv flag. These flags are called? verbose (v), which will enable to print more details on the terminal. For example, by using verbose you could print more details, such as the file permissions, owner group, modification date, and so on.
+
+For example:
+
+$ tar -tvvf archive.tar
+drwxr-xr-x slynux/slynux 0 2010-08-06 09:31 yy/
+drwxr-xr-x slynux/slynux 0 2010-08-06 09:39 yy/usr/
+drwxr-xr-x slynux/slynux 0 2010-08-06 09:31 yy/usr/lib64/
+
+
+Extracting files and folders from an archive
+The following command extracts the contents of the archive to the current directory: 
+
+$ tar -xf archive.tar
+
+
+The -x option stands for extract.
+
+When x is used, the tar command extracts the contents of the archive to the current directory. We can also specify the directory where the files need to be extracted by using the C flag, as follows:
+
+$ tar -xf archive.tar -C /path/to/extraction_directory
+
+
+The command extracts the contents of an archive to insert image a specified directory. It extracts the entire contents of the archive. We can also extract only a few files by specifying them as command arguments:
+
+$ tar -xvf file.tar file1 file4
+
+
+The command above extracts only file1 and file4, and ignores other files in the archive. 
+
+stdin and stdout with tar
+While archiving, we can specify stdout as the output file so that another command appearing through a pipe can read it as stdin and then do some process or extract the archive. 
+
+This is helpful in order to transfer data through a Secure Shell (SSH) connection (while on a network). For example:
+
+$ mkdir ~/destination
+$ tar -cf - file1 file2 file3 | tar -xvf - -C ~/destination
+
+
+In the example above, file1, file2, and file3 are combined into a tarball and then extracted to ~/destination. In this command:
+
+-f specifies stdout as the file for archiving (when the -c option used)
+
+-f specifies stdin as the file for extracting (when the -x option used)
+
+Concatenating two archives
+We can easily merge multiple tar files with the -A option. 
+
+Let's pretend we have two tarballs: file1.tar and file2.tar. We can merge the contents of file2.tar to file1.tar as follows:
+
+$ tar -Af file1.tar file2.tar
+
+
+Verify it by listing the contents:
+
+$ tar -tvf file1.tar
+
+
+Updating files in an archive with timestamp check
+The append option appends any given file to the archive. If the same file is inside the archive is given to append, it will append that file and the archive will contain duplicates. We can use the update option -u to specify only append files that are newer than the file inside the archive with the same name. 
+
+$ tar -tf archive.tar
+filea
+fileb
+filec
+
+
+This command lists the files in the archive.
+
+In order to append filea only if filea has newer modification time than filea inside archive.tar, use:
+
+$ tar -uvvf archive.tar filea
+
+
+Nothing happens if the version of filea outside the archive and the filea inside archive.tar have the same timestamp.
+
+Use the touch command to modify the file timestamp and then try the tar command again: 
+
+$ tar -uvvf archive.tar filea
+-rw-r--r-- slynux/slynux 0 2010-08-14 17:53 filea
+
+
+The file is appended since its timestamp is newer than the one inside the archive. 
+
+Comparing files in archive and file system
+Sometimes it is useful to know whether a file in the archive and a file with the same filename in the filesystem are the same or contain any differences. The d flag can be used to print the differences: 
+
+$ tar -df archive.tar filename1 filename2 ...
+
+
+For example:
+
+$ tar -df archive.tar afile bfile
+afile: Mod time differs
+afile: Size differs
+
+
+Deleting files from archive
+We can remove files from a given archive using the delete option. For example: 
+
+$ tar -f archive.tar --delete file1 file2 ..
+
+
+Let's see another example:
+
+$ tar -tf archive.tar
+filea
+fileb
+filec
+
+
+Or, we can also use the following syntax:
+
+$ tar --delete --file archive.tar [FILE LIST]
+
+
+For example: 
+
+$ tar --delete --file archive.tar filea
+$ tar -tf archive.tar
+fileb
+filec
+
+
+Compression with tar archive
+The tar command only archives files, it does not compress them. For this reason, most people usually add some form of compression when working with tarballs. This significantly decreases the size of the files. Tarballs are often compressed into one of the following formats: 
+
+file.tar.gz 
+
+file.tar.bz2 
+
+file.tar.lzma 
+
+file.tar.lzo 
+
+Different tar flags are used to specify different compression formats.
+
+-j for bunzip2
+
+-z for gzip
+
+--lzma for lzma
+
+They are explained in the following compression-specific recipes.
+
+It is possible to use compression formats without explicitly specifying special options as above. tar can compress by looking at the given extension of the output or input file names. In order for tar to support compression automatically by looking at the extensions, use -a or --auto-compress with tar.
+
+Excluding a set of files from archiving
+It is possible to exclude a set of files from archiving by specifying patterns. Use --exclude [PATTERN]? for excluding files matched by wildcard patterns. 
+
+For example, to exclude all .txt files from archiving use:
+
+$ tar -cf arch.tar * --exclude "*.txt"
+
+
+
+Note that the pattern should be enclosed in double quotes.
+
+
+
+
+It is also possible to exclude a list of files provided in a list file with the -X flag as follows: 
+
+$ cat list
+filea
+fileb
+$ tar -cf arch.tar * -X list
+
+
+Now it excludes filea and fileb from archiving.
+
+Excluding version control directories
+We usually use tarballs for distributing source code. Most of the source code is maintained using version control systems such as subversion, Git, mercurial, cvs, and so on. Code directories under version control will contain special directories used to manage versions like .svn or .git. However, these directories aren't needed by the code itself and so should be eliminated from the tarball of the source code. 
+
+In order to exclude version control related files and directories while archiving use the --exclude-vcs option along with tar. For example:
+
+$ tar --exclude-vcs -czvvf source_code.tar.gz eye_of_gnome_svn
+
+
+Printing total bytes
+It is sometimes useful if we can print total bytes copied to the archive. Print the total bytes copied after archiving by using the --totals option as follows:
+
+$ tar -cf arc.tar * --exclude "*.txt" --totals
+Total bytes written: 20480 (20KiB, 12MiB/s)
+
+
+See also
+Compressing with gunzip (gzip), explains the gzip command
+
+Compressing with bunzip (bzip2), explains the bzip2 command
+
+Compressing with lzma, explains the lzma command
+
+

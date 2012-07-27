@@ -1,0 +1,43 @@
+Merging multiple files as columns
+
+
+There are different cases when we require to concatenate files in columns. We may need each file's content to appear in separate columns. Usually, the cat command concatenates in a line- or row-wise fashion. 
+
+How to do it...
+paste is the command that can be used for column-wise concatenation. The paste command can be used with the following syntax: 
+
+$ paste file1 file2 file3 бн 
+
+Let's try an example as follows:
+
+$ cat paste1.txt
+1
+2
+3
+4
+5
+$ cat paste2.txt
+slynux
+gnu
+bash
+hack
+$ paste paste1.txt paste2.txt
+1slynux
+2gnu
+3bash
+4hack
+5
+
+
+The default delimiter is Tab. We can also explicitly specify the delimiter using d. For example: 
+
+$ paste paste1.txt paste2.txt -d ","
+1,slynux
+2,gnu
+3,bash
+4,hack
+5,
+
+
+See also
+Column-wise cutting of a file with cut, explains extracting data from text files

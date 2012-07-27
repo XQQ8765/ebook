@@ -1,0 +1,91 @@
+Web photo album generator
+
+
+Web developers commonly design photo album pages for websites that consist of a number of image thumbnails on the page. When thumbnails are clicked, a large version of the picture will be displayed. But when many images are required, copying the?<img> tag every time, resizing the image to create a thumbnail, placing them in the thumbs directory, testing the links, and so on are real hurdles. It takes a lot of time and repeats the same task. It can be automated easily by writing a simple Bash script. By writing a script, we can create thumbnails, place them in exact directories, and generate the code fragment for<img> tags automatically in few seconds. This recipe will teach you how to do it. 
+
+Getting ready
+We can perform this task with a for loop that iterates every image in the current directory. The usual Bash utilities such as cat and convert (image magick) are used. These will generate an HTML album, using all the images, to index.html. In order to use convert, make sure you have Imagemagick installed.
+
+How to do it...
+Let's write a Bash script to generate a HTML album page: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: generate_album.sh
+#Description: Create a photo album using images in current directory
+echo "Creating album.."
+mkdir -p thumbs
+cat <<EOF > index.html
+<html>
+<head>
+<style>
+body
+{
+width:470px;
+margin:auto;
+border: 1px dashed grey;
+padding:10px;
+}
+img
+{
+margin:5px;
+border: 1px solid black;
+}
+HTML album pageHTML album pagegenerating</style>
+</head>
+<body>
+<center><h1> #Album title </h1></center>
+<p>
+EOF
+for img in *.jpg;
+do
+convert "$img" -resize "100x" "thumbs/$img"
+echo "<a href=\"$img\" ><img src=\"thumbs/$img\" title=\"$img\" /> </a>" >> index.html
+done
+cat <<EOF >> index.html
+</p>
+</body>
+</html>
+EOF
+echo Album generated to index.html
+
+
+					  
+
+Run the script as follows:
+
+$ ./generate_album.sh
+Creating album..
+Album generated to index.html
+
+
+How it works...
+The initial part of the script is to write the header part of the HTML page. 
+
+The following script redirects all the contents up to EOF (excluding) to the index.html: 
+
+cat <<EOF > index.html
+contents...
+EOF
+
+
+The header includes the HTML and stylesheets.
+
+for img in *.jpg; will iterate through names of each file and will perform actions.
+
+convert "$img" -resize "100x" "thumbs/$img" will create images of 100px width as thumbnails.
+
+The following statement will generate the required<img> tag and appends it to the index.html: 
+
+Code View: Scroll / Show All
+echo "<a href=\"$img\" ><img src=\"thumbs/$img\" title=\"$img\" /></a>" >> index.html
+
+
+					  
+
+Finally, the footer HTML tags are appended with cat again.
+
+See also
+Playing with file descriptors and redirection of Chapter 1, explains EOF and stdin redirection.
+
+

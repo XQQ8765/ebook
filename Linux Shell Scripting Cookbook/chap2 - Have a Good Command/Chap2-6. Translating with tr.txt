@@ -1,0 +1,164 @@
+Translating with tr
+
+
+tr is a small and beautiful command in the UNIX command-warrior toolkit. It is one of the important commands frequently used to craft beautiful one-liner commands. 
+
+tr can be used to perform substitution of characters, deletion of the characters, and squeezing of repeated characters from the standard input. It is often called translate, since it can translate a set of characters to another set.
+
+Getting ready
+tr accepts input only through stdin (standard input). It cannot accept input through command-line arguments. It has the following invocation format:
+
+tr [options] set1 set2
+
+
+Input characters from stdin are mapped from set1 to set2 and the output is written to stdout (standard output). set1 and set2 are character classes or a set of characters. If the length of sets is unequal, set2 is extended to the length of set1 by repeating the last character, or else, if the length of set2 is greater than that of set1, all the characters exceeding the length of set1 are ignored from set2.
+
+How to do it...
+In order to perform translation of characters in the input from uppercase to lowercase, use the following command: 
+
+$ echo "HELLO WHO IS THIS" | tr 'A-Z' 'a-z'
+
+
+'A-Z' and'a-z' are the sets. We can specify custom sets as needed by appending characters or character classes.
+
+'ABD-}', 'aA.,', 'a-ce-x', 'a-c0-9', and so on are valid sets. We can define sets easily. Instead of writing continuous character sequences, we can use the'startchar-endchar' format. It can also be combined with any other characters or character classes. If startchar-endchar are not a valid continuous character sequence, then they are taken as a set of three characters (for example, startchar, -, and endchar). You can also use special characters such as'\t', '\n', or any ASCII characters.
+
+How it works…
+By using tr with the concept of sets, we can map characters from one set to another set easily. Let's go through an example on how to use tr for encrypting and decrypting numeric characters: 
+
+$ echo 12345 | tr '0-9' '9876543210'
+87654 #Encrypted
+$ echo 87654 | tr '9876543210' '0-9'
+12345 #Decrypted
+
+
+Let's try another interesting example.
+
+ROT13 is a well known encryption algorithm. In the ROT13 scheme, the same function is used to encrypt and decrypt text. The ROT13 scheme performs alphabetic rotation of characters for 13 characters. Let's perform ROT13 using tr as follows:
+
+Code View: Scroll / Show All
+$ echo "tr came, tr saw, tr conquered." | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' 'NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm'
+
+
+					  
+
+The output will be:
+
+ge pnzr, ge fnj, ge pbadhrerq.
+
+
+By sending the encrypted text again to the same ROT13 function, we get: 
+
+Code View: Scroll / Show All
+$ echo ge pnzr, ge fnj, ge pbadhrerq. | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' 'NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm'
+
+
+					  
+
+The output will be:
+
+tr came, tr saw, tr conquered.
+
+
+tr can be used to convert tab characters into space as follows:
+
+$ cat text | tr '\t' ' '
+
+
+There's more...
+Deleting characters using tr
+tr has an option -d to delete a set of characters that appear on stdin by using the specified set of characters to be deleted as follows: 
+
+$ cat file.txt | tr -d '[set1]'
+#Only set1 is used, not set2
+
+
+For example:
+
+$ echo "Hello 123 world 456" | tr -d '0-9'
+Hello world
+# Removes the numbers from stdin and print
+
+
+Complementing character set
+We can use a set complement to set1 by using the -c flag. -c [set] is equivalent to specifying a set (complement-set) which contains complement characters of [set]: 
+
+tr -c [set1] [set2]
+
+
+The complement of set1 means that it is the set having all the characters except for characters in set1.
+
+The best usage example is to delete all the characters from the input text except the ones specified in the complement set. For example: 
+
+$ echo hello 1 char 2 next 4 | tr -d -c '0-9 \n'
+1 2 4
+
+
+Here, the complement set is the set containing all numerals, the space character, and newline. All other characters are removed since d is used with tr.
+
+Squeezing characters with tr
+The tr command is very helpful in many text processing contexts. Repeated continuous characters should be squeezed to a single character in many circumstances. Squeezing of whitespace is a frequently occurring task. 
+
+tr provides the s option to squeeze repeating characters from the input. It can be performed as follows:
+
+$ echo "GNU is not UNIX. Recursive right ?" | tr -s ' '
+GNU is not UNIX. Recursive right ?
+# tr -s '[set]'
+
+
+Let's use tr in a tricky way to add a given list of numbers from a file as follows:
+
+$ cat sum.txt
+1
+2
+3
+4
+5
+$ cat sum.txt | echo $[ $(tr '\n' '+' ) 0 ]
+15
+
+
+How does this hack work?
+
+Here, the tr command is used to replace'\n' with the'+' character, hence we form the string"1+2+3+..5+", but at the end of the string we have an extra + operator. In order to nullify the effect of the + operator, 0 is appended.
+
+$[ operation ] performs a numeric operation. Hence it forms the string as follows:
+
+echo $[ 1+2+3+4+5+0 ]
+
+
+If we use a loop to perform addition by reading numbers from a file, it would take few lines of code. Here a one-liner does the trick. The skill of crafting one-liners is attained by practice.
+
+Character classes
+tr can use different character classes as sets. The different classes are as follows: 
+
+alnum: Alphanumeric characters 
+
+alpha: Alphabetic characters 
+
+cntrl: Control (non-printing) characters 
+
+digit: Numeric characters 
+
+graph?: Graphic characters 
+
+lower: Lower-case alphabetic characters 
+
+print?: Printable characters 
+
+punct: Punctuation characters 
+
+space: Whitespace characters 
+
+upper: Upper-case characters 
+
+xdigit?: Hexadecimal characters 
+
+We can select the required classes and use them with as follows:
+
+tr [:class:] [:class:]
+
+
+For example:
+
+tr '[:lower:]' '[:upper:]'

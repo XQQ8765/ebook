@@ -1,0 +1,82 @@
+Monitoring user logins to find intruders
+
+Logfiles can be used to gather details about the state of the system. Here is an interesting scripting problem statement: 
+
+We have a system connected to the Internet with SSH enabled. Many attackers are trying to log in to the system. We need to design an intrusion detection system? by writing a shell script. Intruders? are defined as users who are trying to log in with multiple attempts for more than two minutes and whose attempts are all failing. Such users are to be detected and a report should be generated with the following details: 
+
+User account to which a login is attempted
+
+Number of attempts
+
+IP address of the attacker
+
+Host mapping for IP address
+
+Time range for which login attempts are performed.
+
+Getting started
+We can write a shell script that can scan through the logfiles and gather the required information from them. Here, we are dealing with SSH login failures. The user authentication session log is written to the log file /var/log/auth.log. The script should scan the log file to detect the failure login attempts and perform different checks on the log to infer the data. We can use the host command? to find out the host mapping from the IP address. 
+
+How to do it¡­
+Let's write an intruder detection script that can generate a report of intruders by using the authentication logfile as follows: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: intruder_detect.sh
+#Description: Intruder reporting tool with auth.log input
+AUTHLOG=/var/log.auth.log
+if [[ -n $1 ]];
+then
+AUTHLOG=$1
+echo Using Log file : $AUTHLOG
+fi
+LOG=/tmp/valid.$$.log
+grep -v "invalid" $AUTHLOG > $LOG
+users=$(grep "Failed password" $LOG | awk '{ print $(NF-5) }' | sort | uniq)
+printf "%-5s|%-10s|%-10s|%-13s|%-33s|%s\n" "Sr#" "User" "Attempts" "IP address" "Host_Mapping" "Time range"
+ucount=0;
+ip_list="$(egrep -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" $LOG | sort | uniq)"
+for ip in $ip_list;
+do
+grep $ip $LOG > /tmp/temp.$$.log
+for user in $users;
+do
+grep $user /tmp/temp.$$.log> /tmp/$$.log
+cut -c-16 /tmp/$$.log > $$.time
+tstart=$(head -1 $$.time);
+start=$(date -d "$tstart" "+%s");
+tend=$(tail -1 $$.time);
+end=$(date -d "$tend" "+%s")
+limit=$(( $end - $start ))
+if [ $limit -gt 120 ];
+then
+let ucount++;
+IP=$(egrep -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" /tmp/$$.log | head -1 );
+TIME_RANGE="$tstart-->$tend"
+ATTEMPTS=$(cat /tmp/$$.log|wc -l);
+HOST=$(host $IP | awk '{ print $NF }' )
+printf "%-5s|%-10s|%-10s|%-10s|%-33s|%-s\n" "$ucount" "$user" "$ATTEMPTS" "$IP" "$HOST" "$TIME_RANGE";
+fi
+done
+done
+rm /tmp/valid.$$.log /tmp/$$.log $$.time /tmp/temp.$$.log 2> /dev/null
+
+
+					  
+
+A sample output is as follows:
+
+ 
+
+How it works¡­
+In the intruder_detect.sh script, we use the auth.log file as input. We can either provide a log file as input to the script by using a command-line argument to the script or, by default, it reads the /var/log/auth.log file. We need to log details about login attempts for valid user names only. When a login attempt for an invalid user occurs, a log similar to Failed password for invalid user bob from 203.83.248.32 port 7016 ssh2 is logged to auth.log. Hence, we need to exclude all lines in the log file having the word "invalid". The grep command with the invert option (-v) is used to remove all logs corresponding to invalid users. The next step is to find out the list of users for which login attempts occurred and failed. The SSH will log lines similar to sshd[21197]: Failed password for bob1 from 203.83.248.32 port 50035 ssh2 for a failed password. 
+
+Hence we should find all the lines with words "failed password". Now all the unique IP addresses are to be found out for extracting all the log lines corresponding to each IP address. The list of IP address is extracted by using a regular expression for IP address and the egrep command. A for loop is used to iterate through IP address and the corresponding log lines are found using grep and are written to a temporary file. The sixth word from the last word in the log line is the user name (for example, bob1 ). The awk command? is used to extract the sixth word from the last word. NF returns the column number of the last word. Therefore, NF-5 gives the column number of the sixth word from the last word. We use sort and uniq commands?? to produce a list of users without duplication.
+
+Now we should collect the failed login log lines containing the name of each users. A for loop is used for reading the lines corresponding to each user and the lines are written to a temporary file. The first 16 characters in each of the log lines is the timestamp. The cut command is used to extract the timestamp. Once we have all the timestamps for failed login attempts for a user, we should check the difference in time between the first attempt and the last attempt. The first log line corresponds to the first attempt and last log line corresponds to last attempt. We have used head -1 to extract the first line and tail -1 to extract the last line. Now we have a time stamp for first (tstart) and last attempt (tends) in string format. Using the date command?, we can convert the date in string representation to total seconds in UNIX Epoch time (the recipe, Getting, setting dates, and delays of Chapter 1, explains Epoch time).
+
+The variables start and end have a time in seconds corresponding to the start and end timestamps in the date string. Now, take the difference between them and check whether it exceeds two minutes (120 seconds). Thus, the particular user is termed as an intruder and the corresponding entry with details are to be produced as a log. IP addresses can be extracted from the log by using a regular expression for IP address and the egrep command?. The number of attempts is the number of log lines for the user. The number of lines can be found out by using the wc command. The host name mapping can be extracted from the output of the host command by running with IP address as argument. The time range can be printed using the timestamp we extracted. Finally, the temporary files used in the script are removed. 
+
+The above script is aimed only at illustrating a model for scanning the log and producing a report from it. It has tried to make the script smaller and simpler to leave out the complexity. Hence it has few bugs. You can improve the script by using better logic.
+
+

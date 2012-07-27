@@ -1,0 +1,337 @@
+Finding files and file listing
+
+
+find is one of the great utilities in the UNIX/Linux command-line toolbox. It is a very useful command for shell scripts, but most people do not use it effectively due to the lack of understanding. This recipe deals with most of the use cases of find and how it can be used to solve problems of different criterions. 
+
+Getting ready
+The find command uses the following strategy: find descends through a hierarchy of files, matches the files that meet specified criteria, and performs some actions. Let's go through different use cases of find and the basic usages. 
+
+How to do it...
+In order to list all the files and folders from the current directory to the descending child directories, use the following syntax: 
+
+$ find base_path
+
+
+base_path can be any location from which the find should start descending (for example, /home/slynux/).
+
+An example of this command is as follows: 
+
+$ find . -print
+# Print lists of files and folders
+
+
+. specifies current directory and .. specifies the parent directory. This convention is followed throughout the UNIX file system.
+
+The -print argument specifies to print the names (path) of the matching files. When -print is used'\n' will be the delimiting character for separating each file. 
+
+The -print0 argument specifies each matching file name printed with the delimiting character'\0'. This is useful when a filename contains a space character.
+
+There's more...
+In this recipe we have learned the usage of the most commonly-used find command with an example. The find command is a powerful command-line tool and it is armed with a variety of interesting options. Let's walk through some of these different options of the find command.
+
+Search based on file name or regular expression match
+The -name argument specifies a matching string for the filename. We can pass wildcards as its argument text. *.txt matches all the filenames ending with .txt and prints them. The print option prints the filenames or file paths in the terminal that matches the conditions (for example, name) given as options to the find command. 
+
+$ find /home/slynux -name "*.txt" print
+
+
+The find command has an option? iname (ignore case), which is similar to -name. iname matches the name ignoring the case.
+
+For example:
+
+$ ls
+example.txt EXAMPLE.txt file.txt
+$ find . -iname "example*" -print
+./example.txt
+./EXAMPLE.txt
+
+
+If we want to match either of the multiple criterions, we can use OR conditions as shown below:
+
+$ ls
+new.txt some.jpg text.pdf
+$ find . \( -name "*.txt" -o -name "*.pdf" \) -print
+./text.pdf
+./new.txt
+
+
+The previous code will print all of the .txt and .pdf files, since the find command matches both .txt and .pdf files. \( and \) is used to treat -name "*.txt" -o -name "*.pdf" as a single unit. 
+
+The -path argument can be used to match the file path for files that match the wildcards. -name always matches using the given filename. However, -path matches the file path as a whole. For example: 
+
+$ find /home/users -path "*slynux*" -print
+This will match files as following paths.
+/home/users/list/slynux.txt
+/home/users/slynux/eg.css
+
+
+The -regex argument is similar to -path, but -regex matches the file paths based on regular expressions. 
+
+Regular expressions are an advanced form of wildcard matching. It enables to specify a text with patterns. By using the patterns, we can make matches to the text and print them. A typical example of text matching using regular expressions is: parsing all e-mail addresses from a given pool of text. An e-mail address takes the form name@host.root. So, it can be generalized as [a-z0-9]+@[a-z0-9]+.[a-z0-9]+. The + signifies that the previous class of characters can occur one or more times, repeatedly, in the characters that follow. 
+
+The following command matches .py or .sh files:
+
+$ ls
+new.PY next.jpg test.py
+$ find . -regex ".*\(\.py\|\.sh\)$"
+./test.py
+
+
+Similarly, using -iregex ignores the case for the regular expressions that are available. For example:
+
+$ find . -iregex ".*\(\.py\|\.sh\)$"
+./test.py
+./new.PY
+
+
+Negating arguments
+find can also take negation of arguments using "!". For example: 
+
+$ find . ! -name "*.txt" -print
+
+
+The above find construct matches all the file names, as long as the name does not end with .txt. The following example shows the result of the command:
+
+$ ls
+list.txt new.PY new.txt next.jpg test.py
+$ find . ! -name "*.txt" -print
+.
+./next.jpg
+./test.py
+./new.PY
+
+
+Search based on the directory depth
+When the find command is used it recursively walks through all the subdirectories as much as possible until it reaches the leaf of the subdirectory tree. We can restrict the depth to which the find command traverses using some depth parameters given to the find. -maxdepth and -mindepth? are the parameters. 
+
+In most of the cases, we need to search only in the current directory. It should not further descend into the subdirectories from the current directory. In such cases, we can restrict the depth to which the find command should descend using depth parameters. In order to restrict find from descending into the subdirectories from the current directory, the depth can be set as 1. When we need to descend to two levels, the depth is set as 2, and so on for the rest of the levels.
+
+For specifying the maximum depth we use the maxdepth level parameter. Similarly, we can also specify the minimum level at which the descending should start. If we want to start searching from the second level onwards, we can set the minimum depth using the mindepth level parameter. Restrict the find command to descend to a maximum depth of 1, by using the following command:
+
+$ find . -maxdepth 1 -type f -print
+
+
+This command lists all the regular files only from the current directory. If there are subdirectories, they are not printed or traversed. Similarly, -maxdepth 2 traverses up to at most two descending levels of subdirectories. 
+
+-mindepth is similar to maxdepth, but it sets the least depth level for the find traversal. It can be used to find and print the files that are located with a minimum level of depth from the base path. For example, to print all the files that are at least two subdirectories distant from the current directory use the following command:
+
+$ find . -mindepth 2 -type f -print
+./dir1/dir2/file1
+./dir3/dir4/f2
+
+
+Even if there are files in the current directory or dir1 and dir3, it will not be printed.
+
+
+-maxdepth and mindepth should be specified as the third argument to the find. If they are specified as the fourth or further arguments, it may affect the efficiency of the find as it has to do unnecessary checks (for example, if maxdepth is specified as the fourth argument and type as the third argument, the find command first finds out all the files having the specified type and then finds all of the matched files having the specified depth. However, if the depth were specified as the third argument and type as the fourth, find could collect all the files having at most the specified depth and then check for the file type, which is the most efficient way of searching.
+
+
+
+
+Search based on file type
+UNIX-like operating systems consider every object as a file. There are different kinds of files such as regular file, directory, character devices, block devices, symlinks, hardlinks, sockets, FIFO, and so on. 
+
+The file search can be filtered out using the? -type option. By using type, we can specify to the find command that it should only match files having a specified type.
+
+List only directories including descendants as follows:
+
+$ find . -type d -print
+
+
+It is hard to list directories and files separately. But find helps to do it. List only regular files as follows:
+
+$ find . -type f -print
+
+
+List only symbolic links as follows:
+
+$ find . -type l -print
+
+
+You can use the type arguments from the following table to properly match the required file type: 
+
+File type  Type argument  
+Regular file  f  
+Symbolic link  l  
+Directory  d  
+Character special device  c  
+Block device  b  
+Socket  s  
+Fifo  p  
+
+
+
+
+Search on up file times
+UNIX/Linux file systems have three types of timestamp on each file. They are as follows: 
+
+Access time (-atime): This is the last timestamp of when the file was accessed by some user
+
+Modification time (-mtime): This is the last timestamp of when the file content was modified
+
+Change time (-ctime): This is the last timestamp of when the metadata for a file (such as permissions or ownership) was modified
+
+There is nothing called creation time in UNIX.
+
+-atime, -mtime?, -ctime? are the time parameter options available with find. They can be specified with integer values in "number of days". These integer values are often attached with - or + signs. The - sign implies less than whereas the + implies greater than. For example:
+
+Print all the files that were accessed within the last 7 days as follows:
+
+$ find . -type f -atime -7 -print
+
+
+Print all the files that are having access time exactly 7 days old as follows:
+
+$ find . -type f -atime 7 -print
+
+
+Print all the files that are having access time older than 7 days as follows:
+
+$ find . -type f -atime +7 -print
+
+
+Similarly, we can use the mtime parameter for search files based on modification time and -ctime for search based on change time.
+
+-atime, -mtime, and ctime are time-based parameters that use the time metric in days. There are some other time-based parameters that use the time metric in minutes. These are as follows:
+
+-amin (access time)?
+
+-mmin (modification time)?
+
+-cmin (change time)?
+
+For example: 
+
+In order to print all the files that are having access time older than seven minutes, use the following command:
+
+$ find . -type f -amin +7 -print
+
+
+Another nice feature available with find is the? newer parameter. By using -newer, we can specify a reference file to compare with the timestamp. We can find all the files that are newer (older modification time) than the specified file with the newer parameter.
+
+For example, find all the files that are having a modification time greater than that of the modification time of a given file.txt file as follows:
+
+$ find . -type f -newer file.txt -print
+
+
+Timestamp manipulation flags for the find command are very useful for writing system backup and maintenance scripts.
+
+Search based on file size
+Based on the file sizes of the files, a search can be performed as follows: 
+
+$ find . -type f -size +2k
+# Files having size greater than 2 kilobytes
+$ find . -type f -size -2k
+# Files having size less than 2 kilobytes
+$ find . -type f -size 2k
+# Files having size 2 kilobytes
+
+
+Instead of k we can use different size units as the following:
+
+b 512 byte blocks
+
+c bytes
+
+w two byte words
+
+k Kilobyte
+
+M Megabyte
+
+G Gigabyte
+
+Deleting based on the file matches
+The -delete flag can be used to remove files that are matched by find. 
+
+Remove all the .swp files from the current directory as follows:
+
+$ find . -type f -name "*.swp" -delete
+
+
+Match based on the file permissions and ownership
+It is possible to match files based on the file permissions. We can list out the files having specified file permission as follows: 
+
+$ find . -type f -perm 644 -print
+# Print files having permission 644
+
+
+As an example usage case, we can consider the case of Apache web server. The PHP files in the web server require proper permissions to execute. We can find out the PHP files that are not having proper execute permissions as follows:
+
+$ find . type f name "*.php" ! -perm 644 print
+
+
+We can also search files based on ownership of the files. The files owned by a specific user can be found out using the -user USER option.
+
+The USER argument can be a username or UID.
+
+For example, to print the list of all files owned by the user slynux, you can use the following command:
+
+$ find . -type f -user slynux -print
+
+
+Executing commands or actions with find
+The find command can be coupled with many of the other commands using the -exec option. -exec is one of the most powerful features that comes with find. 
+
+Let's see how to use the exec option. 
+
+Consider the example in the previous section. We used perm? to find out the files that do not have proper permissions. Similarly, in the case where we need to change the ownership of all files owned by a certain user (for example, root) to another user (for example, www-data the default Apache user in the web server), we can find all the files owned by root by using the user option and using exec to perform ownership change operation. 
+
+
+You must run the find command as root for performing ownership change.
+
+
+
+
+Let's have a look at the following example:
+
+# find . -type f user root exec chown slynux {} \;
+
+
+In this command, {} is a special string used with the exec option. For each file match, {} will be replaced with the file name in place for exec. For example, if the find command finds two files test1.txt and test2.txt with owner slynux, the find command will perform: 
+
+chown slynux {} 
+
+This gets resolved to chown slynux test1.txt and chown slynux test2.txt.
+
+Another usage example is to concatenate all the C program files in a given directory and write it to a single file all_c_files.txt. We can use find to match all the C files recursively and use the cat command with the -exec flag as follows:
+
+$ find . -type f -name "*.c" -exec cat {} \;>all_c_files.txt
+
+
+-exec is followed with any command. {} is a match. For every matched filename, {} is replaced with filename.
+
+To redirect the data from find to the all_c_files.txt file, we used the> operator instead of>> (append) because the entire output from the find command is a single data stream (stdin).>> is necessary only when multiple data streams are to be appended to a single file.
+
+For example, to copy all the .txt files that are older than 10 days to a directory OLD, use the following command:
+
+$ find . -type f -mtime +10 -name "*.txt" -exec cp {} OLD \;
+
+
+Similarly, the find command can be coupled with many other commands.
+
+
+-exec with multiple commands
+
+We cannot use multiple commands along with the exec parameter. It accepts only a single command, but we can use a trick. Write multiple commands in a shell script (for example, commands.sh) and use it with exec as follows:
+
+exec ./commands.sh {} \;
+
+
+
+
+-exec can be coupled with printf to produce a very useful output. For example:
+
+$ find . -type f -name "*.txt" -exec printf "Text file: %s\n" {} \;
+
+
+Skip specified directories from the find
+Skipping certain subdirectories for a performance improvement is sometimes required while doing a directory search and performing some action. For example, when programmers look for particular files on a development source tree, which is under a version control system such as Git, the source hierarchy will always contain the .git directory in each of the subdirectories (.git stores version control related information for every directory). Since version control related directories do not produce useful output, they should be excluded from the search. The technique of excluding files and directories from the search is known as pruning. It can be performed as follows: 
+
+$ find devel/source_path \( -name ".git" -prune \) -o \( -type f -print \)
+# Instead of \( -type -print \), use required filter.
+
+
+The above command prints the name (path) of all the files that are not from the .git directories.
+
+Here, \( -name ".git" -prune \) is the exclude portion, which specifies that the .git directory should be excluded and \( -type f -print \) specifies the action to be performed. The actions to be performed are placed in the second block -type f print (the action specified here is to print the names and path of all the files).

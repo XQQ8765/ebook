@@ -1,0 +1,66 @@
+define utility with Web backend
+
+
+Google provides Web definitions for any word by using the search query define:WORD. We need a GUI web browser to fetch the definitions. However, we can automate it and parse the required definitions by using a script. Let's see how to do it.
+
+Getting ready
+We can use lynx, sed, awk, and grep to write the define utility.
+
+How to do it...
+Let's go through the code for the define utility script to fetch definitions from Google search: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: define.sh
+#Description: A Google define: frontend
+limit=0
+if [ ! $# -ge 1 ];
+then
+echo -e "Usage: $0 WORD [-n No_of_definitions]\n"
+exit -1;
+fi
+if [ "$2" = "-n" ];
+then
+limit=$3;
+let limit++
+fi
+word=$1
+lynx -dump http://www.google.co.in/search?q=define:$word | \
+awk '/Defini/,/Find defini/' | head -n -1 | sed 's:*:\n*:; s:^[ ]*::' | \
+grep -v "[[0-9]]" | \
+awk '{
+if ( substr($0,1,1) == "*" )
+{ sub("*",++count".") } ;
+print
+} ' > /tmp/$$.txt
+echo
+if [ $limit -ge 1 ];
+then
+cat /tmp/$$.txt | sed -n "/^1\./, /${limit}/p" | head -n -1
+else
+cat /tmp/$$.txt;
+fi
+
+
+					  
+
+Run the script as follows:
+
+$ ./define.sh hack -n 2
+1. chop: cut with a hacking tool
+2. one who works hard at boring tasks
+
+
+How it works...
+We will look into the core part of the definition parser.? Lynx is used to obtain the plain text version of the web page. http://www.google.co.in/search?q=define:$word is the URL for the web definition web page. Then we reduce the text between "Definitions on web" and "Find definitions". All the definitions are occurring in between these lines of text (awk'/Defini/,/Find defini/'). 
+
+'s:*:\n*:' is used to replace * with * and newline in order to insert a newline in between each definition, and s:^[ ]*:: is used to remove extra spaces in the start of lines. Hyperlinks are marked as [number] in lynx output. Those lines are removed by grep -v, the invert match lines option. Then awk is used to replace the * occurring at start of the line with a number so that each definition can assign a serial number. If we have read a -n count in the script, it has to output only a few definitions as per count. So awk is used to print the definitions with number 1 to count (this makes it easier since we replaced * with the serial number). 
+
+See also
+Basic sed primer of Chapter 4, explains the sed command
+
+Basic awk primer of Chapter 4, explains the awk command
+
+Searching and mining "text" inside a file with grep of Chapter 4, explains the grep command
+
+Downloading a web page as formatted plain text, explains the lynx command

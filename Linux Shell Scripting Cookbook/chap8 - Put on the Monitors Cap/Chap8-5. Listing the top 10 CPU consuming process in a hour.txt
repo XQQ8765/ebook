@@ -1,0 +1,75 @@
+Listing the top 10 CPU consuming process in a hour
+
+
+CPU time is a major resource and sometimes we require to keep track of the processes that consume the most CPU cycles in a period of time. In regular desktops or laptops, it might not be an issue that the CPU is heavily consumed. However, for a server that handles numerous requests, CPU is a critical resource. By monitoring the CPU usage for a certain period we can identify the processes that keep the CPU busy all the time and optimize them to efficiently use the CPU or to debug them due to any other issues. This recipe is a practice with process monitoring and logging. 
+
+Getting ready
+ps is a command used for collecting details about the processes running on the system. It can be used to gather details such as CPU usage, commands under execution, memory usage, status of process, and so on. Processes that consume the CPU for one hour can be logged, and the top 10 can be determined by proper usage of ps and text processing. For more details on the ps comma?nd, see the chapter: Administration Calls!. 
+
+How to do it...
+Let's go through the following shell script for monitoring and calculating CPU usages in one hour:
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Name: pcpu_usage.sh
+#Description: Script to calculate cpu usage by processe?s for 1 hour
+SECS=3600
+UNIT_TIME=60
+#Change the SECS to total seconds for which monitoring is to be performed.
+#UNIT_TIME is the interval in seconds between each sampling
+STEPS=$(( $SECS / $UNIT_TIME ))
+echo Watching CPU usage... ;
+for((i=0;i<STEPS;i++))
+do
+ps -eo comm,pcpu | tail -n +2 >> /tmp/cpu_usage.$$
+sleep $UNIT_TIME
+done
+echo
+echo CPU eaters :
+cat /tmp/cpu_usage.$$ | \
+awk '
+{ process[$1]+=$2; }
+END{
+for(i in process)
+{
+printf("%-20s %s",i, process[i] ;
+}
+}' | sort -nrk 2 | head
+rm /tmp/cpu_usage.$$
+#Remove the temporary log file
+
+
+					  
+
+A sample output is as follows:
+
+$ ./pcpu_usage.sh
+Watching CPU usage...
+CPU eaters :
+Xorg 20
+firefox-bin 15
+bash 3
+evince 2
+pulseaudio 1.0
+pcpu.sh 0.3
+wpa_supplicant 0
+wnck-applet 0
+watchdog/0 0
+usb-storage 0
+
+
+How it works...
+In the above script, the major input source is ps -eocomm, pcpu. comm stands for command name and pcpu stands for the CPU usage in percent. It will output all the process names and the CPU usage in percent. For each process there exists a line in the output. Since we need to monitor the CPU usage for one hour, we repeatedly take usage statistics using ps -eo comm,pcpu? | tail -n +2 and append to a file /tmp/cpu_usage.$$ running inside a for loop with 60 seconds wait in each iteration. This wait is provided by sleep 60. It will execute ps once in each minute. 
+
+tail -n +2 is used to strip off the header and COMMAND %CPU in the ps output.
+
+$$ in cpu_usage.$$ signifies that it is the process ID of the current script. Suppose PID is 1345, during execution it will be replaced as /tmp/cpu_usage.1345. We place this file in /tmp since it is a temporary file.
+
+The statistics file will be ready after one hour and will contain 60 entries corresponding to the process status for each minute. Then awk is used to sum the total CPU usage for each process. An associative array process is used for the summation of CPU usages. It uses the process name as an array index. Finally, it sorts the result with a numeric reverse sort according to the total CPU usage and pass through head to obtain top 10 usage entries. 
+
+See also
+Basic awk primer of Chapter 4, explains the awk command
+
+head and tail - printing the last or first ten lines of Chapter 3, explains the tail command
+
+

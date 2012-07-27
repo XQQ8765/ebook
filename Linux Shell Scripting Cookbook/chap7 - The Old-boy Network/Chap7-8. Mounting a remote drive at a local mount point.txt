@@ -1,0 +1,26 @@
+Mounting a remote drive at a local mount point
+
+
+Having a local mount point to access remote host file-system would be really helpful while carrying out both read and write data transfer operations. SSH is the most common transfer protocol available in a network and hence we can make use of it with sshfs. sshfs enables you to mount a remote filesystem to a local mount point. Let's see how to do it. 
+
+Getting ready
+sshfs doesn't come by default with GNU/Linux distributions. Install sshfs by using a package manager. sshfs is an extension to the fuse file system package that allows supported OSes to mount a wide variety of data as if it were a local file system.
+
+How to do it...
+In order to mount a filesytem location at a remote host to a local mount point, use:
+
+# sshfs user@remotehost:/home/path /mnt/mountpoint
+Password:
+
+
+Issue the user password when prompted.
+
+Now data at /home/path on the remote host can be accessed via a local mount point /mnt/mountpoint.
+
+In order to unmount after completing the work, use:
+
+# umount /mnt/mountpoint
+
+
+See also
+Running commands on remote host with SSH, explains the ssh command.

@@ -1,0 +1,113 @@
+Downloading from a web page
+
+
+Downloading a file or a web page from a given URL is simple. A few command-line download utilities are available to perform this task. 
+
+Getting ready
+wget is a file download command-line utility. It is very flexible and can be configured with many options. 
+
+How to do it...
+A web page or a remote file can be downloaded using wget as follows: 
+
+$ wget URL
+
+
+For example:
+
+$ wget http://slynux.org
+--2010-08-01 07:51:20-- http://slynux.org/
+Resolving slynux.org... 174.37.207.60
+Connecting to slynux.org|174.37.207.60|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 15280 (15K) [text/html]
+Saving to: "index.html"
+100%[======================================>] 15,280 75.3K/s in 0.2s
+2010-08-01 07:51:21 (75.3 KB/s) - "index.html" saved [15280/15280]
+
+
+It is also possible to specify multiple download URLs as follows:
+
+$ wget URL1 URL2 URL3 ..
+
+
+A file can be downloaded using wget using the URL as:
+
+$ wget ftp://example_domain.com/somefile.img
+
+
+Usually, files are downloaded with the same filename as in the URL and the download log information or progress is written to stdout.
+
+You can specify the output file name with the -O option. If the file with the specified filename already exists, it will be truncated first and the downloaded file will be written to the specified file.
+
+You can also specify a different logfile path rather than printing logs to stdout by using the -o option as follows:
+
+$ wget ftp://example_domain.com/somefile.img -O dloaded_file.img -o log
+
+
+By using the above command, nothing will be printed on screen. The log or progress will be written to log and the output file will be dloaded_file.img. 
+
+There is a chance that downloads might break due to unstable Internet connections. Then we can use the number of tries as an argument so that once interrupted, the utility will retry the download that many times before giving up.
+
+In order to specify the number of tries, use the -t flag as follows:
+
+$ wget -t 5 URL
+
+
+There's more...
+The wget utility has several additional options that can be used under different problem domains. Let's go through a few of them.
+
+Restricted with speed downloads
+When we have a limited Internet downlink bandwidth and many applications sharing the internet connection, if a large file is given for download, it will suck all the bandwidth and may cause other process to starve for bandwidth. The wget command comes with a built-in option to specify the maximum bandwidth limit the download job can possess. Hence all the applications can simultaneously run smoothly. 
+
+We can restrict the speed of wget by using the --limit-rate argument as follows:
+
+$ wget --limit-rate 20k http://example.com/file.iso
+
+
+In this command k (kilobyte) and m (megabyte) specify the speed limit.
+
+We can also specify the maximum quota for the download. It will stop when the quota is exceeded. It is useful when downloading multiple files limited by the total download size. This is useful to prevent the download from accidently using too much disk space.
+
+Use --quota? or Q as follows:
+
+$ wget -Q 100m http://example.com/file1 http://example.com/file2
+
+
+Resume downloading and continue
+If a download using wget gets interrupted before it is completed, we can resume the download where we left off by using the -c option as follows:
+
+$ wget -c URL
+
+
+Using cURL for download
+cURL is another advanced command-line utility. It is much more powerful than wget. 
+
+cURL can be used to download as follows: 
+
+$ curl http://slynux.org > index.html
+
+
+Unlike wget, curl writes the downloaded data into standard output (stdout) rather than to a file. Therefore, we have to redirect the data from stdout to the file using a redirection operator.
+
+Copying a complete website (mirroring)
+wget has an option to download the complete website by recursively collecting all the URL links in the web pages and downloading all of them like a crawler. Hence we can completely download all the pages of a website. 
+
+In order to download the pages, use the --mirror option as follows:
+
+$ wget --mirror exampledomain.com
+
+
+Or use:
+
+$ wget -r -N -l DEPTH URL
+
+
+-l specifies the DEPTH of web pages as levels. That means it will traverse only that much number of levels. It is used along with r (recursive). The -N argument is used to enable time stamping for the file. URL is the base URL for a website for which the download needs to be initiated.
+
+Accessing pages with HTTP or FTP authentication
+Some web pages require authentication for HTTP or FTP URLs. This can be provided by using the --user and --password arguments: 
+
+$ wget -user username -password pass URL
+
+
+It is also possible to ask for a password without specifying the password inline. In order to do that use --ask-password instead of the --password argument.

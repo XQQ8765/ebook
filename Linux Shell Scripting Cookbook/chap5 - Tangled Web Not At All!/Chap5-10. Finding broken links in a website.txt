@@ -1,0 +1,47 @@
+Finding broken links in a website
+
+
+I have seen people manually checking each and every page on a site to search for broken links. It is possible only for websites having very few pages. When the number of pages become large, it will become impossible. It becomes really easy if we can automate finding broken links. We can find the broken links by using HTTP manipulation tools. Let's see how to do it. 
+
+Getting ready
+In order to identify the links and find the broken ones from the links, we can use lynx and curl. It has an option? -traversal, which will recursively visit pages in the website and build the list of all hyperlinks in the website. We can use cURL to verify whether each of the links are broken or not.
+
+How to do it...
+Let's write a Bash script with the help of the curl command to find out the broken links on a web page:
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: find_broken.sh
+#Description: Find broken links in a website
+if [ $# -eq 2 ];
+then
+echo -e "$Usage $0 URL\n"
+exit -1;
+fi
+echo Broken links:
+mkdir /tmp/$$.lynx
+cd /tmp/$$.lynx
+lynx -traversal $1 > /dev/null
+count=0;
+sort -u reject.dat > links.txt
+while read link;
+do
+output=`curl -I $link -s | grep "HTTP/.*OK"`;
+if [[ -z $output ]];
+then
+echo $link;
+let count++
+fi
+done < links.txt
+[ $count -eq 0 ] && echo No broken links found.
+
+
+					  
+
+How it works...
+lynx -traversal URL will produce a number of files in the working directory. It includes a file reject.dat which will contain all the links in the website. sort -u is used to build a list by avoiding duplicates. Then we iterate through each link and check the header response by using curl -I. If the header contains first line HTTP/1.0 200 OK as the response, it means that the target is not broken. All other responses correspond to broken links and are printed out to stdout. 
+
+See also
+Downloading a web page as formatted plain text, explains the lynx command
+
+A primer on cURL, explains the curl command

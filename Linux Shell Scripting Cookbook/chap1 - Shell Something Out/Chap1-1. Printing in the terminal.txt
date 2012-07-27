@@ -1,0 +1,125 @@
+Printing in the terminal
+The terminal is an interactive utility by which a user interacts with the shell environment. Printing text in the terminal is a basic task that most shell scripts and utilities need to perform regularly. Printing can be performed via various methods and in different formats. 
+
+How to do it...
+echo is the basic command for printing in the terminal. 
+
+echo puts a newline at the end of every invocation by default:
+
+$ echo "Welcome to Bash"
+Welcome to Bash
+
+
+Simply using double-quoted text with the echo command prints the text in the terminal. Similarly, text without double-quotes also gives the same output:
+
+$ echo Welcome to Bash
+Welcome to Bash
+
+
+Another way to do the same task is by using single quotes:
+
+$ echo 'text in quote'
+
+
+These methods may look similar, but some of them have got a specific purpose and side effects too. Consider the following command: 
+
+$ echo "cannot include exclamation - ! within double quotes"
+
+
+This will return the following:
+
+bash: !: event not found error
+
+
+Hence, if you want to print !, do not use within double-quotes or you may escape the ! with a special escape character (\) prefixed with it.
+
+$ echo Hello world !
+
+
+Or:
+
+$ echo 'Hello world !'
+
+
+Or:
+
+$ echo "Hello world \!" #Escape character \ prefixed.
+
+
+When using echo with double-quotes, you should add set +H before issuing echo so that you can use !.
+
+The side effects of each of the methods are as follows:
+
+When using echo without quotes, we cannot use a semicolon as it acts as a delimiter between commands in the bash shell.
+
+echo hello;hello takes echo hello as one command and the second hello as the second command.
+
+When using echo with single quotes, the variables (for example, $var will not be expanded) inside the quotes will not be interpreted by Bash, but will be displayed as is.
+
+This means: 
+
+$ echo '$var' will return $var 
+
+whereas 
+
+$ echo $var will return the value of the variable $var if defined or nothing at all if it is not defined. 
+
+Another command for printing in the terminal is the printf command. printf uses the same arguments as the printf command in the C programming language. For example: 
+
+$ printf "Hello world"
+
+
+printf takes quoted text or arguments delimited by spaces. We can use formatted strings with printf. We can specify string width, left or right alignment, and so on. By default, printf does not have newline as in the echo command. We have to specify a newline when required, as shown in the following script:
+
+#!/bin/bash
+#Filename: printf.sh
+printf "%-5s %-10s %-4s\n" No Name Mark
+printf "%-5s %-10s %-4.2f\n" 1 Sarath 80.3456
+printf "%-5s %-10s %-4.2f\n" 2 James 90.9989
+printf "%-5s %-10s %-4.2f\n" 3 Jeff 77.564
+
+
+We will receive the formatted output:
+
+No Name Mark
+1 Sarath 80.35
+2 James 91.00
+3 Jeff 77.56
+
+
+%s, %c, %d, and %f are format substitution characters for which an argument can be placed after the quoted format string.
+
+%-5s can be described as a string substitution with left alignment (- represents left alignment) with width equal to 5. If - was not specified, the string would have been aligned to the right. The width specifies the number of characters reserved for that variable. For Name, the width reserved is 10. Hence, any name will reside within the 10-character width reserved for it and the rest of the characters will be filled with space up to 10 characters in total.
+
+For floating point numbers, we can pass additional parameters to round off the decimal places.
+
+For marks, we have formatted the string as %-4.2f, where .2 specifies rounding off to two decimal places. Note that for every line of the format string a \n newline is issued.
+
+There's more...
+It should be always noted that flags (such as -e, -n, and so on) for echo and printf should appear before any strings in the command, else Bash will consider the flags as another string.
+
+Escaping newline in echo
+By default, echo has a newline appended at the end of its output text. This can be avoided by using the -n flag. echo can also accept escape sequences in double-quoted strings as argument. For using escape sequences, use echo as echo -e "string containing escape sequences". For example: 
+
+echo -e "1\t2\t3"
+123
+
+
+Printing colored output
+Producing colored output on the terminal is very interesting stuff. We produce colored output using escape sequences. 
+
+Color codes are used to represent each color. For example, reset=0, black=30, red=31, green=32, yellow=33, blue=34, magenta=35, cyan=36, and white=37.
+
+In order to print colored text, enter the following:
+
+echo -e "\e[1;31m This is red text \e[0m"
+
+
+Here \e[1;31 is the escape string that sets the color to red and \e[0m resets the color back. Replace 31 with the required color code.
+
+For a colored background, reset = 0, black = 40, red = 41, green = 42, yellow = 43, blue = 44, magenta = 45, cyan = 46, and white=47, are the color code that are commonly used.
+
+In order to print a colored background, enter the following:
+
+echo -e "\e[1;42m Green Background \e[0m"
+

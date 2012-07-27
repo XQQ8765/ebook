@@ -1,0 +1,107 @@
+Loopback files and mounting
+
+
+Loopback filesystems are very interesting components of Linux like systems. We usually create filesystems on devices (for example, disk drive partitions). These storage devices are available as device files like /dev/device_name. In order to use the storage device filesystem, we need to mount it at some directory called a mount point. Loopback filesystems are those that we create in files rather than a physical device. We can mount those files as devices at a mount point. Let's see how to do it. 
+
+Getting ready
+Loopback filesystems reside on a file. We mount these files by attaching it to a device file. An example of a loopback filesystem is the initial ramdisk file, which you would see at boot/initrd.img. It stores an initial filesystem for the kernel in a file.
+
+Let's see how to create an ext4 filesystem on a file of size 1GB.
+
+How to do it...
+The following command will create a file that is 1 GB in size.
+
+$ dd if=/dev/zero of=loopbackfile.img bs=1G count=1
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 37.3155 s, 28.8 MB/s
+
+
+You can see that the size of the created file exceeds 1GB. This is because the hard disk is a block device and hence storage is allocated by integral multiples of blocks size.
+
+Now format the 1GB file using the mkfs command as follows: 
+
+# mkfs.ext4 loopbackfile.img
+
+
+This command formats it to ext4. Check the file type using the following command:
+
+Code View: Scroll / Show All
+$ sudo file loopbackfile.img
+loopbackfile.img: Linux rev 1.0 ext4 filesystem data, UUID=c9d56c42-f8e6-4cbd-aeab-369d5056660a (extents) (large files) (huge files)
+
+
+					  
+
+Now you can mount the loopback file as follows:
+
+$ sudo mkdir /mnt/loopback
+# mount -o loop loopback.img /mnt/loopback
+
+
+The -o loop additional option is used to mount any loopback file systems.
+
+This is the shortcut method. We do not attach it to any devices. But internally it attaches to a device called /dev/loop1 or loop2.
+
+We can do it manually as follows:
+
+# losetup /dev/loop1 loopback.img
+# mount /dev/loop1 /mnt/loopback
+
+
+The first method cannot be used in all circumstances. Suppose we want to create a hard disk file, and then want to partition it and mount a sub partition, we cannot use mount -o loop. We have to use the second method. Partition a zeros dumped file as follows:
+
+# losetup /dev/loop1 loopback.img
+# fdisk /dev/loop1
+
+
+Create partitions in loopback.img in order to mount the first partition as follows:
+
+# losetup -o 32256 /dev/loop2 loopback.img
+
+
+Now /dev/loop2 represents first partition.
+
+-o is the offset flag. 32256 bytes are for a DOS partition scheme. The first partition starts after an offset of 32256 bytes from the start of the hard disk.
+
+We can set up the second partition by specifying the required offset. After mounting we can perform all regular operations as we can on physical devices.
+
+In order to umount, use the following syntax: 
+
+# umount mount_point
+
+
+For example:
+
+# umount /mnt/sda1
+
+
+Or, alternately, we can use device file path as an argument to the umount command as:
+
+# umount /dev/sda1
+
+
+Note that umount command should be executed as a root user since it is a privileged command.
+
+There's more...
+Let's explore more about additional mount options.
+
+Mounting ISO files as loopback
+An ISO file is an archive of any optical media. We can mount ISO files in the same way that we mount physical discs by using loopback mounting. 
+
+A mount point is just a directory, which is used as access path to contents of a device through a filesystem. We can even use a non-empty directory as the mount path. Then the mount path will contain data from the devices rather than original contents until the device is unmounted. For example: 
+
+# mkdir /mnt/iso
+# mount -o loop linux.iso /mnt/iso
+
+
+Now perform operations using files from /mnt/iso. ISO is a read-only filesystem.
+
+Flush changes immediately with sync
+While making changes on a mounted device, they are not immediately written to the physical devices. They are only written when the buffer is full. But we can force writing of changes immediately by using the sync command as follows:
+
+# sync 
+
+You should execute the sync command as root.
+
+

@@ -1,0 +1,43 @@
+Chapter 3. File In, File Out
+
+
+In this chapter, we will cover:
+
+Generating files of any size
+
+Intersection and set difference (A-B) on text files
+
+Finding and deleting duplicate files
+
+Making directories for a long path
+
+File permissions, ownership and sticky bit
+
+Making files immutable
+
+Generating blank files in bulk
+
+Finding symbolic links and its target
+
+Enumerating file type statistics
+
+Loopback files and mounting
+
+Creating ISO files, Hybrid ISO
+
+Finding difference between files, patching
+
+head and tail - printing the last or first 10 lines
+
+Listing only directories - alternative methods
+
+Fast command line directory navigation using pushd and popd
+
+Counting the number of lines, words, and characters in a file
+
+Printing directory tree
+
+Introduction
+UNIX treats every object in the operating system as a file. We can find the files associated with every action performed and can make use of them for different system- or process-related manipulations. For example, the command terminal that we use is associated with a device file. We can write to the terminal by writing to the corresponding device file for that specific terminal. Files take different forms such as directories, regular files, block devices, character special devices, symbolic links, sockets, named pipes, and so on. Filename, size, file type, modification time, access time, change time, inode, links associated, and the filesystem the file is on are all attributes and properties that files can have. This chapter deals with recipes that handle any of the operations or properties related to files. 
+
+

@@ -1,0 +1,77 @@
+2.3. Architecture of a rule-based system
+The rules in the first expert systems were intertwined with the rest of the software, so that developing a new expert system meant starting from the ground up. The folks who wrote MYCIN, recognizing this fact, created a development tool named EMYCIN.[3] EMYCIN (Empty MYCIN) was developed by removing all the medical knowledge from MYCIN, leaving behind only a generic framework for rule-based systems. EMYCIN was the first expert system shell. An expert system shell is just the inference engine and other functional parts of an expert system with all the domain-specific knowledge removed. Most modern rule engines can be seen as more or less specialized expert system shells, with features to support operation in specific environments or programming in specific domains. This book is about this kind of rule engine.
+
+[3] W. Van Melle, ¡°A Domain-Independent Production Rule System for Consultation Programs,¡± International Joint Conference on Artificial Intelligence (1979): 923¨C925.
+
+A typical rule engine contains:
+
+An inference engine
+
+A rule base
+
+A working memory
+
+The inference engine, in turn, consists of:
+
+A pattern matcher
+
+An agenda
+
+An execution engine
+
+These components are shown schematically in figure 2.1.
+
+Figure 2.1. The architecture of a typical rule-based system. The pattern-matcher applies the rules in the rule-base to the facts in working memory to construct the agenda. The execution engine fires the rules from the agenda, which changes the contents of working memory and restarts the cycle.
+
+
+
+
+2.3.1. The inference engine
+If you wanted to write your own rule engine, where would you start? You might begin with the most important component. The primary business of a rule engine is to apply rules to data. That makes the inference engine the central part of a rule engine.
+
+The inference engine controls the whole process of applying the rules to the working memory to obtain the outputs of the system. Usually an inference engine works in discrete cycles that go something like this:
+
+All the rules are compared to working memory (using the pattern matcher) to decide which ones should be activated during this cycle. This unordered list of activated rules, together with any other rules activated in previous cycles, is called the conflict set.
+
+The conflict set is ordered to form the agenda¡ªthe list of rules whose right-hand sides will be executed, or fired. The process of ordering the agenda is called conflict resolution. The conflict resolution strategy for a given rule engine will depend on many factors, only some of which will be under the programmer¡¯s control.
+
+To complete the cycle, the first rule on the agenda is fired (possibly changing the working memory) and the entire process is repeated. This repetition implies a large amount of redundant work, but many rule engines use sophisticated techniques to avoid most or all of the redundancy. In particular, results from the pattern matcher and from the agenda¡¯s conflict resolver can be preserved across cycles, so that only the essential, new work needs to be done.
+
+Many beginning rule programmers have difficulty with the idea that the rule engine will decide the order in which the rules will be fired, but this is actually one of the great strengths of rule-based programming. The rule engine can more or less create a custom program for each situation that arises, smoothly handling combinations of inputs the programmer might not have imagined.
+
+2.3.2. The rule base
+Your rule engine will obviously need somewhere to store rules. The rule base contains all the rules the system knows. They may simply be stored as strings of text, but most often a rule compiler processes them into some form that the inference engine can work with more efficiently. For an email filter, the rule compiler might produce tables of patterns to search for and folders to file messages in. Jess¡¯s rule compiler builds a complex, indexed data structure called a Rete network. A Rete network is a data structure that makes rule processing fast. Chapter 8 describes how Jess¡¯s rule compiler works.
+
+In addition, the rule compiler may add to or rearrange the premises or conclusions of a rule, either to make it more efficient or to clarify its meaning for automatic execution. Depending on the particular rule engine, these changes may be invisible to the programmer.
+
+Some rule engines allow (or require) you to store the rule base in an external relational database, and others have an integrated rule base. Storing rules in a relational database allows you to select rules to be included in a system based on criteria like date, time, and user access rights.
+
+2.3.3. The working memory
+You also need to store the data your rule engine will operate on. In a typical rule engine, the working memory, sometimes called the fact base, contains all the pieces of information the rule-based system is working with. The working memory can hold both the premises and the conclusions of the rules. Typically, the rule engine maintains one or more indexes, similar to those used in relational databases, to make searching the working memory a very fast operation.
+
+It¡¯s up to the designer of the rule engine to decide what kinds of things can be stored in working memory. Some working memories can hold only objects of a specific type, and others can include, for example, Java objects.
+
+2.3.4. The pattern matcher
+Your inference engine has to decide what rules to fire, and when. The purpose of the pattern matcher is to decide which rules apply, given the current contents of the working memory. In general, this is a hard problem. If the working memory contains thousands of facts, and each rule has two or three premises, the pattern matcher might need to search through millions of combinations of facts to find those combinations that satisfy rules. Fortunately, a lot of research has been done in this area, and very efficient ways of approaching the problem have been found. Still, for most rule-based programs, pattern matching is the most expensive part of the process. Beginning rule programmers often overlook this fact, expecting the procedural right-hand sides of their rules to represent all the computational effort in their program. The solution to Mrs. Rosencrantz¡¯s problem involved lots of pattern matching and no procedural code at all (except to print a report at the end). Often the pattern-matching technique used by a particular rule engine will affect the kinds of rules you write for that engine, either by limiting the possibilities or by encouraging you to write rules that would be particularly efficient.
+
+2.3.5. The agenda
+Once your inference engine figures out which rules should be fired, it still must decide which rule to fire first. The list of rules that could potentially fire is stored on the agenda. The agenda is responsible for using the conflict strategy to decide which of the rules, out of all those that apply, have the highest priority and should be fired first. Again, this is potentially a hard problem, and each rule engine has its own approach. Commonly, the conflict strategy might take into account the specificity or complexity of each rule and the relative age of the premises in the working memory. Rules may also have specific priorities attached to them, so that certain rules are more important and always fire first.
+
+As an example, the driving robot¡¯s control program might have two rules like these:
+
+IF
+    the light is green
+THEN
+    go
+END
+IF
+    a person is in front of you
+THEN
+    stop
+END
+
+If the robot is stopped for a red light, and the light turns green when someone is still in the crosswalk, then both rules will apply. It is important that the second rule fire before the first, or the future of driving robots will be in serious peril. This second rule should therefore be given a very high priority.
+
+2.3.6. The execution engine
+Finally, once your rule engine decides what rule to fire, it has to execute that rule¡¯s action part. The execution engine is the component of a rule engine that fires the rules. In a classical production system such as MYCIN, rules could do nothing but add, remove, and modify facts in the working memory. In modern rule engines, firing a rule can have a wide range of effects. Some modern rule engines (like Jess) offer a complete programming language you can use to define what happens when a given rule fires. The execution engine then represents the environment in which this programming language executes. For some systems, the execution engine is a language interpreter; for others, it is a dispatcher that invokes compiled code.
+

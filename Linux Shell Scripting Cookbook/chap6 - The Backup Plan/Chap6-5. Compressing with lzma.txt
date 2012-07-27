@@ -1,0 +1,109 @@
+Compressing with lzma
+
+
+lzma is comparatively new when compared to gzip or bzip2. lzma offers better compression rates than gzip or bzip2. As lzma is not preinstalled on most Linux distros, you may need to install it using the package manager. 
+
+How to do it...
+In order to compress with lzma use the following command: 
+
+$ lzma filename
+$ ls
+filename.lzma
+
+
+This will remove the file and produce a compressed file called filename.lzma.
+
+To extract an lzma file use:
+
+$ unlzma filename.lzma
+
+
+This will remove filename.lzma and produce an uncompressed version of the file.
+
+The lzma command can also read a file from stdin and write the compressed file to stdout.
+
+In order to read from stdin and read out as stdout use:
+
+$ cat file | lzma -c > file.lzma
+
+
+-c is used to specify output to stdout.
+
+We usually use lzma with tarballs. A tarball can be compressed by using the --lzma option passed to the tar command while archiving and extracting.
+
+There are two methods to create a lzma tarball:
+
+Method - 1 
+
+$ tar -cvvf --lzma archive.tar.lzma [FILES]
+
+
+
+Or: 
+
+
+$ tar -cavvf archive.tar.lzma [FILES]
+
+
+
+The -a option specifies to automatically detect the compression format from the extension. 
+
+
+
+Method - 2 
+
+First, create the tarball: 
+
+
+$ tar -cvvf archive.tar [FILES]
+
+
+
+Compress it after tarballing: 
+
+
+$ lzma archive.tar
+
+
+If we need to add hundreds of files to the archive, the above commands may fail. To fix that issue, use a loop to append files to the archive one by one using the r option. See the similar section from the recipe, Compressing with gunzip (gzip). 
+
+There's more...
+Let's go through additional options associated with lzma utilities
+
+Extracting an lzma tarball
+In order to extract a tarball compressed with lzma compression to a specified directory, use: 
+
+$ tar -xvvf --lzma archive.tar.lzma -C extract_directory
+
+
+In this command, -x is used for extraction. --lzma specifies the use of lzma to decompress the resulting file.
+
+Or, we could also use:
+
+$ tar -xavvf archive.tar.lzma -C extract_directory
+
+
+The -a option specifies to automatically detect the compression format from the extension.
+
+Keeping input files without removing them
+While using lzma or unlzma, it will remove the input file and produce an output file. But we can prevent from removing input files and keep them by using the -k option. For example:
+
+$ lzma test.bz2 -k
+$ ls
+test.bz2.lzma
+
+
+Compression ratio
+We can specify the compression ratio, which is available in the range of 1 to 9 (where 1 is the least compression, but fast, and 9 is the highest possible compression but much slower). 
+
+You can also specify ratios in between as follows:
+
+$ lzma -9 test.img
+
+
+This command compresses the file to the maximum.
+
+See also
+Archiving with tar, explains the tar command
+
+

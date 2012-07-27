@@ -1,0 +1,45 @@
+Making directories for a long path
+
+
+There are circumstances when we are required to make a tree of empty directories. If some intermediate directories exist in the given path, it will also have to incorporate checks to see whether the directory exists or not. It will make the code larger and inefficient. Let's see the use case and the recipe to solve the issue. 
+
+Getting ready
+mkdir is the command for creating directories. For example: 
+
+$ mkdir dirpath
+
+
+If the directory already exists, it will return a "File exists" error message, as follows: 
+
+mkdir: cannot create directory `dir_name': File exists
+
+
+You are given a directory path (/home/slynux/test/hello/child). The directory /home/slynux already exist. We need to create rest of the directories (/home/slynux/test, /home/slynux/test/hello, and /home/slynux/test/hello) in the path.
+
+The following code is used to figure out whether each directory in a path exists:
+
+if [ -e /home/slynux ]; then
+# Create next level directory
+fi
+
+
+-e is a parameter used in the condition construct [ ], to determine whether a file exists. In UNIX-like systems, directory is also a type of file. [ -e FILE_PATH ] returns true if the file exists.
+
+How to do it...
+The following sequence of code needs to be executed to create directories in a tree in several levels: 
+
+$ mkdir /home 2> /dev/null
+$ mkdir /home/slynux 2> /dev/null
+$ mkdir /home/slynux/test 2> /dev/null
+$ mkdir /home/slynux/test/hello 2> /dev/null
+$ mkdir /home/slynux/test/hello/child 2> /dev/null
+
+
+If an error, such as "Directory exists", is encountered, it is ignored and the error message is dumped to the /dev/null device using the 2> redirection. But this is lengthy and non-standard. The standard one-liner to perform this action is:
+
+$ mkdir -p /home/slynux/test/hello/child
+
+
+This single command takes the place of the five different commands listed above. It ignores if any level of directory exists and creates the missing directories.
+
+

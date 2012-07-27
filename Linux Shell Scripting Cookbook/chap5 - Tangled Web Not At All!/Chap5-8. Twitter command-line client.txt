@@ -1,0 +1,60 @@
+Twitter command-line client
+
+
+Twitter is the hottest micro blogging platform as well as the latest buzz of online social media. Tweeting and reading tweets is fun. What if we can do both from command line? It is pretty simple to write a command-line Twitter client. Twitter has RSS feeds and hence we can make use of them. Let's see how to do it. 
+
+Getting ready
+We can use cURL to authenticate and send twitter updates as well as download the RSS feed pages to parse the tweets. Just four lines of code can do it. Let's do it.
+
+How to do it...
+Let's write a Bash script using the curl command to manipulate twitter APIs: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: tweets.sh
+#Description: Basic twitter client
+USERNAME="PUT_USERNAME_HERE"
+PASSWORD="PUT_PASSWORD_HERE"
+COUNT="PUT_NO_OF_TWEETS"
+if [[ "$1" != "read" ]] && [[ "$1" != "tweet" ]];
+then
+echo -e "Usage: $0 send status_message\n OR\n $0 read\n"
+exit -1;
+fi
+if [[ "$1" = "read" ]];
+then
+curl --silent -u $USERNAME:$PASSWORD http://twitter.com/statuses/friends_timeline.rss | \
+grep title | \
+tail -n +2 | \
+head -n $COUNT | \
+sed 's:.*<title>\([^<]*\).*:\n\1:'
+elif [[ "$1" = "tweet" ]];
+then
+status=$( echo $@ | tr -d '"' | sed 's/.*tweet //')
+curl --silent -u $USERNAME:$PASSWORD -d status="$status" http://twitter.com/statuses/update.xml > /dev/null
+echo 'Tweeted :)'
+fi
+
+
+					  
+
+Run the script as follows:
+
+$ ./tweets.sh tweet Thinking of writing a X version of wall command "#bash"
+Tweeted :)
+$ ./tweets.sh read
+bot: A tweet line
+t3rm1n4l: Thinking of writing a X version of wall command #bash
+
+
+How it works...
+Let's see the working of above script by splitting it into two parts. The first part is about reading tweets. To read tweets the script downloads the RSS information from http://twitter.com/statuses/friends_timeline.rss and parses the lines containing the<title> tag. Then it strips off the<title> and</title> tags using sed to form the required tweet text. Then a COUNT variable is used to remove all other text except the number of recent tweets by using the head command. tail n +2 is used to remove an unnecessary header text "Twitter: Timeline of friends". 
+
+In the sending tweet part, the -d status argument of curl is used to post data to Twitter using their API: http://twitter.com/statuses/update.xml. 
+
+$1 of the script will be the tweet in the case of sending a tweet. Then to obtain the status we take $@ (list of all arguments of the script) and remove the word "tweet" from it.
+
+See also
+A primer on cURL, explains the curl command
+
+head and tail - printing the last or first 10 lines of Chapter 3, explains the commands head and tail

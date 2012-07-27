@@ -1,0 +1,68 @@
+Printing n lines before or after a pattern in a file
+
+
+Printing a section of text by pattern matching is frequently used in text processing. Sometimes we may need the lines of text before a pattern or after a pattern appears in a text. For example, consider that there is a file containing the rating of film actors where each line corresponds to a film actor's details, and we need to find out the rating of an actor along with the details of actors who are nearest to them in rating. Let's see how to do it. 
+
+Getting ready
+grep is the best tool for searching and finding text in a file. Usually, grep prints a matching line or matching text for a given pattern. But the context line control options in grep enables it to print before, after, and before-after lines around the line of pattern match. 
+
+How to do it...
+This technique can be better explained with a film actor list. For example:
+
+$ cat actress_rankings.txt | head -n 20
+1 Keira Knightley
+2 Natalie Portman
+3 Monica Bellucci
+4 Bonnie Hunt
+5 Cameron Diaz
+6 Annie Potts
+7 Liv Tyler
+8 Julie Andrews
+9 Lindsay Lohan
+10 Catherine Zeta-Jones
+11 CateBlanchett
+12 Sarah Michelle Gellar
+13 Carrie Fisher
+14 Shannon Elizabeth
+15 Julia Roberts
+16 Sally Field
+17 T¨¦aLeoni
+18 Kirsten Dunst
+19 Rene Russo
+20 JadaPinkett
+
+
+In order to print three lines after the match "Cameron Diaz" along with the matching line, use the following command:
+
+$ grep -A 3 "Cameron Diaz" actress_rankings.txt
+5 Cameron Diaz
+6 Annie Potts
+7 Liv Tyler
+8 Julie Andrews
+
+
+In order to print the matched line and the preceding three lines, use the following command:
+
+$ grep -B 3 "Cameron Diaz" actress_rankings.txt
+2 Natalie Portman
+3 Monica Bellucci
+4 Bonnie Hunt
+5 Cameron Diaz
+
+
+Print the matched line and the two lines before and after the matched line as follows: 
+
+$ grep -C 2 "Cameron Diaz" actress_rankings.txt
+3 Monica Bellucci
+4 Bonnie Hunt
+5 Cameron Diaz
+6 Annie Potts
+7 Liv Tyler
+
+
+Are you wondering where I got this ranking from?
+
+I parsed a website having full of images and HTML content just using basic sed, awk, and grep commands. See the chapter: Tangled Web? Not at all.
+
+See also
+Searching and mining "text" inside a file with grep, explains the grep command.

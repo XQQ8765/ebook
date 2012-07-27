@@ -1,0 +1,55 @@
+Archiving with cpio
+
+
+cpio is another archiving format similar to tar. It is used to store files and directories in a file with attributes such as permissions, ownership, and so on. But it is not commonly used as much as tar. However, cpio seems to be used in RPM package archives, initramfs files for the Linux kernel, and so on. This recipe will give minimal usage examples of cpio. 
+
+How to do it...
+cpio takes input filenames through stdin and it writes the archive into stdout. We have to redirect stdout to a file to receive the output cpio file as follows:
+
+Create test files:
+
+$ touch file1 file2 file3
+
+
+We can archive the test files as follows:
+
+$ echo file1 file2 file3 | cpio -ov > archive.cpio
+
+
+In this command: 
+
+-o specifies the output
+
+-v is used for printing a list of files archived
+
+
+By using cpio, we can also archive using files as absolute paths. /usr/somedir is an absolute path as it contains the full path starting from root (/).
+
+A relative path will not start with / but it starts the path from the current directory. For example, test/file means that there is a directory test and the file is inside the test directory.
+
+While extracting, cpio extracts to the absolute path itself. But incase of tar it removes the / in the absolute path and converts it as relative path.
+
+
+
+
+In order to list files in a cpio archive use the following command:
+
+$ cpio -it < archive.cpio
+
+
+This command will list all the files in the given cpio archive. It reads the files from stdin. In this command:
+
+-i is for specifying the input
+
+-t is for listing
+
+In order to extract files from the cpio archive use:
+
+$ cpio -id < archive.cpio
+
+
+Here, -d is used for extracting.
+
+It overwrites files without prompting. If the absolute path files are present in the archive, it will replace the files at that path. It will not extract files in the current directory like tar. 
+
+

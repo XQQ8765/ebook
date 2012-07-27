@@ -1,0 +1,122 @@
+Basic sed primer
+
+
+sed stands for stream editor. It is a very essential tool for text processing. It is a marvelous utility that can play around regular expressions. A well-known usage of the sed command is for text replacement. This recipe will cover most of the frequently used sed techniques. 
+
+How to do it¡­
+sed can be used to replace occurrences of a string with another string in a given text. It can be matched using regular expressions.
+
+$ sed 's/pattern/replace_string/' file
+
+
+or
+
+$ cat file | sed 's/pattern/replace_string/' file
+
+
+This command reads from stdin.
+
+To save the changes along with the substitutions to the same file, use the -i option. Most of the users follow multiple redirections to save the file after making a replacement as follows:
+
+$ sed 's/text/replace/' file > newfile
+$ mv newfile file
+
+
+However, it can be done in just one line, for example:
+
+$ sed -i 's/text/replace/' file
+
+
+The previously seen sed commands will replace the first occurrence of the pattern in each line. But in order to replace every occurrence, we need to add the g parameter at the end as follows:
+
+$ sed 's/pattern/replace_string/g' file
+
+
+The /g suffix means that it will substitute every occurrence. However, sometimes we need not replace the first "N" occurrences, but only the rest of them. There is a built-in option to ignore the first "N" occurrences and replace from the"N+1th"occurrence onwards.
+
+Have a look at the following commands:
+
+$ echo this thisthisthis | sed 's/this/THIS/2g'
+thisTHISTHISTHIS
+$ echo this thisthisthis | sed 's/this/THIS/3g'
+thisthisTHISTHIS
+$ echo this thisthisthis | sed 's/this/THIS/4g'
+thisthisthisTHIS
+
+
+Place /Ng when it needs to start the replacement from the N-th occurrence.
+
+/ in sed is a delimiter character. We can use any delimiter characters as follows:
+
+sed 's:text:replace:g'
+sed 's|text|replace|g'
+
+
+When the delimiter character appears inside the pattern, we have to escape it using \ prefix as:
+
+sed 's|te\|xt|replace|g'
+
+
+\| is a delimiter appearing in the pattern replaced with escape.
+
+There's more...
+The sed command comes with numerous options for text manipulation. By combining the options available with sed in logical sequences, many complex problems can be solved in one line. Let's see some different options available with sed. 
+
+Removing blank lines
+Removing blank lines is a simple technique using sed to remove blank lines. Blanks can be matched with regular expression ^$: 
+
+$ sed '/^$/d' file
+
+
+/pattern/d will remove lines matching the pattern.
+
+For blank lines, the line end marker appears next to the line start marker.
+
+Matched string notation (&)
+In sed we can use& as the matched string for the substitution pattern such that we can use the matched string in replacement string. 
+
+For example:
+
+$ echo this is an example | sed 's/\w\+/[&]/g'
+[this] [is] [an] [example]
+
+
+Here the regex \w\+ matches every word. Then we replace it with [&]. & corresponds to the word that is matched.
+
+Substring match notation (\1)
+& is a string which corresponds to match string for the given pattern. But we can also match the substrings of the given pattern. Let's see how to do it. 
+
+$ echo this is digit 7 in a number | sed 's/digit \([0-9]\)/\1/'
+this is 7 in a number
+
+
+It replaces digit 7 with 7. The substring matched is 7. \(pattern\)is used to match the substring. The pattern is enclosed in () and is escaped with slashes. For the first substring match, the corresponding notation is \1, for the second it is \2, and so on. Go through the following example with multiple matches:
+
+$ echo seven EIGHT | sed 's/\([a-z]\+\) \([A-Z]\+\)/\2 \1/'
+EIGHT seven
+
+
+([a-z]\+\) matches the first word and \([A-Z]\+\)matches the second word. \1 and \2 are used for referencing them. This type of referencing is called back referencing. In the replacement part, their order is changed as \2 \1 and hence it appears in reverse order.
+
+Combination of multiple expressions
+The combination of multiple sed using a pipe can be replaced as follows: 
+
+sed 'expression' | sed 'expression'
+
+
+Which is equivalent to:
+
+$ sed 'expression; expression'
+
+
+Quoting
+Usually, it is seen that the sed expression is quoted using single quotes. But double-quotes can also be used. Double-quotes expand the expression by evaluating it. Using double-quotes is useful when we want to use some variable string in a sed expression.
+
+For example:
+
+$ text=hello
+$ echo hello world | sed "s/$text/HELLO/"
+HELLO world
+
+
+$text is evaluated as "hello".

@@ -1,0 +1,151 @@
+Checking palindrome strings with a script
+
+
+Checking whether a string is palindrome is one of the first lab exercises in a C programming course. However, here we have included this recipe to give you an idea of how to solve similar problems in which pattern matching can be extended in a way that previously occurring patterns repeat in the text. 
+
+Getting ready
+The sed command has the capability to remember a previously-matched sub pattern. It is called back referencing. We can solve palindrome problems by using back referencing. We can solve this using multiple ways in Bash. 
+
+How to do it...
+sed can remember previously matched regular expression patterns, thereby we can identify whether duplicates of a character exists in a string. This capability to remember and reference previously matched patterns is called back-reference.
+
+Let's see how we can apply back-referencing in a simpler manner to solve the problem. For example:
+
+$ sed -n '/\(.\)\1/p' filename
+
+
+\(.\) corresponds to memorize the one sub string inside ( ). Here it is . (period) which is also sed's single character wildcard character.
+
+\1 corresponds to the memory of the first match inside (). \2 corresponds to the second match. Hence we can memorize many blocks enclosed in (). () appears as \( \) to give ( and ) special meaning rather than just a character.
+
+The previous sed statement will print any pattern matching two exactly the same.
+
+The structure of all palindrome words is as follows:
+
+Even number of characters and a sequence of characters concatenated with same characters in reverse order
+
+Odd number of characters with a sequence of characters concatenated with reverse of same characters, but a common character in between the first sequence and its reverse
+
+Therefore, for matching both, we can keep an optional character in between while writing the regular expression.
+
+A sed regex matching a three-letter palindrome word will look like the following: 
+
+'/\(.\).\1/p'
+
+
+We can place an extra character (.) in between the character sequence and its reverse sequence.
+
+Let's write a script that can match a palindrome string of any length as follows:
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: match_palindrome.sh
+#Description: Find out palindrome strings from a given file
+if [ $# -ne 2 ];
+then
+echo "Usage: $0 filename string_length"
+exit -1
+fi
+filename=$1 ;
+basepattern='/^\(.\)'
+count=$(( $2 / 2 ))
+for((i=1;i<$count;i++))
+do
+basepattern=$basepattern'\(.\)' ;
+done
+if [ $(( $2 % 2 )) -ne 0 ];
+then
+basepattern=$basepattern'.' ;
+fi
+for((count;count>0;count--))
+do
+basepattern=$basepattern'\'"$count" ;
+done
+basepattern=$basepattern'$/p'
+sed -n "$basepattern" $filename
+
+
+					  
+
+Use the dictionary file as the input file to get a list of palindrome words of a given string length. For example: 
+
+$ ./match_palindrome.sh /usr/share/dict/british-english 4
+noon
+peep
+poop
+sees
+
+
+How it works...
+The working of the above script is simple. Most of the work is done to generate the sed script for a regular expression and a back-reference string generation.
+
+Let's go through its working with the help of some worked out examples.
+
+If you want to match the character and back-reference it, we use \(.\) to match one character and \1 to reference it. Hence, in order match a two letter palindrome and print it, we use:
+
+sed '/\(.\)\1/p'
+Now, to specify that match string from the beginning of the line, we add line-begin market ^ so that it will become sed'/^\(.\)\1/p'. /p is used to print the match. 
+
+If we want to match four character palindrome, we use:
+
+sed '/^\(.\)\(.\)\2\1/p'
+We have used two \(.\) to match two characters and remember them. Anything enclosed within \( and \) will be remembered by sed and can be back-referenced. \2\1 is used to back-reference in the reverse order of the matched characters. 
+
+In the above script, we have a variable called basepattern, which contains the sed script.
+
+The pattern is generated using a for loop based on the number of characters in the palindrome string.
+
+Initially, basepattern is initialized as basepattern='/^\(.\)', which corresponds to a one-character match. A for loop is used to concatenate \(.\) with basepattern for half the number of times of the length of palindrome string. Again a for loop is used to concatenate back-references in the reverse order (like'\4\3\2\1') half the number of times the length of palindrome string. Finally, in order to support palindrome strings with odd length an optional character (.) is enclosed between match regex and back-references.
+
+Thus the sed palindrome match pattern is crafted. This crafted string is used to find out the palindrome strings from the dictionary file. 
+
+In the above script, we have used sed pattern generation using for loops. Actually there is no need to generate pattern separately. The sed command has its own loop implementation using labels and goto. sed is a vast language. Palindrome check can be done in a single line using a complex sed script. It is hard to explain it from scratch. Just try out the following script:
+
+Code View: Scroll / Show All
+$ word="malayalam"
+$ echo $word | sed ':loop ; s/^\(.\)\(.*\)\1/\2/; t loop; /^.\?$/{ s/.*/PALINDROME/ ; q; }; s/.*/NOT PALINDROME/ '
+PALINDROME
+
+
+					  
+
+If you are interested in deep scripting with sed, refer to the complete sed and awk reference book: sed & awk, Second Edition by Dale Dougherty and Arnold Robbins.
+
+Try to parse the above one-line sed script to test the palindrome using the book.
+
+There's more...
+Now let's see some other options, or possibly some pieces of general information that are relevant to this task.
+
+Simplest and direct method
+The simplest method to check whether a string is a palindrome is by using the rev command.
+
+The rev command takes a file or stdin as input and prints the reversed string of every line. 
+
+Let's do it:
+
+string="malayalam"
+if [[ "$string" == "$(echo $string | rev )" ]];
+then
+echo "Palindrome"
+else
+echo "Not palindrome"
+fi
+
+
+The rev command can be used along with other commands to solve different problems. Let's look at an interesting example to reverse the words in a sentence: 
+
+sentence='this is line from sentence'
+echo $sentence | rev | tr ' ' '\n' | tac | tr '\n' ' ' | rev
+
+
+The output is as follows:
+
+sentence from line is this
+
+
+In the above one-liner, the characters are reversed first using the rev command. Then the words are separated into a word per line by replacing space with the \n character by using the tr command. Now the lines are reversed in order using the tac command. Again, lines are merged into a line using tr. Now rev is again applied so that a line with words is in the reverse order. 
+
+See also
+Basic sed primer, explains the sed command
+
+Comparisons and tests of Chapter 1, explains the string comparison operators

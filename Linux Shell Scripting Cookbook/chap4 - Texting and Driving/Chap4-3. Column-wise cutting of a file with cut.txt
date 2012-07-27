@@ -1,0 +1,135 @@
+Column-wise cutting of a file with cut
+
+
+We may need to cut text by column rather than row. Let's assume that we have a text file containing student reports with columns, such as No, Name, Mark, and Percentage. We need to extract only the name of students to another file or any n-th column in the file or extract two or more columns. This recipe will illustrate how to perform this task. 
+
+Getting ready
+cut is a small utility that often comes to our help for cutting in column fashion. It can also specify the delimiter that separates each column. In cut terminology, each column is known as a field. 
+
+How to do it...
+In order to extract the first field or column, use the following syntax: 
+
+cut -f FIELD_LIST filename
+
+
+FIELD_LIST is a list of columns that are to be displayed. The list consists of column numbers delimited by commas. For example:
+
+$ cut -f 2,3 filename
+
+
+Here, the second and the third columns are displayed.
+
+cut can also read input text from stdin.
+
+Tab is the default delimiter for fields or columns. If lines without delimiters are found, they are also printed. To avoid printing lines that do not have delimiter characters, attach the -s option along with cut. An example of using the cut command for columns is as follows:
+
+$ cat student_data.txt
+No Name Mark Percent
+1 Sarath 45 90
+2 Alex 49 98
+3 Anu 45 90
+$ cut -f1 student_data.txt
+No
+1
+2
+3
+
+
+Extract multiple fields as follows:
+
+$ cut -f2,4 student_data.txt
+Name Percent
+Sarath 90
+Alex 98
+Anu 90
+
+
+To print multiple columns, provide a list of column numbers separated by commas as argument to -f.
+
+We can also complement the extracted fields using the --complement option. Suppose you have many fields and you want to print all the columns except the third column, use: 
+
+$ cut -f3 -complement student_data.txt
+No Name Percent
+1 Sarath 90
+2 Alex 98
+3 Anu 90
+
+
+To specify the delimiter character for the fields, use the -d option as follows:
+
+$ cat delimited_data.txt
+No;Name;Mark;Percent
+1;Sarath;45;90
+2;Alex;49;98
+3;Anu;45;90
+$ cut -f2 -d";" delimited_data.txt
+Name
+Sarath
+Alex
+Anu
+
+
+There's more...
+The cut command has more options to specify the character sequences to be displayed as columns. Let's go through the additional options available with cut.
+
+Specifying range of characters or bytes as fields
+Suppose that we don't rely on delimiters, but we need to extract fields such that we need to define a range of characters (counting from 0 as start of line) as a field, such extractions are possible with cut. 
+
+Let's see what notations are possible:
+
+N-  from N-th byte, character or field, to end of line  
+N-M  from N-th to M-th (included) byte, character or field  
+-M  from first to M-th (included) byte, character or field  
+
+
+
+
+We use the above notations to specify fields as range of bytes or characters with the following options: 
+
+-b for bytes
+
+-c for characters
+
+-f for defining fields
+
+For example:
+
+$ cat range_fields.txt
+abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxy
+
+
+You can print the first to fifth characters as follows:
+
+$ cut -c1-5 range_fields.txt
+abcde
+abcde
+abcde
+abcde
+
+
+The first two characters can be printed as follows:
+
+$ cut range_fields.txt -c-2
+ab
+ab
+ab
+ab
+
+
+Replace -c with -b to count in bytes.
+
+We can specify output delimiter while using with -c, -f and -b as:
+
+--output-delimiter "delimiter string"
+
+
+When multiple fields are extracted with -b or -c, --output-delimiter is a must. Else, you cannot distinguish between fields if it is not provided. For example: 
+
+$ cut range_fields.txt -c1-3,6-9 --output-delimiter ","
+abc,fghi
+abc,fghi
+abc,fghi
+abc,fghi

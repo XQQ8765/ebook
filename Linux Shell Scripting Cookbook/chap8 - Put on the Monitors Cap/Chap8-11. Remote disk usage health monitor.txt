@@ -1,0 +1,71 @@
+Remote disk usage health monitor
+A network consists of several machines with different users. The network requires centralized monitoring of disk usage of remote machines. The system administrator of the network needs to log the disk usage of all the machines in the network every day. Each log line should contain details such as the date, IP address of the machine, device, capacity of the device, used space, free space, percentage usage, and health status. If the disk usage of any of the partitions in any remote machine exceeds 80 percent, the health status should be set to ALERT, else it should be set to SAFE. This recipe will illustrate how to write a monitoring script that can collect details from remote machines in a network. 
+
+Getting ready
+We need to collect the disk usage statistics from each machine on the network, individually, and write a log file in the central machine. A script that collects the details and writes the log can be scheduled to run everyday at a particular time. The SSH can be used to log in to remote systems to collect disk usage data.
+
+How to do it¡­
+First we have to set up a common user account on all the remote machines in the network. It is for the disklog program to log in to the system. We should configure auto-login with SSH for that particular user (the recipe, Password-less auto-login with SSH in Chapter 7, explains configuration of auto-login). We assume that there is a user called test in all remote machines configured with auto-login. Let's go through the shell script: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: disklog.sh
+#Description: Monitor disk usage health for remote systems
+logfile="diskusage.log"
+if [[ -n $1 ]]
+then
+logfile=$1
+fi
+if [ ! -e $logfile ]
+then
+printf "%-8s %-14s %-9s %-8s %-6s %-6s %-6s %s\n" "Date" "IP address" "Device" "Capacity" "Used" "Free" "Percent" "Status" > $logfile
+fi
+IP_LIST="127.0.0.1 0.0.0.0"
+#provide the list of remote machine IP addresses
+(
+for ip in $IP_LIST;
+do
+ssh slynux@$ip 'df -H' | grep ^/dev/ > /tmp/$$.df
+while read line;
+do
+cur_date=$(date +%D)
+printf "%-8s %-14s " $cur_date $ip
+echo $line | awk '{ printf("%-9s %-8s %-6s %-6s %-8s",$1,$2,$3,$4,$5); }'
+pusg=$(echo $line | egrep -o "[0-9]+%")
+pusg=${pusg/\%/};
+if [ $pusg -lt 80 ];
+then
+echo SAFE
+else
+echo ALERT
+fi
+done< /tmp/$$.df
+done
+) >> $logfile
+
+
+					  
+
+We can schedule using the cron utility to run the script at regular intervals. For example, to run the script everyday at 10 am, write the following entry in the crontab: 
+
+00 10 * * * /home/path/disklog.sh /home/user/diskusg.log
+
+
+Run the command crontab e. Add the above line and save the text editor.
+
+You can run the script manually as follows:
+
+$ ./disklog.sh
+
+
+A sample output log for the above script is as follows:
+
+ 
+
+How it works¡­
+In the disklog.sh script, we can provide the logfile path as a command-line argument or else it will use the default logfile. If the logfile does not exists, it will write the logfile header text into the new file. e $logfile is used to check whether the file exists or not. The list of IP addresses of remote machines are stored in the variable IP_LIST delimited with spaces. It should be made sure that all the remote systems listed in the IP_LIST have a common user test with auto-login with SSH configured. A for loop is used to iterate through each of the IP addresses. A remote command df H is executed to get the disk free usage data using the ssh command. It is stored in a temporary file. A while loop is used to read the file line by line. Data is extracted using awk and is printed. The date is also printed. The percentage usage is extracted using the egrep command and % is replaced with none to get the numeric value of percent. It is checked whether the percentage value exceeds 80. If it is less than 80, the status is set as SAFE and if greater than or equal to 80, the status is set as ALERT. The entire printed data should be redirected to the logfile. Hence the portion of code is enclosed in a subshell () and the standard output is redirected to the logfile.??? 
+
+See also
+Scheduling with cron of Chapter 9, explains the crontab command
+
+

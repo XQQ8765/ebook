@@ -1,0 +1,100 @@
+Automating interactive input
+
+
+Automating interactive input for command-line utilities are extremely useful for writing automation tools or testing tools. There will be many situations when we deal with commands that read inputs interactively. Interactive input is the input typed by the user only when the command asks for some input. An example for execution of a command and supply of interactive input is as follows: 
+
+$ command
+Enter a number: 1
+Enter name : hello
+You have entered 1,hello
+
+
+Getting ready
+Automating utilities which can automate the acceptance of input as in the above mentioned manner are useful to supply input to local commands as well as for remote applications. Let's see how to automate them.
+
+How to do it...
+Think about the sequence of an interactive input. From the previous code we can formulate the steps of the sequence as follows:
+
+1[Return]hello[Return] 
+
+Converting the above steps 1,Return,hello,Return by observing the characters that are actually typed in the keyboard, we can formulate the following string.
+
+"1\nhello\n" 
+
+The \n character is sent when we press Return. By appending return (\n) characters, we get the actual string that is passed to the stdin (standard input).
+
+Hence by sending the equivalent string for the characters typed by the user, we can automate the passing of input in the interactive processes.
+
+How it works…
+Let's write a script that reads input interactively and uses this script for automation examples:
+
+#!/bin/bash
+#Filename: interactive.sh
+read -p "Enter number:" no ;
+read -p "Enter name:" name
+echo You have entered $no, $name;
+
+
+Let's automate the sending of input to the command as follows:
+
+$ echo -e "1\nhello\n" | ./interactive.sh
+You have entered 1, hello
+
+
+Thus crafting inputs with \n works.
+
+We have used echo -e to produce the input sequence. If the input is large we can use an input file and redirection operator to supply input.
+
+$ echo -e "1\nhello\n" > input.data
+$ cat input.data
+1
+hello
+
+
+You can also manually craft the input file without echo commands by hand typing. For example: 
+
+$ ./interactive.sh < input.data
+
+
+This redirects interactive input data from a file.
+
+If you are a reverse engineer, you may have played with buffer overflow exploits. To exploit them we need to redirect shellcode like"\xeb\x1a\x5e\x31\xc0\x88\x46", which is written in hex. These characters cannot be typed directly through keyboard since, keys for these characters are not present in the keyboard. Therefore we should use:
+
+echo -e "\xeb\x1a\x5e\x31\xc0\x88\x46" 
+
+This will redirect shellcode to a vulnerable executable.
+
+We have described a method to automate interactive input programs by redirecting expected input text through stdin (standard input). We are sending the input without checking the input the program asks for. We are sending the input by expecting the program to ask input in a specific (static) order. If the program asks input randomly or in a changing order, or sometimes certain inputs are never asked, the above method fails. It will send wrong inputs to different input prompts by the program. In order to handle dynamic input supply and provide input by checking the input requirements by the program on runtime, we have a great utility called expect.? The expect command supplies correct input for the correct input prompt by the program. Let's see how to use expect. 
+
+There's more...
+Automation of interactive input can also be done using other methods. Expect scripting is another method for automation. Let's go through it.
+
+Automating with expect
+The expect utility does not come by default with most of the common Linux distributions. You have to install the expect package manually using package manager. 
+
+expect expects for a particular input prompt and sends data by checking message in the input prompt.
+
+#!/usr/bin/expect
+#Filename: automate_expect.sh
+spawn ./interactive .sh
+expect "Enter number:"
+send "1\n"
+expect "Enter name:"
+send "hello\n"
+expect eof
+
+
+Run as:
+
+$ ./automate_expect.sh
+
+
+In this script:
+
+spawn parameter specifies which command is to be automated
+
+expect parameter provides the expected message
+
+send is the message to be sent.
+
+expect eof defines the end of command interaction

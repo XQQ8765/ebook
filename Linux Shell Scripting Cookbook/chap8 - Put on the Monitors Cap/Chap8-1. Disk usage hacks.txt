@@ -1,0 +1,252 @@
+Disk usage hacks
+
+
+Disk space is a limited resource. We frequently perform disk usage calculation on hard disks or any storage media to find out the free space available on the disk. When free space becomes scarce, we will need to find out large-sized files that are to be deleted or moved in order to create free space. Disk usage manipulations are commonly used in shell scripting contexts. This recipe will illustrate various commands used for disk manipulations and problems where disk usages can be calculated with a variety of options. 
+
+Getting ready
+df and du are the two significant commands that are used for calculating disk usage in Linux. The command df stands for disk free and du stands for disk usage. Let's see how we can use them to perform various tasks that involve disk usage calculation. 
+
+How to do it...
+To find the disk space used by a file (or files), use:
+
+$ du FILENAME1 FILENAME2 ..
+
+
+For example:
+
+$ du file.txt
+4
+
+
+The result is, by default, shown as size in bytes.
+
+
+In order to obtain the disk usage for all files inside a directory along with the individual disk usage for each file showed in each line, use:
+
+$ du -a DIRECTORY
+
+
+-a outputs results for all files in the specified directory or directories recursively.
+
+
+Running du DIRECTORY will output a similar result, but it will show only the size consumed by subdirectories. However, they do not show the disk usage for each of the files. For printing the disk usage by files, -a is mandatory.
+
+
+
+
+For example:
+
+$ du -a test
+4 test/output.txt
+4 test/process_log.sh
+4 test/pcpu.sh
+16 test
+
+
+An example of using du DIRECTORY is as follows:
+
+$ du test
+16 test
+
+
+There's more...
+Let's go through additional usage practices for the du command.
+
+Displaying disk usage in KB, MB, or Blocks
+By default, the disk usage command displays the total bytes used by a file. A more human-readable format is when disk usage is expressed in standard units KB, MB, or GB. In order to print the disk usage in a display-friendly format, use h as follows: 
+
+du -h FILENAME
+
+
+For example:
+
+$ du -sh test/pcpu.sh
+4.0K test/pcpu.sh
+# Multiple file arguments are accepted
+
+
+Or:
+
+# du -h DIRECTORY
+$ du -h hack/
+16K hack/
+
+
+Displaying the grand total sum of disk usage
+Suppose we need to calculate the total size taken by all the files or directories, displaying individual file sizes won't help. du has an option -c such that it will output the total disk usage of all files and directories given as an argument. It appends a line SIZE total with the result. The syntax is as follows: 
+
+$ du -c FILENAME1 FILENAME2..
+
+
+For example:
+
+du -c process_log.sh pcpu.sh
+4 process_log.sh
+4 pcpu.sh
+8 total
+
+
+Or:
+
+$ du -c DIRECTORY
+
+
+For example:
+
+$ du -c test/
+16 test/
+16 total
+
+
+Or:
+
+$ du -c *.txt
+# Wildcards
+
+
+-c can be used along with other options like -a and -h. It gives the same output as without using -c. The only difference is that it appends an extra line containing the total size.
+
+There is another option s (summarize), which will print only the grand total as the output. It will print the total sum, and flag -h can be used along with it to print in human readable format. This command has frequent use in practice. The syntax is as follows: 
+
+$ du -s FILES(s)
+$ du -sh DIRECTORY
+
+
+For example:
+
+$ du -sh slynux
+680K slynux
+
+
+Printing files in specified units
+We can force du to print the disk usage in specified units. For example: 
+
+Print size in bytes (by default) by using:
+
+$ du -b FILE(s)
+
+
+Print the size in kilobytes by using:
+
+$ du -k FILE(s)
+
+
+Print the size in megabytes by using:
+
+$ du -m FILE(s)
+
+
+Print size in given BLOCK size specified by using:
+
+$ du -B BLOCK_SIZE FILE(s)
+
+
+
+Here, BLOCK_SIZE is specified in bytes. 
+
+
+An example consisting of all the commands is as follows: 
+
+$ du pcpu.sh
+4 pcpu.sh
+$ du -b pcpu.sh
+439 pcpu.sh
+$ du -k pcpu.sh
+4 pcpu.sh
+$ du -m pcpu.sh
+1 pcpu.sh
+$ du -B 4 pcpu.sh
+1024 pcpu.sh
+
+
+Excluding files from disk usage calculation
+There are circumstances when we need to exclude certain files from disk usage calculation. Such excluded files can be specified in two ways: 
+
+1. Wildcards 
+
+We can specify a wildcard as follows: 
+
+$ du --exclude "WILDCARD" DIRECTORY
+
+
+
+For example: 
+
+
+$ du --exclude "*.txt" FILES(s)
+# Excludes all .txt files from calculation
+
+
+2. Exclude list 
+
+We can specify a list of files to be excluded from a file as follows: 
+
+$ du --exclude-from EXCLUDE.txt DIRECTORY
+# EXCLUDE.txt is the file containing list
+
+
+There are also some other handy options available with du to restrict the disk usage calculation. We can specify the maximum depth of the hierarchy that the du should traverse as a whole by calculating disk usage with the --max-depth parameter. Specifying a depth of 1 calculates the sizes of files in the current directory. Depth 2 will calculate files in the current directory and the next subdirectory and stop traversal at that second subdirectory.
+
+For example:
+
+$ du --max-depth 2 DIRECTORY
+
+
+
+du can be restricted to traverse only a single file system by using the -x argument. Suppose du DIRECTORY is run, it will traverse through every possible subdirectory of DIRECTORY recursively. A subdirectory in the directory hierarchy may be a mount point (for example, /mnt/sda1 is a subdirectory of /mnt and it is a mount point for the device /dev/sda1). du will traverse that mount point and calculate the sum of disk usage for that device filesystem also. In order to prevent du from traversing and to calculate from other mount points or filesystems, use the -x flag along with other du options. du x / will exclude all mount points in /mnt/ for disk usage calculation.
+
+
+
+
+While using du make sure that the directories or files it traverses have the proper read permissions. 
+
+Finding the 10 largest size files from a given directory
+Finding large-size files is a regular task we come across. We regularly require to delete those huge size files or move them. We can easily find out large-size files using du and sort commands. The following one-line script can achieve this task: 
+
+$ du -ak SOURCE_DIR | sort -nrk 1 | head
+
+
+Here -a specifies all directories and files. Hence du traverses the SOURCE_DIR and calculates the size of all files. The first column of the output contains the size in Kilobytes since -k is specified and the second column contains the file or folder name.
+
+sort is used to perform numerical sort with column 1 and reverse it. head is used to parse the first 10 lines from the output.
+
+For example:
+
+$ du -ak /home/slynux | sort -nrk 1 | head -n 4
+50220 /home/slynux
+43296 /home/slynux/.mozilla
+43284 /home/slynux/.mozilla/firefox
+43276 /home/slynux/.mozilla/firefox/8c22khxc.default
+
+
+One of the drawbacks of the above one-liner is that it includes directories in the result. However, when we need to find only the largest files and not directories we can improve the one-liner to output only the large-size files as follows:
+
+$ find . -type f -exec du -k {} \; | sort -nrk 1 | head
+
+
+We used find to filter only files to du rather than allow du to traverse recursively by itself.
+
+Disk free information
+The du command provides information about the usage, whereas df provides information about free disk space. It can be used with and without -h. When -h is issued with df it prints the disk space in human readable format. 
+
+For example:
+
+$ df
+Filesystem 1K-blocks Used Available Use% Mounted on
+/dev/sda1 9611492 2276840 6846412 25% /
+none 508828 240 508588 1% /dev
+none 513048 168 512880 1% /dev/shm
+none 513048 88 512960 1% /var/run
+none 513048 0 513048 0% /var/lock
+none 513048 0 513048 0% /lib/init/rw
+none 9611492 2276840 6846412 25% /var/lib/ureadahead/debugfs
+$ df -h
+FilesystemSize Used Avail Use% Mounted on
+/dev/sda1 9.2G 2.2G 6.6G 25% /
+none 497M 240K 497M 1% /dev
+none 502M 168K 501M 1% /dev/shm
+none 502M 88K 501M 1% /var/run
+none 502M 0 502M 0% /var/lock
+none 502M 0 502M 0% /lib/init/rw
+none 9.2G 2.2G 6.6G 25% /var/lib/ureadahead/debugfs
+

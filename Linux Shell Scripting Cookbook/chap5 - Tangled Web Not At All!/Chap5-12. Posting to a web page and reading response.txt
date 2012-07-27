@@ -1,0 +1,79 @@
+Posting to a web page and reading response
+
+
+POST and GET are two types of requests in HTTP to send information to or retrieve information from a website. In a GET request, we send parameters (name-value pairs) through the web page URL itself. In the case of POST, it won't be attached with the URL. POST is used when a form needs to be submitted. For example, a username, the password to be submitted, and the login page to be retrieved. 
+
+POSTing to pages comes as frequent use while writing scripts based on web page retrievals. Let's see how to work with POST. Automating the HTTP GET and POST request by sending POST data and retrieving output is a very important task that we practice while writing shell scripts that parse data from websites.
+
+Getting ready
+Both cURL and wget can handle POST requests by arguments. They are to be passed as name-value pairs.
+
+How to do it...
+Let's see how to POST and read HTML response from a real website using curl: 
+
+$ curl URL -d "postvar=postdata2&postvar2=postdata2"
+
+
+We have a website (http://book.sarathlakshman.com/lsc/mlogs/) and it is used to submit the current user information such as hostname and username. Assume that, in the home page of the website there are two fields HOSTNAME and USER, and a SUBMIT button. When the user enters a hostname, a user name, and clicks on the SUBMIT button, the details will be stored in the website. This process can be automated using a single line of curl command by automating the POST request. If you look at the website source (use the view source option from the web browser), you can see an HTML form defined similar to the following code:
+
+Code View: Scroll / Show All
+<form action="http://book.sarathlakshman.com/lsc/mlogs/submit.php" method="post" >
+<input type="text" name="host" value="HOSTNAME" >
+<input type="text" name="user" value="USER" >
+<input type="submit" >
+</form>
+
+
+					  
+
+Here, http://book.sarathlakshman.com/lsc/mlogs/submit.php is the target URL. When the user enters the details and clicks on the Submit button. The host and user inputs are sent to submit.php as a POST request and the response page is returned on the browser.
+
+We can automate the POST request as follows:
+
+Code View: Scroll / Show All
+$ curl http://book.sarathlakshman.com/lsc/mlogs/submit.php -d "host=test-host&user=slynux"
+<html>
+You have entered :
+<p>HOST : test-host</p>
+<p>USER : slynux</p>
+<html>
+
+
+					  
+
+Now curl returns the response page. 
+
+-d is the argument used for posting. The string argument for -d is similar to the GET request semantics. var=value pairs are to be delimited by&.
+
+
+The -d argument should always be given in quotes. If quotes are not used,& is interpreted by the shell to indicate this should be a background process.
+
+
+
+
+There's more
+Let's see how to perform POST using cURL and wget.
+
+POST in curl
+You can POST data in curl by using -d or data as follows: 
+
+$ curl -data "name=value" URL -o output.html
+
+
+If multiple variables are to be sent, delimit them with&. Note that when& is used the name-value pairs should be enclosed in quotes, else the shell will consider& as a special character for background process. For example:
+
+$ curl -d "name1=val1&name2=val2" URL -o output.html
+
+
+POST data using wget
+You can POST data using wget by using - post-data "string". For example: 
+
+$ wget URL post-data "name=value" -O output.html
+
+
+Use the same format as cURL for name-value pairs. 
+
+See also
+A primer on cURL, explains the curl command
+
+Downloading from a web page explains the wget command

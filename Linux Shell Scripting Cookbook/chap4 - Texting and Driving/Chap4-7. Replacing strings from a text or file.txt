@@ -1,0 +1,55 @@
+Replacing strings from a text or file
+
+
+String replacement is a frequently-used text-processing task. It can be done easily with regular expressions by matching the required text. 
+
+Getting ready
+When we hear the term 'replace', every system admin will recall sed. sed is the universal tool under UNIX-like systems to make replacements in text or in a file. Let's see how to do it. 
+
+How to do it...
+The sed primer recipe contains most of the usages of sed. You can replace a string or pattern as follows:
+
+$ sed 's/PATTERN/replace_text/g' filename
+
+
+Or:
+
+$ stdin | sed 's/PATTERN/replace_text/g'
+
+
+We can also use double quote (") instead of single quote ('). When double quote (") is used, we can specify variables inside the sed pattern and replacement strings. For example:
+
+$ p=pattern
+$ r=replaced
+$ echo "line containing apattern" | sed "s/$p/$r/g"
+line containing a replaced
+
+
+We can also use it without g in sed.
+
+$ sed 's/PATTEN/replace_text/' filename
+
+
+Then it will replace the occurrence of PATTERN first time it appears only. /g stands for global. That means, it will replace every occurrence of PATTERN in the file.
+
+There's more...
+We have seen basic text replacement with sed. Let's see how to save the replaced text in the source file itself.
+
+Making replacement saved in the file
+When a filename is passed to sed, it's output will be available to stdout. Instead of sending the output stream into stdout, to make changes saved in the file, use the i option as follows: 
+
+$ sed 's/PATTERN/replacement/' -i filename
+
+
+For example, replace all three-digit numbers with another specified number in a file as follows:
+
+$ cat sed_data.txt
+11 abc 111 this 9 file contains 111 11 88 numbers 0000
+$ cat sed_data.txt | sed 's/\b[0-9]\{3\}\b/NUMBER/g'
+11 abc NUMBER this 9 file contains NUMBER 11 88 numbers 0000
+
+
+The above one-liner replaces three-digit numbers only.\b[0-9]\{3\}\b is the regular expression used to match three-digit numbers. [0-9] is the range of digits, that is, from 0 to 9. {3} is used for matching the preceding character thrice. \ in \{3\} is used to give a special meaning for { and }. \b is the word boundary marker.
+
+See also
+Basic sed primer, explains the sed command

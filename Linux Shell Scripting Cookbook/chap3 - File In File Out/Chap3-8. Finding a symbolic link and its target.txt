@@ -1,0 +1,56 @@
+Finding a symbolic link and its target
+
+
+Symbolic links are common with UNIX-like systems. We may come across various manipulations based on symbolic links. This recipe may not be having any practical purpose, but it gives practice of handling symbolic links that may be helpful in writing shell scripts for other purposes.
+
+Getting ready
+Symbolic links are just pointers to other files. They are similar in function to aliases in Mac OS X or shortcuts in Windows. When symbolic links are removed, they will not cause any harm to the original file. 
+
+How to do it...
+We can create a symbolic link as follows: 
+
+$ ln -s target symbolic_link_name
+
+
+For example:
+
+$ ln l -s /var/www/ ~/web
+
+
+This creates a symbolic link (called "web") in the logged in user's home directory. The link points to /var/www/. This is seen in the output of the following command:
+
+$ ls web
+lrwxrwxrwx 1 slynux slynux 8 2010-06-25 21:34 web -> /var/www
+
+
+web -> /var/www specifies that web points to /var/www.
+
+For every symbolic link, the permission notation block (lrwxrwxrwx) starts with letter "l", which represents a symlink.
+
+So, in order to print symbolic links in the current directory, use the following command:
+
+$ ls -l | grep "^l" | awk '{ print $8 }'
+
+
+grep will filter the lines from the ls -l output such that it displays only lines starting with l. ^ is the start marker for the string. awk is used to print the eighth column. Hence it prints the eighth column, which is the filename. 
+
+Another way to print symbolic links is to use find as follows:
+
+$ find . -type l -print
+
+
+In the above command, in the find argument type we have specified "l", which will instruct the find command to search only for symbolic link files. The print option is used to print the list of symbolic links to the standard output (stdout). The path from which the file search should begin is given as '.', which means it is the current directory.
+
+In order to print the target of a symbolic link use the following command:
+
+$ ls -l web | awk '{ print $10 }'
+/var/www
+
+
+The ls l command lists many details with each of the line corresponding to the details of a file. ls l web lists the details for the file called web, which is a symbolic link. The tenth column in the output of ls l contains the link to which the file points to (if the file is a symbolic link). Hence in order to find the target associated with a symbolic link, we can use awk to print the tenth column from the file details listing (the output from ls l).
+
+Or, alternately, we can use the standard way of reading the target path for a given symbolic link using the command readlink. It is the most preferred method and can be used as follows:
+
+$ readlink web
+/var/www
+

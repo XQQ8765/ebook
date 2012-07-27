@@ -1,0 +1,122 @@
+Compressing or decompressing JavaScript
+
+
+JavaScript is widely used in designing websites. While writing JavaScript code, we use several white spaces, comments, and tabs for readability and maintenance of code. But the use of a lot of white spaces and tabs in JavaScript causes the file size to increase. As the file size increases, it increases page load times. Hence most of the professional websites use compressed JavaScripts for fast loading. 
+
+Compression is mostly squeezing white spaces and newline characters. Once JavaScript is compressed, it can be decompressed by adding enough white space and newline characters, which makes it readable. Usually, obfuscated code also can be made readable by inserting white space and newlines. This recipe is an attempt to hack similar capabilities in the shell. 
+
+Getting ready
+We are going to write a JavaScript compressor or obfuscation tool. Also a decompressing tool can be designed. We are going to get our hands dirty using text and character replacement tools tr and sed. Let's see how to do it. 
+
+How to do it...
+Let's go through the logical sequences and the code required for compressing and decompressing the JavaScript. 
+
+$ cat sample.js
+functionsign_out()
+{
+$("#loading").show();
+$.get("log_in",{logout:"True"},
+function(){
+window.location="";
+});
+}
+
+
+The following are the tasks we need to perform for compressing the JavaScript:
+
+1. Remove newline and tab characters.
+
+2. Squeeze spaces.
+
+3. Replace comments /* content */.
+
+4. Replace the following with substitutions:
+
+"{ " with "{"
+
+" }" with "}"
+
+" (" with "("
+
+") " with ")"
+
+", " with ","
+
+" ; " with ";" (we need to remove all extra spaces)
+
+To decompress or to make the JavaScript more readable, we can use the following tasks:
+
+1. Replace ";" with ";\n".
+
+2. Replace "{" with "{\n" and "}" with "\n}".
+
+How it works...
+Let's compress the JavaScript by performing these tasks: 
+
+1. Remove the'\n' and '\t' characters:
+
+tr -d '\n\t'
+2. Remove extra spaces:
+
+tr -s ' ' or sed 's/[ ]\+/ /g'
+3. Remove comments:
+
+sed 's:/\*.*\*/::g'
+: is used as a sed delimiter to avoid the need of escaping / since we need to use /* and */ 
+
+* in the sed is escaped as \* 
+
+.* is used to match all text in between /* and */ 
+
+4. Remove all spaces preceding and suffixing the {,},(,),;,:, and comma.
+
+sed 's/ \?\([{}();,:]\) \?/\1/g'
+The above sed statement can be parsed as follows:
+
+/ \?\([{}();,:]\) \?/ in the sed code is the match part and /\1 /g is the replacement part.
+
+\([{}();,:]\) is used to match any one character in the set [ { }( ) ; , : ] (inserted spaces for readability). \( and \) are group operators used to memorize the match and back reference in the replacement part. ( and ) are escaped to give them a special meaning as a group operator. \? precedes and follows the group operators. It is to match the space character that may precede or follow any of the characters in the set.
+
+In the replacement part, the match string (that is, the combination of : a space (optional), a character from the set, and again optional space) is replaced with the character matched. It uses a back reference to the character matched and memorized using the group operator (). Back-referenced characters refer to a group match by using the \1 symbol.
+
+Combine the above tasks using a pipe as follows:
+
+$ catsample.js | \
+tr -d '\n\t' | tr -s ' ' \
+| sed 's:/\*.*\*/::g' \
+| sed 's/ \?\([{}();,:]\) \?/\1/g'
+
+
+The output is as follows:
+
+Code View: Scroll / Show All
+functionsign_out(){$("#loading").show();$.get("log_in",{logout:"True"},function(){window.location="";});}
+
+
+					  
+
+Let's write a decompression script for making obfuscated code readable as follows: 
+
+$ cat obfuscated.txt | sed 's/;/;\n/g; s/{/{\n\n/g; s/}/\n\n}/g'
+
+
+Or:
+
+Code View: Scroll / Show All
+$ cat obfuscated.txt | sed 's/;/;\n/g' | sed 's/{/{\n\n/g' | sed 's/}/\n\n}/g'
+
+
+					  
+
+In the previous command:
+
+s/;/;\n/g replaces; with \n;
+
+s/{/{\n\n/g replaces { with {\n\n 
+
+s/}/\n\n}/g replaces } with \n\n} 
+
+See also
+Translating with tr of Chapter 2, explains the tr command
+
+Basic sed primer, explains the sed command

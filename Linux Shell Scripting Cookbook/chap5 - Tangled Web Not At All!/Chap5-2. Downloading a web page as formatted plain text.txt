@@ -1,0 +1,21 @@
+Downloading a web page as formatted plain text
+
+
+Web pages are HTML pages containing a collection of HTML tags along with other elements, such as JavaScript, CSS, and so on. But the HTML tags define the base of a web page. We may need to parse the data in a web page while looking for specific content, and this is something Bash scripting can help us with. When we download a web page, we receive an HTML file. In order to view formatted data, it should be viewed in a web browser. However, in most of the circumstances, parsing a formatted text document will be easier than parsing HTML data. Therefore, if we can get a text file with formatted text similar to the web page seen on the web browser, it is more useful and it saves a lot of effort required to strip off HTML tags. Lynx is an interesting command-line web browser. We can actually get the web page as plain text formatted output from Lynx. Let's see how to do it. 
+
+How to do it...
+Let's download the webpage view, in ASCII character representation, in a text file using the dump flag with the lynx command: 
+
+$ lynx -dump URL > webpage_as_text.txt
+
+
+This command will also list all the hyper-links (<a href="link">) separately under a heading References as the footer of the text output. This would help us avoid parsing of links separately using regular expressions.
+
+For example:
+
+$ lynx -dump http://google.com > plain_text_page.txt
+
+
+You can see the plain text version of text by using the cat command as follows:
+
+$ cat plain_text_page.txt

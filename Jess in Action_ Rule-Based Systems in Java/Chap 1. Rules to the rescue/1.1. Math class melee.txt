@@ -1,0 +1,183 @@
+1. Rules to the rescue
+In this chapter you¡¯ll...
+
+Be introduced to the Jess programming language
+
+Analyze a rule-based program
+
+See familiar examples of rule-based systems
+
+Rule-based software is in regular use in practically every business, school, and home. In this chapter, we¡¯ll look at some examples of how rules are used to solve common problems. Because most programmers learn best by doing, you¡¯ll start by writing a rule-based program of your own.
+
+1.1. Math class melee
+¡°The answer, please?¡±
+
+The stern voice startles you. You were dozing in Mrs. Rosencrantz¡¯s high school math class again. You realize at once that she¡¯s been talking to you.
+
+¡°Well?¡±
+
+You look at the blackboard. It¡¯s one of those word puzzles, the logic kind. Mrs. Rosencrantz is waiting for you to solve it. You quickly scan what she¡¯s scrawled on the board with her crone¡¯s hand:
+
+A foursome of golfers is standing at a tee, in a line from left to right. Each golfer wears different colored pants; one is wearing red pants. The golfer to Fred¡¯s immediate right is wearing blue pants.
+
+Joe is second in line.
+
+Bob is wearing plaid pants.
+
+Tom isn¡¯t in position one or four, and he isn¡¯t wearing the hideous orange pants.
+
+In what order will the four golfers tee off, and what color are each golfer¡¯s pants?¡±
+
+You get the gist of it right away, but how on earth are you supposed to figure it out? There¡¯s no formula to use, no analytic procedure for deriving a solution. Algebra was one thing, but this? Why weren¡¯t you paying attention in class?
+
+Rules to the rescue! A rule-based program can satisfy Mrs. Rosencrantz by efficiently finding the one combination of names, positions, and colors that fits all the constraints. You can directly translate the problem statement into rules, and the rules will find the solution.
+
+Let¡¯s write that program to see how a rule-based system would solve this problem. You¡¯ll write the program in the Jess language. Don¡¯t be concerned that you don¡¯t know the Jess language yet¡ªright now, I¡¯d just like you to understand the approach. You¡¯re going to:
+
+1.
+Choose a way to represent the possible combinations of men¡¯s names, positions, and pants colors.
+
+2.
+Write one rule that describes the problem.
+
+The Jess rule engine will find the solution automatically. Let¡¯s get started.
+
+The first step is to define data structures to represent the smallest useful pieces of a possible solution to the problem: a link between a name and either a position or a color:
+
+(deftemplate pants-color (slot of) (slot is))
+(deftemplate position (slot of) (slot is))
+
+A deftemplate is a bit like a class declaration in Java. While class objects have member variables, deftemplates have slots. Each slot is a placeholder for a specific piece of information. For example, the pants-color template has a slot named of for a person¡¯s name and a slot named is to hold a color. Whereas a Java class is a definition of a type of object, a template is a definition for a type of fact (a fact is basically what it sounds like: a piece of possibly useful information.) A pants-color fact represents the idea that one specific golfer (named in the of slot) has a certain color pants (named in the is slot.)
+
+You¡¯ll use these templates to create facts representing each of the possible combinations. There are 32 of them altogether¡ªfor example:
+
+(pants-color (of Bob) (is red))
+(position (of Joe) (is 3))
+
+You can write a rule to create all 32 of these facts and put them into working memory, a kind of scratch space Jess uses to store the facts it knows:
+
+(defrule generate-possibilities
+    =>
+    (foreach ?name (create$ Fred Joe Bob Tom)
+        (foreach ?color (create$ red blue plaid orange)
+            (assert (pants-color (of ?name)
+                                (is ?color))))
+
+        (foreach ?position (create$ 1 2 3 4)
+            (assert (position (of ?name)
+                             (is ?position))))))
+
+This code loops (using foreach) over the four names given in the problem and creates (using assert) a pants-color fact for each of the possible name/color pairs and a position fact for each name/position pair, for a total of 32 facts. The function create$ returns a list of its arguments.
+
+Now that you¡¯ve written a rule to create all the possible combinations, you¡¯ll write a second rule to search through them to find the subset of facts that represent the solution. This is the fun part. You¡¯ll translate each sentence in the problem statement directly into code. First, note that you use a symbol starting with a question mark, like ?c, to write a variable in Jess. You¡¯ll use the variable ?c to represent ¡°some color¡±; ?p to represent ¡°some position¡±; ?n to mean ¡°some name¡±; and ?c1...?c4 and ?p1...?p4 to represent Fred, Joe, Bob, and Tom¡¯s pants color and position, respectively.
+
+Here¡¯s the first useful sentence, The golfer to Fred¡¯s immediate right is wearing blue pants:
+
+(defrule find-solution
+    ;; There is a golfer named Fred, whose position is ?p1
+    ;; and pants color is ?c1
+    (position (of Fred) (is ?p1))
+    (pants-color (of Fred) (is ?c1))
+
+    ;; The golfer to Fred's immediate right
+    ;; is wearing blue pants.
+    (position (of ?n&~Fred)
+              (is ?p&:(eq ?p (+ ?p1 1))))
+    (pants-color (of ?n&~Fred)
+                 (is blue&~?c1))
+
+In this code snippet, the variable ?n represents the unknown name of the person to Fred¡¯s right, ?p1 is Fred¡¯s unknown position, ?c1 is the unknown color of Fred¡¯s pants, and ?p is the unknown golfer¡¯s position. In these patterns, & means and and ~ means not, so (name ?n&~Fred) means that this person¡¯s name, call it ?n, is not Fred. Here¡¯s the next line (Joe is second in line):
+
+;; Joe is in position #2
+(position (of Joe) (is ?p2&2&~?p1))
+(pants-color (of Joe) (is ?c2&~?c1))
+
+Note that you must be careful to read between the lines of the problem as you write this rule. You know every golfer is in a different position, so you can say with confidence that ?p2&2&~?p1¡ªJoe¡¯s position, call it ?p2, the value of which is 2, is not the same as Bob¡¯s position ?p1. It¡¯s possible that ?p2 and ?p are the same, though: Joe might be to Fred¡¯s immediate right, so you don¡¯t mention ?p here.
+
+Now the next line of the problem, Bob is wearing plaid pants:
+
+    ;; Bob is wearing the plaid pants
+    (position (of Bob)
+              (is ?p3&~?p1&~?p&~?p2))
+    (pants-color (of Bob&~?n)
+                 (is plaid&?c3&~?c1&~?c2))
+
+By now you know a lot about Bob¡¯s position ?p3 and pants color ?c3. You know ?p3 is not the same as ?p1 or ?p2, and you also know it¡¯s not the same as ?p. Why? Because the golfer in position ?p wears blue pants, and Bob¡¯s pants are plaid, and the golfers in ?p1 and ?p2 are named Fred and Joe, not Bob.
+
+Finally, you know a lot about Tom (Tom isn¡¯t in positions one or four, and he isn¡¯t wearing the hideous orange pants):
+
+    ;; Tom isn't in position 1 or 4
+    ;; and isn't wearing orange
+    (position (of Tom&~?n)
+              (is ?p4&~1&~4&~?p1&~?p2&~?p3))
+    (pants-color (of Tom)
+                 (is ?c4&~orange&~blue&~?c1&~?c2&~?c3))
+
+There are only four positions, but you know Tom¡¯s position is not 1, not 4, and not ?p1, ?p2, or ?p3¡ªmore constraints than there are possibilities. This is actually a good sign; it suggests that you have more than enough information to solve the puzzle. You can place a similar number of constraints on Tom¡¯s fashion choices.
+
+All that is left is to print out the set of variables ?p1...?p4 and ?c1...?c4 that solves the problem:
+
+=>
+(printout t Fred " " ?p1 " " ?c1 crlf)
+(printout t Joe "  " ?p2 " " ?c2 crlf)
+(printout t Bob "  " ?p3 " " ?c3 crlf)
+(printout t Tom "  " ?p4 " " ?c4 crlf crlf))
+
+The symbol => separates the if part of the rule from the then part¡ªit specifies what the rule should do if all the requirements are satisfied. Here it prints a table of results. If you enter the code for the problem into Jess and then run it, you get the answer directly. The source for this problem is in the file rosencrantz.clp, and you can run it like this:
+
+C:\Jess61> java ¨Cclasspath jess.jar jess.Main rosencrantz.clp
+Fred 1 orange
+Joe  2 blue
+Bob  4 plaid
+Tom  3 red
+
+You see that exactly one set of variables satisfies the problem. Joe turns out to be the mysterious man in the blue pants, and Fred (the tasteless golfer in the orange ones) will tee off first.
+
+What would happen if some of the information was missing? For example, suppose you didn¡¯t know that Joe was second at the tee¡ªhow would this affect the results? Let¡¯s give it a try. If you change Joe¡¯s section of the program like so:
+
+;; We don't know anything about Joe, really
+(position (of Joe) (is ?p2&~?p1))
+(pants-color (of Joe) (is ?c2&~?c1))
+
+and then run it, you get the following result:
+
+Code View: Scroll / Show All
+Fred 3 orange
+Joe 4 blue
+Bob 1 plaid
+Tom 2 red
+
+Fred 2 orange
+Joe 4 blue
+Bob 1 plaid
+Tom 3 red
+
+Fred 2 orange
+Joe 1 blue
+Bob 4 plaid
+Tom 3 red
+
+Fred 1 orange
+Joe 2 blue
+Bob 4 plaid
+Tom 3 red
+
+Fred 1 orange
+Joe 3 blue
+Bob 4 plaid
+Tom 2 red
+
+Fred 1 orange
+Joe 4 blue
+Bob 3 plaid
+Tom 2 red
+
+					  
+
+Now there are six different solutions, and Jess finds and reports them all. This is another strength of rule-based programming: Rule-based systems can degrade gracefully in the presence of incomplete information. You didn¡¯t have to build this quality into the program¡ªit¡¯s just there.
+
+1.1.1. Beyond logic puzzles
+When you wake up from the recurring math-class nightmare, you may be relieved to think that solving logic puzzles is a far cry from your normal duties as a programmer. But that¡¯s really not so. Ill-defined problems like this logic puzzle abound in business environments. A human-resources application may need to flag personnel with a suspicious pattern of insurance claims. A requirement for a financial application might be to recommend buying securities that look promising. Manufacturing software could raise an alarm and shut down an assembly line if quality-assurance results indicate there may be a production problem.
+
+What do suspicious, promising, and may be a problem mean, exactly? They probably can¡¯t be expressed as equations¡ªit¡¯s possible they can¡¯t be given a precise definition at all. If they each can be described as a set of constraints and guidelines, however, then a rule-based program can implement them easily. In the rest of this chapter, we¡¯ll look at some common applications of rule-based programming.
+

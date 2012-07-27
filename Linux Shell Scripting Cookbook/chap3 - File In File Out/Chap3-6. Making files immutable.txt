@@ -1,0 +1,31 @@
+Making files immutable
+
+
+Files on extended type file systems, which are common in Linux (for example, ext2, ext3, ext4, and so on) can be made immutable. Certain type of file attributes help to set the immutable attribute to the file. When a file is made immutable, any user or super user cannot remove the file until the immutable attribute is removed from the file. We can easily find out the file system type of any mounted partition by looking at the /etc/mtab file. The first column of the file specifies the partition device path (for example, /dev/sda5) and the third column specifies the file system type (for example, ext3). Let's see how to make files immutable. 
+
+Getting ready
+chattr can be used for to make files immutable. However, it is not the only extended attribute that can be changed by chattr. 
+
+Making a file immutable is one of the methods for securing files from modification. The best known example is in the case of the /etc/shadow file. The shadow file consists of encrypted passwords of every user in the current system. By injecting encrypted passwords, we can login into the system. Users can, usually, change their password by using the passwd command. When you execute the passwd command, it actually modifies the /etc/shadow file. We can make the shadow file immutable so that no user is able to change the password. Let's see how to do it. 
+
+How to do it...
+A file can be made immutable as follows:
+
+chattr +i file
+
+
+Or:
+
+$ sudo chattr +i file
+
+
+The file is therefore made immutable. Now try the following command:
+
+rm file
+rm: cannot remove `file': Operation not permitted
+
+
+In order to make it writable, remove the immutable attribute as follows:
+
+chattr -i file
+

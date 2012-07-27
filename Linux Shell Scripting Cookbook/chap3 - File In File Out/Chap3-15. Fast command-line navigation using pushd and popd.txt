@@ -1,0 +1,74 @@
+Fast command-line navigation using pushd and popd
+
+
+When dealing with multiple locations on a terminal or shell prompt, our common practice is to copy and paste the paths. Copy-paste is only effective when mouse is used. When there is only command-line access without a GUI, it is hard to deal with navigation through multiple paths. For example, if we are dealing with locations /var/www, /home/slynux, and /usr/src, when we need to navigate these locations one by one, it is really difficult to type the path every time when we need to switch between the paths. Hence the command-line interface (CLI) based navigation techniques such as pushd and popd are used. Let's see how to practice them. 
+
+Getting ready
+pushd and popd? are used to switch between multiple directories without the copy-paste of directory paths. pushd and popd operate on a stack. We know that stack is a Last In First Out (LIFO) data structure. It will store the directory paths in a stack and switch between them using push and pop operations. 
+
+How to do it...
+We omit the use of the cd command while using pushd and popd. 
+
+In order to push and change directory to a path use:
+
+~ $ pushd /var/www
+
+
+Now the stack contains /var/www ~ and the current directory is changed to /var/www.
+
+Now again push the next directory path as follows:
+
+/var/www $ pushd /usr/src
+
+
+Now the stack contains /usr/src /var/www ~ and the current directory is /usr/src.
+
+You can similarly push as many directory paths as needed.
+
+View the stack contents by using the following command:
+
+$ dirs
+/usr/src /var/www ~ /usr/share /etc
+0 1 2 3 4
+
+
+When you want to switch to any path in the list, number each path from 0 to n, then use the path number for which we need to switch, for example:
+
+$ pushd +3
+
+
+It will rotate the stack and switch to the directory /usr/share.
+
+pushd will always add paths to the stack, to remove paths from the stack use popd.
+
+Remove a last pushed path and change directory to the next directory by using:
+
+$ popd
+
+
+Suppose the stack is /usr/src /var/www ~ /usr/share /etc such that the current directory is /usr/src, popd will change the stack to /var/www ~ /usr/share /etc and change the directory to /var/www.
+
+In order to remove a specific path from the list, use popd +no.
+
+The no is counted as 0 to n from left to right.
+
+There's more...
+Let's go through essential directory navigation practices.
+
+Most frequently used directory switching
+pushd and popd can be used when there are more than three directory paths are used. But when you use only two locations, there is an alternative and easier way. That is cd -. 
+
+If the current path is /var/www, perform the following:
+
+/var/www $ cd /usr/src
+/usr/src $ # do something
+
+
+Now to switch back to /var/www, you don't have to type it out again, but just execute:
+
+/usr/src $ cd -
+
+
+Now you can switch to /usr/src as follows:
+
+/var/www $ cd -

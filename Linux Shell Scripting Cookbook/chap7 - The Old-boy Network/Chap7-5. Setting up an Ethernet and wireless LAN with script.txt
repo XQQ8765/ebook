@@ -1,0 +1,111 @@
+Setting up an Ethernet and wireless LAN with script
+
+
+An Ethernet is simple to configure. Since it uses physical cables, there are no special requirements such as authentication. However,? a wireless LAN requires authentication¡ªfor example, a WEP key as well as the ESSID of the wireless network to connect. Let's see how to connect to a wireless as well as a wired network by writing a shell script. 
+
+Getting ready
+To connect to a wired network, we need to assign an IP address and subnet mask by using the ifconfig utility. But for a wireless network connection, it will require additional utilities, such as iwconfig? and iwlist?, to configure more parameters. 
+
+How to do it...
+In order to connect to a network from a wired interface, execute the following script: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: etherconnect.sh
+#Description: Connect Ethernet
+#Modify the parameters below according to your settings
+######### PARAMETERS ###########
+IFACE=eth0
+IP_ADDR=192.168.0.5
+SUBNET_MASK=255.255.255.0
+GW=192.168.0.1
+HW_ADDR='00:1c:bf:87:25:d2'
+# HW_ADDR is optional
+#################################
+if [ $UID -ne 0 ];
+then
+echo "Run as root"
+exit 1
+fi
+# Turn the interface down before setting new config
+/sbin/ifconfig $IFACE down
+if [[ -n $HW_ADDR ]];
+then
+/sbin/ifconfig hw ether $HW_ADDR
+echo Spoofed MAC ADDRESS to $HW_ADDR
+fi
+/sbin/ifconfig $IFACE $IP_ADDR netmask $SUBNET_MASK
+route add default gw $GW $IFACE
+echo Successfully configured $IFACE
+
+
+					  
+
+The script for connecting to a wireless LAN with WEP is as follows: 
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: wlan_connect.sh
+#Description: Connect to Wireless LAN
+#Modify the parameters below according to your settings
+######### PARAMETERS ###########
+IFACE=wlan0
+IP_ADDR=192.168.1.5
+SUBNET_MASK=255.255.255.0
+GW=192.168.1.1
+HW_ADDR='00:1c:bf:87:25:d2'
+#Comment above line if you don't want to spoof mac address
+ESSID="homenet"
+WEP_KEY=8b140b20e7
+FREQ=2.462G
+#################################
+KEY_PART=""
+if [[ -n $WEP_KEY ]];
+then
+KEY_PART="key $WEP_KEY"
+fi??
+wireless LANwireless LANsetting up# Turn the interface down before setting new config
+/sbin/ifconfig $IFACE down
+if [ $UID -ne 0 ];
+then
+echo "Run as root"
+exit 1;
+fi
+if [[ -n $HW_ADDR ]];
+then
+/sbin/ifconfig $IFACE hw ether $HW_ADDR
+echo Spoofed MAC ADDRESS to $HW_ADDR
+fi
+/sbin/iwconfig $IFACE essid $ESSID $KEY_PART freq $FREQ
+/sbin/ifconfig $IFACE $IP_ADDR netmask $SUBNET_MASK
+route add default gw $GW $IFACE
+echo Successfully configured $IFACE
+
+
+					  
+
+How it works...
+The commands ifconfig, iwconfig,? and route are to be run as root. Hence a check for the root user is performed at the beginning of the scripts. 
+
+The Ethernet connection script is pretty straightforward and it uses the concepts explained in the recipe, Basic networking primer. Let's go through the commands used for connecting to the wireless LAN.
+
+A wireless LAN requires some parameters such as the essid, key, and frequency to connect to the network. The essid is the name of the wireless network to which we need to connect. Some Wired Equivalent Protocol (WEP) networks use a WEP key for authentication, whereas some networks don't. The WEP key is usually a 10-letter hex passphrase. Next comes the frequency assigned to the network. iwconfig is the command used to attach the wireless card with the proper wireless network, WEP key, and frequency. 
+
+We can scan and list the available wireless network by using the utility iwlist. To scan, use the following command: 
+
+# iwlist scan
+wlan0 Scan completed :
+Cell 01 - Address: 00:12:17:7B:1C:65
+Channel:11
+Frequency:2.462 GHz (Channel 11)
+Quality=33/70 Signal level=-77 dBm
+Encryption key:on
+ESSID:"model-2"
+
+
+The Frequency parameter can be extracted from the scan result, from the line Frequency:2.462 GHz (Channel 11).
+
+See also
+Comparisons and tests of Chapter 1, explains string comparisons.
+
+

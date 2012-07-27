@@ -1,0 +1,119 @@
+Doing math calculations with the shell
+
+
+Arithmetic operations are an essential requirement for every programming language. The Bash shell comes with a variety of methods for arithmetic operations. 
+
+Getting ready
+The Bash shell environment can perform basic arithmetic operations using the commands let, (( )), and []. The two utilities expr and bc are also very helpful in performing advanced operations.
+
+How to do it...
+A numeric value can be assigned as a regular variable assignment, which is stored as string. However, we use methods to manipulate as numbers.
+
+#!/bin/bash
+no1=4;
+no2=5;
+
+
+The let command can be used to perform basic operations directly. 
+
+While using let, we use variable names without the $ prefix, for example:
+
+let result=no1+no2
+echo $result
+
+
+Increment operation:
+
+$ let no1++
+
+
+Decrement operation:
+
+$ let no1--
+
+
+Shorthands:
+
+let no+=6
+let no-=6
+
+
+
+These are equal to let no=no+6 and let no=no-6 respectively. 
+
+
+
+Alternate methods:
+
+The [] operator can be used similar to the let command as follows: 
+
+
+result=$[ no1 + no2 ]
+
+
+
+Using $ prefix inside [] operators are legal, for example: 
+
+
+result=$[ $no1 + 5 ]
+
+
+
+(( )) can also be used. $ prefixed with a variable name is used when the (( )) operator is used, as follows: 
+
+
+result=$(( no1 + 50 ))
+
+
+
+expr can also be used for basic operations: 
+
+
+result=`expr 3 + 4`
+result=$(expr $no1 + 5)
+
+
+
+All of the above methods do not support floating point numbers, and operate on integers only. 
+
+bc the precision calculator is an advanced utility for mathematical operations. It has a wide range of options. We can perform floating point operations and use advanced functions as follows: 
+
+
+echo "4 * 0.56" | bc
+2.24
+no=54;
+result=`echo "$no * 1.5" | bc`
+echo $result
+81.0
+
+
+
+Additional parameters can be passed to bc with prefixes to the operation with semicolon as delimiters through stdin. 
+
+Specifying decimal precision (scale): In the following example the scale=2 parameter sets the number of decimal places to 2. Hence the output of bc will contain a number with two decimal places:
+
+echo "scale=2;3/8" | bc
+0.37
+
+
+
+
+Base conversion with bc: We can convert from one base number system to another one. Let's convert from decimal to binary, and binary to octal:
+
+
+#!/bin/bash
+Description: Number conversion
+no=100
+echo "obase=2;$no" | bc
+1100100
+no=1100100
+echo "obase=10;ibase=2;$no" | bc
+100
+
+
+Calculating squares and square roots can be done as follows:
+
+echo "sqrt(100)" | bc #Square root
+echo "10^10" | bc #Square
+
+

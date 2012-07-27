@@ -1,0 +1,26 @@
+Listing only directories alternative methods
+
+
+Though listing only directories seems to be a simple task, many would not be able to do it. I have seen this often, even when asked to people who are good at shell scripting. This recipe is worth knowing since it introduces multiple ways of listing only directories with various tricky techniques. 
+
+Getting ready
+There are multiple ways of listing directories only. When you ask people about these techniques, the first answer that they would probably give is dir. But, it is wrong. The dir command is just another command like ls with fewer options than ls. Let's see how to list directories. 
+
+How to do it...
+There are four ways in which directories in the current path can be displayed. They are: 
+
+$ ls -d */ 
+
+Only the above combination with -d will print directories. 
+
+$ ls -F | grep "/$" 
+
+When the -F parameter is used, all entries are appended with some type of file character such as @, *, |, and so on. For directories, entries are appended with the / character. We use grep to filter only entries ending with the /$ end of line indicator. 
+
+$ ls -l | grep "^d" 
+
+The first character of ls -d output lines of each file entries is the type of file character. For directory, the type of file character is "d". Hence we use grep to filter lines starting with "d". ^ is the start of line indicator. 
+
+$ find . -type d -maxdepth 1 -print 
+
+The find command can take the parameter type as directory and maxdepth is set to 1 since it should not search the directories of descendants. 

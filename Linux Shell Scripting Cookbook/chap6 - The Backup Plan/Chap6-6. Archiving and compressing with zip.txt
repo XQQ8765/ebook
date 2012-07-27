@@ -1,0 +1,46 @@
+Archiving and compressing with zip
+ZIP is a popular compression format used on many platforms. It isn't as commonly used as gzip or bzip2 on Linux platforms, but files from the Internet are often saved in this format. 
+
+How to do it...
+In order to archive with ZIP, the following syntax is used: 
+
+$ zip archive_name.zip [SOURCE FILES/DIRS]
+
+
+For example:
+
+$ zip file.zip file
+
+
+Here, the file.zip file will be produced.
+
+Archive directories and files recursively as follows:
+
+$ zip -r archive.zip folder1 file2
+
+
+In this command, -r is used for specifying recursive.
+
+Unlike lzma, gzip, or bzip2, zip won't remove the source file after archiving. zip is similar to tar in that respect, but zip can compress files where tar does not. However, zip adds compression too.
+
+In order to extract files and folders in a ZIP file, use:
+
+$ unzip file.zip
+
+
+It will extract the files without removing filename.zip (unlike unlzma or gunzip).
+
+In order to update files in the archive with newer files in the filesystem, use the -u flag:
+
+$ zip file.zip -u newfile
+
+
+Delete a file from a zipped archive, by using d as follows: 
+
+$ zip -d arc.zip file.txt
+
+
+In order to list the files in an archive use:
+
+$ unzip -l archive.zip
+

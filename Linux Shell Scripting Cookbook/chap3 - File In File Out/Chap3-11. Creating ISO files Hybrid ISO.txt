@@ -1,0 +1,104 @@
+Creating ISO files, Hybrid ISO
+
+
+An ISO image is an archive format that stores the exact storage images of optical disks like CD ROMs, DVD ROMs, and so on. It is a common use case that we burn ISO images to optical disks. But what if you want to create an image of an optical disk? For that we need to create an ISO image from an optical disk. Many people rely on third-party utilities to create an ISO image from an optical disk. However, using the command line, it's just a single line job. 
+
+Also, many people don't distinguish between bootable and non-bootable optical disks. Bootable disks are capable of booting from themselves and also running an operating system or another product. Non-bootable ISOs cannot do that. The practice that people usually follow is to copy files from a bootable CD-ROM and paste it to another location for keeping the copy. After that, they use the copied directory to burn a CD ROM. But then, it will lose its bootable nature. To preserve the bootable nature, it should be copied as a disk image or an ISO file.
+
+Nowadays, most people use devices such as flash drives or hard disks as a replacement for optical disks. When we write a bootable ISO to a flash drive it will no longer be bootable unless we use a special hybrid ISO image designed specifically for the purpose.
+
+This recipe will give you an insight on ISO images and manipulations.
+
+Getting ready
+As we described many times in this book, UNIX handles everything as files. Every device is a file. Hence what if we want to copy an exact image of a device? We need to read all data from it and write to another file, right?
+
+As we know, the cat command can be used to read any data and redirection can be used to write to a file. 
+
+How to do it...
+In order to create an ISO image from /dev/cdrom use the following command: 
+
+# cat /dev/cdrom > image.iso
+
+
+This will work, it will read all the bytes from the device and write an ISO image.
+
+Using the cat command for creating an ISO image is a tricky way to do it. But the most preferred way to create an ISO image is to use the dd utility.
+
+# dd if=/dev/cdrom of=image.iso
+
+
+mkisofs is a command used to create ISO system. The output file of mkisofs can be written to CD ROM or DVD ROM using utilities like cdrecord. We can use mkisofs to create an ISO file using a directory containing all the required files that should appear as contents of an ISO file as follows: 
+
+$ mkisofs -V "Label" -o image.iso source_dir/
+
+
+The o option in the mkisofs command specifies the ISO file path. The source_dir is the path of the directory that should be used as source content for the ISO and the V option specifies the label that should be used for the ISO file.
+
+There's more...
+Let's learn more commands and techniques related to ISO files.
+
+Hybrid ISO that boots off flash drive or hard disk
+Usually, bootable ISO files cannot be transferred or written to a USB storage device and boot the OS from the USB key. But special type of ISO files called hybrid ISOs can be flashed and they are capable of booting from such devices.
+
+We can convert standard ISO files into hybrid ISOs with the isohybrid command. The isohybrid command is a new utility and most Linux distros don't include this by default. You can download the syslinux package from: http://syslinux.zytor.com. 
+
+Have a look at the following command:
+
+# isohybrid image.iso
+
+
+Using this command, we will have a hybrid ISO with the file name image.iso and it can be written to USB storage devices. 
+
+Write the ISO to a USB storage by using the following command:
+
+# dd if=image.iso of=/dev/sdb1
+
+
+Use the appropriate device instead of sdb1.
+
+Or, you can use cat as follows:
+
+# cat image.iso > /dev/sdb1
+
+
+Burning an ISO from command line
+The cdrecord command is used to burn an ISO file into a CD ROM or DVD ROM. It can be used to burn the image to the CD ROM as follows: 
+
+# cdrecord -v dev=/dev/cdrom image.iso
+
+
+Some extra options are as follows:
+
+We can specify the burning speed with the speed option as follows:
+
+-speed SPEED
+For example: 
+
+# cdrecord v dev=/dev/cdrom image.iso speed 8
+
+
+
+The speed is 8x, which is specified as 8. 
+
+
+
+A CD ROM can be burned in multisessions such that we can burn data multiple times on a disk. Multisession burning can be performed using the multi option as follows:
+
+
+# cdrecord v dev=/dev/cdrom image.iso -multi
+
+
+Playing with CD Rom tray
+Try the following commands and have fun: 
+
+$ eject 
+
+This command is used to eject the tray. 
+
+$ eject -t 
+
+This command is used to close the tray. 
+
+Try to write a loop that opens the tray and closes the tray for "N" number of times.
+
+

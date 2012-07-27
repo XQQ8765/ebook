@@ -1,0 +1,70 @@
+Grabbing information about terminal
+
+
+While writing command-line shell scripts, we will often need to heavily manipulate information about the current terminal, such as number of columns, rows, cursor positions, masked password fields, and so on. This recipe helps to learn about collecting and manipulating terminal settings. 
+
+Getting ready
+tput and stty are utilities that can be used for terminal manipulations. Let\'s see how to use them to perform different tasks.
+
+How to do it...
+Get number of columns and rows in a terminal as follows:
+
+tput cols
+tput lines
+
+
+In order to print the current terminal name, use:
+
+tput longname
+
+
+For moving the cursor to a position 100,100 you can enter:
+
+tput cup 100 100
+
+
+Set the background color for terminal as follows:
+
+tput setb no
+
+
+no can be a value in the range of 0 to 7.
+
+Set the foreground color for text as follows:
+
+tput setf no
+
+
+no can be a value in the range of 0 to 7.
+
+In order to make the text bold use:
+
+tput bold
+
+
+Start and end underlining by using: 
+
+tput smul
+tput rmul
+
+
+In order to delete from cursor to end of the line use:
+
+tput ed
+
+
+While typing a password, we should not display the characters typed. In the following example, we will see how to do it using stty: 
+
+#!/bin/sh
+#Filename: password.sh
+echo -e "Enter password: "
+stty -echo
+read password
+stty echo
+echo
+echo Password read.
+
+
+The -echo option above disables output to the terminal, whereas echo enables output.
+
+

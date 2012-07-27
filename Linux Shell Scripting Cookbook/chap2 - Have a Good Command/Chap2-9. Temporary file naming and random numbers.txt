@@ -1,0 +1,31 @@
+Temporary file naming and random numbers
+
+
+While writing shell scripts, we use often require to store temporary data. The most suitable location to store temporary data is /tmp (which will be cleaned out by the system on reboot). We can use two methods to generate standard filenames for temporary data. 
+
+How to do it...
+tempfile is not seen in non-Debian Linux distributions. The tempfile command comes shipped with Debian-based distributions, such as Ubuntu, Debian, and many more. 
+
+The following code will assign a temporary filename to the variable temp_file: 
+
+temp_file=$(tempfile)
+
+
+Use echo $temp_file to print the temporary file name in the terminal.
+
+The output will look similar to /tmp/fileaZWm8Y.
+
+Sometimes we may use a filename with a random number attached to it as a temporary filename. This can be done as follows:
+
+temp_file="/tmp/file-$RANDOM"
+
+
+The $RANDOM environment variable always returns a random number. 
+
+How it works…
+Instead of using the tempfile command, we can also use our own temporary. Most experienced UNIX programmers use the following conventions: 
+
+temp_file="/tmp/var.$$"
+
+
+The .$$ suffix is attached. $$ is expanded as the process ID of the current script upon execution.

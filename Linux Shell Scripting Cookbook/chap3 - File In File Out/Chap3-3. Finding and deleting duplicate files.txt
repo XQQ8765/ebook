@@ -1,0 +1,91 @@
+Finding and deleting duplicate files
+
+
+Duplicate files are copies of the same files. In some circumstances, we may need to remove duplicate files and keep a single copy of them. Identification of duplicate files by looking at the file content is an interesting task. It can be done using a combination of shell utilities. This recipe deals with finding out duplicate files and performing operations based on the result. 
+
+Getting ready
+Duplicate files are files with different names but same data. We can identify the duplicate files by comparing the file content. Checksums are calculated by looking at the file contents. Since files with exactly the same content will produce duplicate checksum values, we can use this to remove duplicate lines. 
+
+How to do it...
+Generate some test files as follows: 
+
+$ echo "hello" > test ; cp test test_copy1 ; cp test test_copy2;
+$ echo "next" > other;
+# test_copy1 and test_copy2 are copy of test
+
+
+The code for the script to remove the duplicate files is as follows:
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Filename: remove_duplicates.sh
+#Description: Find and remove duplicate files and keep one sample of each file.
+ls -lS | awk 'BEGIN {
+getline;getline;
+name1=$8; size=$5
+}
+{ name2=$8;
+if (size==$5)
+{
+"md5sum "name1 | getline; csum1=$1;
+"md5sum "name2 | getline; csum2=$1;
+if ( csum1==csum2 )
+{print name1; print name2 }
+};
+size=$5; name1=name2;
+}' | sort -u > duplicate_files
+cat duplicate_files | xargs -I {} md5sum {} | sort | uniq -w 32 | awk '{ print "^"$2"$" }' | sort -u > duplicate_sample
+echo Removing..
+comm duplicate_files duplicate_sample -2 -3 | tee /dev/stderr | xargs rm
+echo Removed duplicates files successfully.
+
+
+					  
+
+Run it as: 
+
+$ ./remove_duplicates.sh
+
+
+How it works...
+The commands above will find the copies of same file in a directory and remove all except one copy of the file. Let's go through the code and see how it works. ls -lS will list the details of the files sorted by file size in the current directory. awk will read the output of ls -lS and perform comparisons on columns and rows of the input text to find out the duplicate files.
+
+The logic behind the previous code is as follows:
+
+We list the files sorted by file size so that the similarly sized files will be grouped together. The files having the same file size are identified as a first step to finding files that are the same. Next, we calculate the checksum of the files. If the checksums match, then the files are duplicates and one set of the duplicates are removed. 
+
+The BEGIN{} block of awk is executed first before lines are read from the file. Reading of lines takes place in the {} block and after the end of reading and processing all lines, the END{} block statements are executed. The output of ls -lS is: 
+
+total 16
+4 -rw-r--r-- 1 slynux slynux 5 2010-06-29 11:50 other
+4 -rw-r--r-- 1 slynux slynux 6 2010-06-29 11:50 test
+4 -rw-r--r-- 1 slynux slynux 6 2010-06-29 11:50 test_copy1
+4 -rw-r--r-- 1 slynux slynux 6 2010-06-29 11:50 test_copy2
+
+
+The output of the first line tells us the total number of files, which in this case is not useful. We use getline to read the first line and then dump it. We need to compare each of the lines and the next line for sizes. For that we read the first line explicitly using getline and store name and size (which are the eighth and fifth columns). Hence a line is read ahead using getline. Now, when awk enters the {} block (in which the rest of the lines are read) that block is executed for every read offline. It compares size obtained from the current line and the previously stored size kept in the size variable. If they are equal, it means two files are duplicates by size. Hence they are to be further checked by md5sum?. 
+
+We have played some tricky ways to reach the solution.
+
+The external command output can be read inside awk as:
+
+"cmd"| getline 
+
+Then we receive the output in line $0 and each column output can be received in $1,$2,..$n, and so on. Here we read the md5sum of files in the csum1 and csum2 variables. Variables name1 and name2 are used to store consecutive file names. If the checksums of two files are the same, they are confirmed to be duplicates and are printed.
+
+We need to find a file each from the group of duplicates so that we can remove all other duplicates except one. We calculate the md5sum of the duplicates and print one file from each group of duplicates by finding unique lines by comparing md5sum only from each line using -w 32 (the first 32 characters in the md5sum output; usually, md5sum output consists of a 32 character hash followed by the filename). Therefore, one sample from each group of duplicates is written in duplicate_sample.
+
+Now, we need to remove all the files listed in duplicate_files, excluding the files listed in duplicate_sample. The comm command? prints files in duplicate_files but not in duplicate_sample. 
+
+For that, we use a set difference operation (refer to the intersection, difference, and set difference recipes).
+
+comm always accepts files that are sorted. Therefore, sort -u is used as a filter before redirecting to duplicate_files and duplicate_sample.
+
+Here the tee command is used to perform a trick so that it can pass filenames to the rm command as well as print. tee writes lines that appear as stdin to a file and sends them to stdout. We can also print text to the terminal by redirecting to stderr. /dev/stderr is the device corresponding to stderr (standard error). By redirecting to a stderr device file, text that appears through stdin will be printed in the terminal as standard error. 
+
+See also
+Basic awk primer of Chapter 4 explains the awk command.
+
+Checksum and verification of Chapter 2 explains the md5sum command.
+
+

@@ -1,0 +1,146 @@
+Transferring files
+
+
+The major purpose of the networking of computers is for resource sharing. Among resource sharing, the most prominent use is in file sharing. There are different methods by which we can transfer files between different nodes on a network. This recipe discusses how to transfer files using commonly used protocols FTP, SFTP, RSYNC, and SCP. 
+
+Getting ready
+The commands for performing file transfer over the network are mostly available by default with Linux installations. Files via FTP can be transferred by using the lftp command. Files via a SSH connection can be transferred by using sftp, RSYNC using SSH with rsync command and transfer through SSH using scp.
+
+How to do it...
+File Transfer Protocol (FTP) is an old file transfer protocol for transferring files between machines on a network. We can use the command lftp for accessing FTP enabled servers for file transfer. It uses Port 21. FTP can only be used if an FTP server is installed on the remote machine. FTP is used by many public websites to share files. 
+
+To connect to an FTP server and transfer files in between, use:
+
+$ lftp username@ftphost
+
+
+Now it will prompt for a password and then display a logged in prompt as follows:
+
+lftp username@ftphost:~>
+
+
+You can type commands in this prompt. For example:
+
+To change to a directory, use cd directory 
+
+To change directory of local machine, use lcd 
+
+To create a directory use mkdir 
+
+To download a file, use get filename as follows:
+
+lftp username@ftphost:~> get filename
+
+
+To upload a file from the current directory, use put filename as follows:
+
+lftp username@ftphost:~> put filename
+
+
+An lftp session can be exited by using the quit command
+
+Auto completion is supported in the lftp prompt.
+
+There's more...
+Let's go through some additional techniques and commands used for file transfer through a network.
+
+Automated FTP transfer
+ftp is another command used for FTP-based file transfer. lftp is more flexible for usage. lftp? and the ftp command open an interactive session with user (it prompts for user input by displaying messages). What if we want to automate a file transfer instead of using the interactive mode? We can automate FTP file transfers by writing a shell script as follows: 
+
+#!/bin/bash
+#Filename: ftp.sh
+#Automated FTP transfer
+HOST='domain.com'
+USER='foo'
+PASSWD='password'
+ftp -i -n $HOST <<EOF
+user ${USER} ${PASSWD}
+binary
+cd /home/slynux
+puttestfile.jpg
+getserverfile.jpg
+quit
+EOF
+
+
+The above script has the following structure:
+
+<<EOF
+DATA
+EOF
+
+
+This is used to send data through stdin to the FTP command. The recipe, Playing with file descriptors and redirection in Chapter 1, explains various methods for redirection into stdin.
+
+The -i option of ftp turns off the interactive session with user. user ${USER} ${PASSWD} sets the username and password. binary sets the file mode to binary.
+
+SFTP (Secure FTP)
+SFTP is an FTP-like file transfer system that runs on top of an SSH connection. It makes use of an SSH connection to emulate an FTP interface. It doesn't require an FTP server at the remote end to perform file transfer but it requires an OpenSSH server to be installed and running. It is an interactive command, which offers an sftp prompt. 
+
+The following commands are used to perform the file transfer. All other commands remain same for every automated FTP session with specific HOST, USER, and PASSWD:
+
+cd /home/slynux
+put testfile.jpg
+get serverfile.jpg
+
+
+In order to run sftp, use:
+
+$ sftp user@domainname
+
+
+Similar to lftp, an sftp session can be exited by typing the quit command.
+
+The SSH server sometimes will not be running at the default Port 22. If it is running at a different port, we can specify the port along with sftp as -oPort=PORTNO. 
+
+For example:
+
+$ sftp -oPort=422 user@slynux.org
+
+
+
+-oPort should be the first argument of the sftp command.
+
+
+
+
+RSYNC
+rsync is an important command-line utility that is widely used for copying files over networks and for taking backup snapshots. This is better explained in separate recipe, Backup snapshots with rsync, that explains the usage of rsync. 
+
+SCP (Secure Copy)
+SCP is a file copy technique which is more secure than the traditional remote copy tool called rcp. The files are transferred through an encrypted channel. SSH is used as an encryption channel. We can easily transfer files to a remote machine as follows: 
+
+$ scp filename user@remotehost:/home/path
+
+
+This will prompt for a password. It can be made password less by using autologin SSH technique. The recipe, Password-less auto-login with SSH, explains SSH autologin.
+
+Therefore, file transfer using scp doesn't require specific scripting. Once SSH login is automated, the scp command can be executed without an interactive prompt for the password.
+
+Here remotehost can be IP address or domain name. The format of the scp command is:
+
+$ scp SOURCE DESTINATION
+
+
+SOURCE or DESTINATION can be in the format username@localhost:/path for example:
+
+$ scp user@remotehost:/home/path/filename filename
+
+
+The above command copies a file from the remote host to the current directory with the given filename. 
+
+If SSH is running at a different port than 22, use -oPort with the same syntax as sftp.
+
+Recursive copying with SCP
+By using scp we can recursively copy a directory between two machines on a network as follows with the -r parameter: 
+
+$ scp -r /home/slynux user@remotehost:/home/backups
+# Copies the directory /home/slynux recursively to remote location
+
+
+scp can also copy files by preserving permissions and mode by using the -p parameter.
+
+See also
+Playing with file descriptors and redirection of Chapter 1, explains the standard input using EOF
+
+

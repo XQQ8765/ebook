@@ -1,0 +1,9 @@
+2.6. Summary
+A rule-based system is a computer program that uses rules to reach conclusions from a set of premises. Its historical roots include production systems and expert systems, but nowadays their broad range of applications includes everything from real-time control of embedded systems to enterprise resource planning for multinational corporations.
+
+Rule based systems are not procedural, but declarative programs. They require a different approach to programming in which a runtime system is used to make scheduling and control-flow decisions. Modern rule-based systems often include hybrid procedural/declarative languages, broadening their applicability.
+
+A wide range of commercial rule development and deployment environments is available, but all have an essential architecture in common. Efforts are underway to standardize rule engine APIs and rule programming languages.
+
+These first two chapters provided an introduction to the fundamental concepts of rule-based programs. This is really a practitioner¡¯s book, however, so we want to begin writing new rule-based programs as soon as possible. You will learn the Jess programming language in the next part of this book. You¡¯ll start by learning about the Jess software itself in chapter 3 and proceed from there.
+

@@ -1,0 +1,120 @@
+Intersection and set difference (A-B) on text files
+
+
+Intersection and set difference operations are commonly used in mathematical classes on set theory. However, similar operations on text are also very helpful in some scenarios. 
+
+Getting ready
+The comm command is a utility to perform comparison between the two files. It has many nice options to arrange the output in such a way that we can perform intersection, difference, and set difference operations. 
+
+Intersection: The intersection operation? will print the lines that the specified files have in common with one another. 
+
+Difference: The difference operation? will print the lines that the specified files contain and that are not the same in all of those files. 
+
+Set difference: The set difference operation will print the lines in file "A" that do not match those in all of the set of files specified ("B" plus "C" for example). 
+
+How to do it...
+Note that comm takes sorted files as input. Take a look at the following example: 
+
+Code View: Scroll / Show All
+$ cat A.txt
+apple
+orange
+gold
+silver
+steel
+iron
+$ cat B.txt
+orange
+gold
+cookies
+carrot
+$ sort A.txt -o A.txt ; sort B.txt -o B.txt
+$ comm A.txt B.txt
+apple
+	carrot
+	cookies
+				gold
+iron
+				orange
+silver
+steel
+
+
+					  
+
+The first column of the output contains lines that are in A.txt excluding common lines in two files. The second column contains lines that are in B.txt excluding common lines. The third column contains the common lines from A.txt and B.txt. Each of the columns are delimited by using the tab (\t) character.
+
+Some options are available to format the output as per our requirement. For example:
+
+-1 removes first column from output
+
+-2 removes the second column
+
+-3 removes the third column
+
+In order to print the intersection of two files, we need to remove the first and second columns and print the third column only as follows:
+
+$ comm A.txt B.txt -1 -2
+gold
+orange
+
+
+Print lines that are uncommon in two files as follows:
+
+$ comm A.txt B.txt -3
+apple
+carrot
+cookies
+iron
+silver
+steel
+
+
+Using the -3 argument in the comm command removes the third column from the output. But, it writes column-1 and column-2 to the output. The column-1 contains the lines in A.txt excluding the lines in B.txt. Similarly, column-2 has the lines from B.txt excluding the lines in A.txt. As the output is a two-column output, it is not that useful. Columns have their fields blank for each of the unique lines. Hence both columns will not have the content on the same line. Either one of the two columns will have the content. In order to make it in a usable output text format, we need to remove the blank fields and make two columns into a single column output as follows: 
+
+apple
+carrot
+cookies
+iron
+silver
+steel
+
+
+In order to produce such an output, we need to remove the \t character at the beginning of the lines. We can remove the \t character from the start of each line and unify the columns into one as follows:
+
+$ comm A.txt B.txt -3 | sed 's/^\t//'
+apple
+carrot
+cookies
+iron
+silver
+steel
+
+
+The sed command? is piped to the comm output. The sed removes the \t character at the beginning of the lines. The s in the sed script stands for substitute. /^\t/ matches the \t at the beginning of the lines (^ is the start of the line marker). // (no character) is the replacement string for every \t at the beginning of the line. Hence every \t at the start of the line gets removed. 
+
+A set difference operation on two files can be performed as explained in the following paragraphs.
+
+The set difference operation enables you to compare two files and print all the lines that are in the file A.txt or B.txt excluding the common lines in A.txt and B.txt. When A.txt and B.txt are given as arguments to the comm command, the output will contain column-1 with the set difference for A.txt with respect to B.txt and column-2 will contain the set difference for B.txt with respect to A.txt. 
+
+By removing the unnecessary columns, we can produce the set difference for A.txt and B.txt as follows:
+
+Set difference for A.txt: 
+
+$ comm A.txt B.txt -2 -3
+
+
+
+-2 -3 removes the second and third columns. 
+
+
+
+Set difference for B.txt: 
+
+
+$ comm A.txt B.txt -1 -3
+
+
+-2 -3 removes the second and third columns.
+
+

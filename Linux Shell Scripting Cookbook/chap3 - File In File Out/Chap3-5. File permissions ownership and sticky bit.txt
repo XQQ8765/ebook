@@ -1,0 +1,208 @@
+File permissions, ownership, and sticky bit
+
+
+File permissions and ownership are one of the distinguishing features of UNIX/Linux file systems such as extended (ext FS). In many circumstances while working on UNIX/Linux platforms, we come across issues related to permissions and ownership. This recipe is a walk through different use cases of permissions and ownership. 
+
+Getting ready
+In Linux systems, each file is associated with many types of permissions. Out of these permissions, three set of permissions (user, group, and others) are commonly manipulated.
+
+The user is the owner of the file. The group is the collection of users (as defined by the system) that are permitted some access to the file. Others are any entity other than the user or group owner of the file. 
+
+Permissions of a file can be listed by using the ls -l command: 
+
+-rw-r--r-- 1 slynux slynux 2497 2010-02-28 11:22 bot.py
+-rw-r--r-- 1 slynux slynux 16237 2010-02-06 21:42 c9.php
+drwxr-xr-x 2 slynux slynux 4096 2010-05-27 14:31a.py
+-rw-r--r-- 1 slynux slynux 539 2010-02-10 09:11 cl.pl
+
+
+The first column of output specifies the following. The first letter corresponds to:
+
+"-"—if it is a regular file.
+
+"d"—if it is a directory
+
+"c"—for a character device
+
+"b"—for a block device
+
+"l"—if it is a symbolic link
+
+"s"—for a socket
+
+"p"—for a pipe
+
+The rest of the portions can be divided into three groups of three letters each (------). The first --- three characters correspond the permissions of the user (owner), the second set of three characters correspond to the permissions of the group, and the third set of three characters correspond to the permissions of others. Each character in the nine character sequence (nine permissions) specifies whether a permission is set or unset. If the permission is set, a character appears in the corresponding position, else a '-' character appears in that position, which means that the corresponding permission is unset (unavailable).
+
+Let's take a look at what each of these three character set means for the user, group, and others.
+
+User: 
+
+Permission string: rwx------? 
+
+The first letter in the three letters specifies whether the user has read permission for the file. If the read permission is set for the user, the character r will appear as the first character. Similarly, the second character specifies write (modify) permission (w) and the third character specifies whether the user has execute (x) permission (the permission to run the file). The execute permission is usually set for executable files. User has one more special permission called setuid (S), which appears in the position of execute (x). The setuid permission enables an executable file to be executed effectively as its owner, even when the executable is run by another user. 
+
+An example for a file with setuid permission set is as follows: 
+
+-rwS------
+
+
+The read, write, and execute permissions are also applied to the directories. However, the interpretation of read, write, and execute permissions are slightly different in the context of directories as follows:
+
+Read permission (r) for the directories enables to read the list of files and sub-directories in the directory
+
+Write permission (w) for a directory enables to create or remove files and directories from a directory
+
+Execute permission (x) specifies whether the access to the files and directories in a directory is possible or not
+
+Group: 
+
+Permission string: ---rwx--- 
+
+The second set of three characters specifies the group permissions. The interpretation of permissions rwx is the same as the permissions for user. Instead of setuid, the group has a setgid (S) bit. It enables to run an executable file with an effective group as the owner group. But the group, which initiates the command, may be different. An example of group permission is as follows:
+
+----rwS---
+
+
+Others: 
+
+Permission string: ------rwx? 
+
+Other permissions appear as the last three character set in the permission string. Others have the same read, write, and execute permissions as the user and group. But it does not have permission S (like setuid and setgid).
+
+Directories have a special permission called sticky bit. When a sticky bit is set for a directory, the user who created the directory can only delete the files in the directory even if group and others have write permissions. The sticky bit appears in the position of execute character (x) in the others permission set. It is represented as character t or T. t appears in the position of x if the execute permission is unset and the sticky bit is set. If the sticky bit and the execute permission is set, character T appears in the position of x. 
+
+For example:
+
+------rwt , ------rwT 
+
+A typical example of a directory with sticky bit turned on by default is /tmp. The sticky bit is a type of write-protection.
+
+In each of the ls -l output line, the string slynux slynux corresponds to the owned user and owned group. Here the first 'slynux' is the user and the second 'slynux' is the group owner.
+
+How to do it...
+In order to set permissions for files, we use the chmod command. 
+
+Assume that we need to set permission: rwx rw- r-- 
+
+This could be set using chmod as follows:
+
+$ chmod u=rwx g=rw o=r filename
+
+
+Here:
+
+u = specifies user permissions
+
+g = specifies group permissions
+
+o = specifies others permissions
+
+In order to add additional permissions on the current file, use + to add permission to user, group or others and use to remove the permissions. Add the executable permission to a file, which is already having the permission rwx rw- r-- as follows:
+
+$ chmod o+x filename
+
+
+This command adds the x permission for others.
+
+Add the executable permission to all permission categories that is, for user, group, and others as follows:
+
+$ chmod a+x filename
+
+
+Here a means all.
+
+In order to remove any permission, use -. For example:
+
+$ chmod a-x filename
+
+
+Permissions can also be set using octal numbers. Permissions are denoted by three-digit octal numbers in which each of the digit corresponds to user, group, and other in the order.
+
+Read, write, and execute permissions have unique octal numbers as follows:
+
+r-- = 4
+
+-w- = 2
+
+--x = 1
+
+We can get the required combination of permissions by adding the octal values for the required permission sets. For example:
+
+rw- = 4 + 2 = 6
+
+r-x = 4 + 1 = 5
+
+The permission rwx rw- r-- in numeric method is as follows: 
+
+rwx = 4 + 2 + 1 = 7
+
+rw- = 4 + 2 = 6
+
+r-- = 4
+
+Therefore, rwx rw- r-- is equal to 764, and the command for setting the permissions using octal values is:
+
+$ chmod 764 filename
+
+
+There's more...
+Let's go through some additional tasks that can be performed for files and directories.
+
+Changing ownership
+In order to change ownership of files, use the chown command as follows: 
+
+$ chown user.group filename
+
+
+For example:
+
+$ chown slynux.slynux test.sh
+
+
+Here, slynux is the user as well as the group.
+
+Setting the sticky bit
+The sticky bit is an interesting type of permission applied to directories. By setting the sticky bit, it restricts only the user owning it to delete the files even though group and others have sufficient permissions. 
+
+In order to set the sticky bit, +t is applied on a directory with chmod as follows: 
+
+$ chmod a+t directory_name
+
+
+Applying permissions recursively to files
+Sometimes it may be required to recursively change the permissions of all the files and directories inside the current directory. This can be done as follows: 
+
+$ chmod 777 . R
+
+
+The -R option specifies to apply change permission recursively.
+
+We have used "." to specify the path as the current working directory. It is equivalent to:
+
+$ chmod 777 "$(pwd)" R.
+Sarath Lakshman 7 January 2011 8:41 PM
+
+
+Applying ownership recursively
+We can apply the ownership recursively by using the -R flag with the chown command as follows: 
+
+$ chown user.group . -R
+
+
+Running an executable as a different user (setuid)
+Some executables need to be executed as a different user (other than the current user that initiates the execution of the file), effectively, whenever they are executed, by using the file path, such as ./executable_name. A special permission attribute for files called setuid permission enables to effectively execute as the file owner when any other user runs the program. 
+
+First change the ownership to the user to which it needs to be executed every time and login as the owner user. Then, run the following command:
+
+$ chmod +s executable_file
+# chown root.root executable_file
+# chmod +s executable_file
+$ ./executable_file
+
+
+Now it executes effectively as the root user every time.
+
+setuid is restricted such that setuid won't work for scripts, but only for Linux ELF binaries. This is a fix for ensuring security.
+
+

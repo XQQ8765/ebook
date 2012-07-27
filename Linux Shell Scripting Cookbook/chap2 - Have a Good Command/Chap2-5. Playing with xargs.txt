@@ -1,0 +1,193 @@
+Playing with xargs
+
+
+We use pipes to redirect stdout (standard output) of a command to stdin (standard input) of another command. For example:
+
+cat foo.txt | grep "test"
+
+
+But, some of the commands accept data as command-line arguments rather than a data stream through stdin (standard input). In that case, we cannot use pipes to supply data through command-line arguments.
+
+We should go for alternate methods. xargs is a command that is very helpful in handling standard input data to the command-line argument conversions. xargs can manipulate stdin and convert to command-line arguments for the specified command. Also xargs can convert any one line or multiple line text input into other formats, such as multiple lines (specified number of columns) or a single line and vice versa. 
+
+All the Bash hackers love one-line commands. One-liners are command sequences that are joined by using the pipe operator, but do not use the semi colon terminator (;) between the commands used. Crafting one-line commands makes tasks efficient and simpler to solve. It requires proper understanding and practise to formulate one-liners for solving text processing problems. xargs is one of the important components for building one-liner commands. 
+
+Getting ready
+The xargs command should always appear immediately after a pipe operator. xargs uses standard input as the primary data stream source. It uses stdin and executes another command by providing command-line arguments for that executing command using the stdin data source. For example: 
+
+command | xargs
+
+
+How to do it...
+The xargs command can supply arguments to a command by reformatting the data received through stdin.
+
+xargs can act as a substitute that can perform similar actions as the -exec argument in the case of the find command. Let's see a variety of hacks that can be performed using the xargs command.? 
+
+Converting multiple lines of input to a single line output: 
+
+Multiple line input can be converted simply by removing the new line character and replacing with the " " (space) character. '\n' is interpreted as a newline, which is the delimiter for the lines. By using xargs, we can ignore all the newlines with spaces so that multiple lines can be converted into a single line text as follows: 
+
+$ cat example.txt # Example file
+1 2 3 4 5 6
+7 8 9 10
+11 12
+$ cat example.txt | xargs
+1 2 3 4 5 6 7 8 9 10 11 12
+
+
+Converting single line into multiple line output: 
+
+Given maximum no of arguments in a line = n, we can split any stdin (standard input) text into lines of n arguments each. An argument is a piece of string delimited by " " (space). Space is the default delimiter. A single line can be split into multiple lines as follows: 
+
+$ cat example.txt | xargs -n 3
+1 2 3
+4 5 6
+7 8 9
+10 11 12
+
+
+How it works…
+The xargs command is appropriate to be applied to many problem scenarios with its rich and simple options. Let's see how these options can be used wisely to solve problems. 
+
+We can also use our own delimiter towards separating arguments. In order to specify a custom delimiter for input, use the d option as follows:
+
+$ echo "splitXsplitXsplitXsplit" | xargs -d X
+split split split split
+
+
+In the above code, stdin contains a string consisting of multiple 'X' characters. We can use 'X' as the input delimiter by using it with d. Here we have explicitly specified X as the input delimiter, whereas in the default case xargs takes Internal Field Separator (space) as the input delimiter.
+
+By using n along with the above command, we can split the input into multiple lines having two words each as follows:
+
+$ echo "splitXsplitXsplitXsplit" | xargs -d X -n 2
+split split
+split split
+
+
+There's more...
+We have learned how to format stdin to different output as arguments from the above examples. Now let's learn how to supply these formatted output as arguments to commands.
+
+Passing formatted arguments to a command by reading stdin 
+Write a small custom echo for better understanding of example usages with xargs to provide command arguments. 
+
+#!/bin/bash
+#Filename: cecho.sh
+echo $*'#'
+
+
+When arguments are passed to the cecho.sh, it will print the arguments terminated by the # character. For example:
+
+$ ./cecho.sh arg1 arg2
+arg1 arg2 #
+
+
+Let's have a look at a problem:
+
+I have a list of arguments in a file (one argument in each line) to be provided to a command (say cecho.sh). I need to provide arguments in two methods. In the first method, I need to provide one argument each for the command as follows:
+
+./cecho.sh arg1
+./cecho.sh arg2
+./cecho.sh arg3
+Or, alternately, I need to provide two or three arguments each for each execution of command. For two arguments each, it would be similar to the following: 
+
+./cecho.sh arg1 arg2
+./cecho.sh arg3
+In the second method, I need to provide all arguments at once to the command as follows:
+
+./cecho.sh arg1 arg2 arg3
+Run the above commands and note down the output before going through the following section. 
+
+The above problems can be solved using xargs. We have the list of arguments in a file called args.txt. The contents are as follows:
+
+$ cat args.txt
+arg1
+arg2
+arg3
+
+
+For the first problem, we can execute the command multiple times with one argument per execution, by using:
+
+$ cat args.txt | xargs -n 1 ./cecho.sh
+arg1 #
+arg2 #
+arg3 #
+
+
+For executing a command with X arguments per each execution, use:
+
+INPUT | xargs n X
+
+
+For example:
+
+$ cat args.txt | xargs -n 2 ./cecho.sh
+arg1 arg2 #
+arg3 #
+
+
+For the second problem, we can execute the command at once with all the arguments, by using:
+
+$ cat args.txt | xargs ./ccat.sh
+arg1 arg2 arg3 #
+
+
+In the above examples, we have supplied command-line arguments directly to a specific command (for example, cecho.sh). We could only supply the arguments from the args.txt file. However, in realtime, we may also need to add some constant parameter with the command (for example, cecho.sh) along with the arguments taken from args.txt. Consider the following example with the format:
+
+./cecho.sh p arg1 l
+
+
+In the above command execution arg1 is the only variable text. All others should remain constant. We should read arguments from a file (args.txt) and supply it as: 
+
+./cecho.sh p arg1 l
+./cecho.sh p arg2 l
+./cecho.sh p arg3 l
+
+
+To provide a command execution sequence as shown, xargs has an option I. By using I we can specify a replacement string that will be replaced while xargs expands. When I is used with xargs, it will execute as one command execution per argument.
+
+Let's do it as follows:
+
+$ cat args.txt | xargs -I {} ./cecho.sh -p {} -l
+-p arg1 -l #
+-p arg2 -l #
+-p arg3 -l #
+
+
+-I {} specifies the replacement string. For each of the arguments supplied for the command, the {} string will be replaced with arguments read through stdin. When used with -I, the command is executed like in a loop. When there are three arguments the command is executed three times along with the command {}. Each time {} is replaced with arguments one by one.
+
+Using xargs with find
+xargs and find are best friends. They can be combined to perform tasks easily. Usually, people combine them in a wrong way. For example: 
+
+$ find . -type f -name "*.txt" -print | xargs rm -f
+
+
+This is dangerous. It may sometimes cause removal of unnecessary files. Here, we cannot predict the delimiting character (whether it is'\n' or' ') for the output of the find command. Many of the filenames may contain a space character (' ') and hence xargs may misinterpret it as a delimiter (for example, "hell text.txt" is misinterpreted by xargs as "hell" and "text.txt").
+
+Hence we must use -print0 along with find to produce an output with delimited character null ('\0') whenever we use the find output as the xargs input.
+
+Let's use find to match and list of all the .txt files and remove them using xargs: 
+
+$ find . -type f -name "*.txt" -print0 | xargs -0 rm -f
+
+
+This removes all .txt files. xargs -0 interprets that the delimiting character is \0.
+
+Counting number of lines of C code in a source code directory over many C files.
+This is a task most programmers do, that is, counting all C program files for LOC (Lines of Code). The code for this task is as follows:
+
+$ find source_code_dir_path -type f -name "*.c" -print0 | xargs -0 wc -l
+
+
+While and subshell trick with stdin
+xargs is restricted to provide arguments in limited ways to supply arguments. Also, xargs cannot supply arguments to multiple set of commands. For executing commands with collected arguments from standard input, we have a very flexible method. I call it a subshell hack. A subshell with a? while loop can be used to read arguments and execute commands in a trickier way as follows: 
+
+$ cat files.txt | ( while read arg; do cat $arg; done )
+# Equivalent to cat files.txt | xargs -I {} cat {}
+
+
+Here, by replacing cat $arg with any number of commands using a while loop, we can perform many command actions with same arguments. We can also pass the output to other commands without using pipes. Subshell ( ) tricks can be used in a variety of problem environments. When enclosed within subshell operators, it acts as a single unit with multiple commands inside. 
+
+$ cmd0 | ( cmd1;cmd2;cmd3) | cmd4
+
+
+If cmd1 is cd /, within the subshell, the path of the working directory changes. However, this change resides inside the subshell only. cmd4 will not see the directory change.

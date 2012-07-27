@@ -1,0 +1,29 @@
+Chapter 7. The Old-boy Network
+In this chapter, we will cover:
+
+Basic networking primer
+
+Let's ping!
+
+Listing all the machines alive on a network
+
+Transferring files through network
+
+Setting up an Ethernet and wireless LAN with script
+
+Password-less auto-login with SSH
+
+Running commands on remote host with SSH
+
+Mounting remote drive at local mount point
+
+Multi-casting window messages on a network
+
+Network traffic and port analysis
+
+Introduction
+Networking is the act of interconnecting machines through a network and configuring the nodes in the network with different specifications. We use TCP/IP as our networking stack and all operations are based on it. Networks are an important part of every computer system. Each node connected in the network is assigned a unique IP address for identification. There are many parameters in networking, such as subnet mask, route, ports, DNS, and so on, which require a basic understanding to follow. 
+
+Several applications that make use of a network operate by opening and connecting to firewall ports. Every application may offer services such as data transfer, remote shell login, and so on. Several interesting management tasks can be performed on a network consisting of many machines. Shell scripts can be used to configure the nodes in a network, test the availability of machines, automate execution of commands at remote hosts, and so on. This chapter focuses on different recipes that introduce interesting tools or commands related to networking and also how they can be used for solving different problems. 
+
+

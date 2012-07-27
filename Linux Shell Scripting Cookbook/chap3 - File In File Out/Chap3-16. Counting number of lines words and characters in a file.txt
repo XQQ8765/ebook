@@ -1,0 +1,54 @@
+Counting number of lines, words, and characters in a file
+
+
+Counting the number of lines, words, and characters from a text or file are very useful for text manipulations. In several cases, count of words or characters are used in indirect ways to perform some hacks to produce required output patterns and results. This book includes some of such tricky examples in other chapters. Counting? LOC (Lines of Code) is an important application for developers. We may need to count special types of files excluding unnecessary files. A combination of wc with other commands help to perform that. 
+
+Getting ready
+wc is the utility used for counting. It stands for Word Count (wc). Let's see how to use wc to count lines, words, and characters. 
+
+How to do it...
+Count number of lines as follows:
+
+$ wc -l file
+
+
+In order to use stdin as input, use the following command:
+
+$ cat file | wc -l
+
+
+Count the number of words as follows:
+
+$ wc -w file
+$ cat file | wc -w
+
+
+In order to count number of characters, use:
+
+$ wc -c file
+$ cat file | wc -c
+
+
+For example, we can count the characters in a text as follows: 
+
+echo -n 1234 | wc -c
+4
+
+
+-n is used to avoid an extra newline character.
+
+When wc is executed without any options as:
+
+$ wc file
+
+
+it will print number of lines, words, and characters delimited by tabs.
+
+There's more...
+Let's go through additional options available with wc command.
+
+Print length of longest length line
+wc can be also used to print the length of longest line using the L option:
+
+$ wc file -L
+

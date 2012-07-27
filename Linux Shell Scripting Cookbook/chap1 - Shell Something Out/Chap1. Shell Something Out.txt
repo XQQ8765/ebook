@@ -1,0 +1,111 @@
+Chapter 1. Shell Something Out
+
+
+In this chapter, we will cover:
+
+Printing in the terminal
+
+Playing with variables and environment variables
+
+Doing Math calculations with the shell
+
+Playing with file descriptors and redirection
+
+Arrays and associative arrays
+
+Visiting aliases
+
+Grabbing information about the terminal
+
+Getting, setting dates, and delays
+
+Debugging the script
+
+Functions and arguments
+
+Reading output of a sequence of commands in a variable
+
+Reading "n" characters without pressing Return
+
+Field separators and iterators
+
+Comparisons and tests
+
+Introduction
+UNIX-like systems are amazing operating system designs. Even after many decades, the UNIX-style architecture for operating systems serves as one of the best designs. One of the most important features of this architecture is the command-line interface or the shell. The shell environment helps users to interact with and access core functions of the operating system. The term scripting is more relevant in this context. Scripting is usually supported by interpreter-based programming languages. Shell scripts are files in which we write a sequence of commands that we need to perform. And the script file is executed using the shell utility. 
+
+In this book we are dealing with Bash (Bourne Again Shell), which is the default shell environment for most GNU/Linux systems. Since GNU/Linux is the most prominent operating system based on a UNIX-style architecture, most of the examples and discussions are written by keeping Linux systems in mind. 
+
+The primary purpose of this chapter is to give readers an insight about the shell environment and become familiar with the basic features that come around the shell. Commands are typed and executed in a shell terminal. When opened, in a terminal, a prompt is available. It is usually in the following format: 
+
+username@hostname$
+
+
+Or:
+
+root@hostname#
+
+
+Or simply as $ or #.
+
+$ represents regular users and # represents the administrative user root. Root is the most privileged user in a Linux system. 
+
+A shell script is a text file that typically begins with a shebang, as follows:
+
+#!/bin/bash
+
+
+For any scripting language in a Linux environment, a script starts with a special line called shebang?. Shebang is a line for which #! is prefixed to the interpreter path. /bin/bash is the interpreter command path for Bash.
+
+Execution of a script can be done in two ways. Either we can run the script as a command-line argument for sh or run a self executable with execution permission. 
+
+The script can be run with the filename as a command-line argument as follows:
+
+$ sh script.sh # Assuming script is in the current directory.
+
+
+Or:
+
+$ sh /home/path/script.sh # Using full path of script.sh.
+
+
+If a script is run as a command-line argument for sh, the shebang in the script is of no use.
+
+In order to self execute a shell script, it requires executable permission. While running as a self executable, it makes use of the shebang. It runs the script using the interpreter path that is appended to #! in shebang. The execution permission for the script can be set as follows:
+
+$ chmod a+x script.sh
+
+
+This command gives the script.sh file the executable permission for all users. The script can be executed as: 
+
+$ ./script.sh #./ represents the current directory
+
+
+Or:
+
+$ /home/path/script.sh # Full path of the script is used
+
+
+The shell program will read the first line and see that the shebang is #!/bin/bash. It will identify the /bin/bash and execute the script internally as:
+
+$ /bin/bash script.sh
+
+
+When a terminal is opened it initially executes a set of commands to define various settings like prompt text, colors, and many more. This set of commands (run commands) are read from a shell script called .bashrc, which is located in the home directory of the user (~/.bashrc). The bash shell also maintains a history of commands run by the user. It is available in the file ~/.bash_history. ~ is the shorthand for the user home directory path.
+
+In Bash, each command or command sequence is delimited by using a semicolon or a new line. For example:
+
+$ cmd1 ; cmd2
+
+
+This is equivalent to:
+
+$ cmd1
+$ cmd2
+
+
+Finally, the # character is used to denote the beginning of unprocessed comments. A comment section starts with # and proceeds up to the end of that line. The comment lines are most often used to provide comments about the code in the file or to stop a line of code from being executed.
+
+Now let's move on to the basic recipes in this chapter.
+
+

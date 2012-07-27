@@ -1,0 +1,306 @@
+Searching and mining "text" inside a file with grep
+
+
+Searching inside a file is an important use case in text processing. We may need to search through thousands of lines in a file to find out some required data by using certain specifications. This recipe will help you learn how to locate data items of a given specification from a pool of data. 
+
+Getting ready
+The grep command is the master UNIX utility for searching in the text. It accepts regular expressions and wild cards. We can produce output in various formats using the numerous interesting options that come with grep. Let's see how to do it. 
+
+How to do it...
+Search in a file for a word as follows:
+
+$ grep match_pattern filename
+this is the line containing match_pattern
+
+
+Or:
+
+$ grep "match_pattern" filename
+this is the line containing match_pattern
+
+
+It will return lines of text that contain the given match_pattern.
+
+We can also read from stdin as follows:
+
+$ echo -e "this is a word\nnext line" | grep word
+this is a word
+
+
+Perform a search in multiple files using a single grep invocation as follows:
+
+$ grep "match_text" file1 file2 file3 ...
+
+
+We can highlight the word in the line by using the --color option as follows:
+
+$ grep word filename -color=auto
+this is the line containing word
+
+
+Usually, the grep command considers match_text as a wildcard. To use regular expressions as input arguments, the -E option should be added¡ªwhich means extended regular expression. Or we can a use regular expression enabled grep command, egrep. For example:
+
+$ grep -E "[a-z]+"
+
+
+Or:
+
+$ egrep "[a-z]+"
+
+
+In order to output only the matching portion of text in a file, use the o option as follows:
+
+$ echo this is a line. | grep -o -E "[a-z]+\."
+line
+
+
+Or:
+
+$ echo this is a line. | egrep -o "[a-z]+\."
+line.
+
+
+In order to print all of the lines, except the line containing match_pattern, use:
+
+$ grep -v match_pattern file
+
+
+The v option added to grep inverts the match results.
+
+Count the number of lines in which a matching string or regex match appears in a file or text as follows: 
+
+$ grep -c "text" filename
+10
+
+
+It should be noted that -c counts only the number of matching lines, not the number of times a match is made. For example:
+
+$ echo -e "1 2 3 4\nhello\n5 6" | egrep -c "[0-9]"
+2
+
+
+Even though there are 6 matching items, it prints 2 since there are only 2 matching lines. Multiple matches in a single line are counted only once.
+
+In order to count the number of matching items in a file, use the following hack:
+
+$ echo -e "1 2 3 4\nhello\n5 6" | egrep -o "[0-9]" | wc -l
+6
+
+
+Print the line number of the match string as follows:
+
+$ cat sample1.txt
+gnu is not unix
+linux is fun
+bash is art
+$ cat sample2.txt
+planetlinux
+$ grep linux -n sample1.txt
+2:linux is fun
+
+
+Or:
+
+$ cat sample1.txt | grep linux -n
+
+
+If multiple files are used, it will also print the filename with the result as follows:
+
+$ grep linux -n sample1.txt sample2.txt
+sample1.txt:2:linux is fun
+sample2.txt:2:planetlinux
+
+
+Print the character or byte offset at which a pattern matches as follows:
+
+$ echo gnu is not unix | grep -b -o "not"
+7:not
+
+
+The character offset for a string in a line is a counter from 0 starting with the first character. In the above example, "not" is at the seventh offset position (that is, not starts from the seventh character in the line (gnu is not unix). 
+
+The b option is always used with o.
+
+To search over many files and find out in which of the files a certain text matches use:
+
+$ grep -l linux sample1.txt sample2.txt
+sample1.txt
+sample2.txt
+
+
+The inverse of the l argument is L. The -L argument returns a list of non-matching files.
+
+There's more...
+We have used the basic usage examples for the grep command. But the grep command comes with rich features. Let's go through the different options available along with grep.
+
+Recursively search many files
+To recursively search for a text over many directories of descendants use: 
+
+$ grep "text" . -R -n
+
+
+In this command"." specifies the current directory.
+
+For example:
+
+$ cd src_dir
+$ grep "test_function()" . -R -n
+./miscutils/test.c:16:test_function();
+
+
+test_function() exists in line number 16 of miscutils/test.c. 
+
+
+This is one of the most frequently used commands by developers. It is used to find the file of source code in which a certain text exists.
+
+
+
+
+Ignoring case of pattern
+The i argument helps match patterns to be evaluated without considering if the characters are uppercase or lowercase. For example: 
+
+$ echo hello world | grep -i "HELLO"
+hello
+
+
+grep by matching multiple patterns
+Usually, we can specify single pattern for matching. However, we can use an argument -e to specify multiple patterns for matching as follows: 
+
+$ grep -e "pattern1" -e "pattern"
+
+
+For example:
+
+$ echo this is a line of text | grep -e "this" -e "line" -o
+this
+line
+
+
+There is also another way to specify multiple patterns. We can use a pattern file for reading patterns. Write patterns to match line by line and execute grep with a -f argument as follows:
+
+$ grep -f pattern_file source_filename
+
+
+For example:
+
+$ cat pat_file
+hello
+cool
+$ echo hello this is cool | grep -f pat_file
+hello this is cool
+
+
+Include and exclude files (wild card pattern) in grep search
+grep can include or exclude files in which to search. We can specify include files or exclude files using wild card patterns. 
+
+To search only .c and .cpp files recursively in a directory by excluding all other file types, use:
+
+$ grep "main()" . -r --include *.{c,cpp}
+
+
+Note that some{string1,string2,string3} expands as somestring1 somestring2 somestring3.
+
+Exclude all README files in the search as follows:
+
+$ grep "main()" . -r -exclude "README"
+
+
+To exclude directories use the --exclude-dir option.
+
+To read a list of files to exclude from a file use --exclude-from FILE.
+
+
+Using grep with xargs with zero-byte suffix
+
+The xargs command is often used to provide a list of file names as a command-line argument to another command. When filenames are used as command-line arguments, it is recommended to use a zero-byte terminator for the file names instead of a space terminator. Some of the file names can contain a space character and it will be misinterpreted as a terminator and a single file name may be broken into two file names (for example, New file.txt can be interpreted as two filenames New and file.txt). This problem can be avoided by using a zero-byte suffix. We use xargs so as to accept stdin text from commands like grep, find, and so on. Such commands can output text to the stdout with a zero-byte suffix. In order to specify that the input terminator for filenames is zero byte (\0), we should use 0 with xargs. 
+
+Create some test files as follows:
+
+$ echo "test" > file1
+$ echo "cool" > file2
+$ echo "test" > file3
+
+
+In the following command sequence, grep outputs filenames with a zero byte terminator (\0). It is specified by using the Z option with grep. xargs -0 reads the input and separates file names with a zero byte terminator:
+
+$ grep "test" file* -lZ | xargs -0 rm
+
+
+Usually, -Z is used along with -l.
+
+
+Silent output for grep
+
+The previously mentioned usages of grep return output in different formats. There are some cases when we need to know whether a file contains the specified text or not. We have to perform a test condition that returns true or false. It can be performed using the quiet condition (-q). In quiet mode, the grep command does not write any output to the standard output. Instead it runs the command and returns exit status based on success or failure. 
+
+We know that a command returns 0 if success and non-zero if failure.
+
+Let's go through a script that makes uses of grep in quiet mode for testing whether a match text appears in a file or not.
+
+#!/bin/bash
+#Filename: silent_grep.sh
+#Description: Testing whether a file contain a text or not
+if [ $# -ne 2 ];
+then
+echo "$0 match_text filename"
+fi
+match_text=$1
+filename=$2
+grep -q $match_text $filename
+if [ $? -eq 0 ];
+then
+echo "The text exists in the file"
+else
+echo "Text does not exist in the file"
+fi
+
+
+The silent_grep.sh script can be run as follows by providing a match word (Student) and a filename (student_data.txt) as the command argument:
+
+$ ./silent_grep.sh Student student_data.txt
+The text exists in the file
+
+
+Print lines before and after text matches
+
+Context-based printing is a one of the nice features of grep. Suppose a matching line for a given match text is found, grep usually prints only the matching lines. But we may need "n" lines after the matching lines or "n" lines before the matching line or both. It can be performed using context line control in grep. Let's see how to do it. 
+
+In order to print three lines after a match, use the -A option: 
+
+$ seq 10 | grep 5 -A 3
+5
+6
+7
+8
+
+
+In order to print three lines before the match, use the -B option:
+
+$ seq 10 | grep 5 -B 3
+2
+3
+4
+5
+
+
+Print three lines after and before the match, use the -C option as follows:
+
+$ seq 10 | grep 5 -C 3
+2
+3
+4
+5
+6
+7
+8
+
+
+If there are multiple matches, each section is delimited by a line "--":
+
+$ echo -e "a\nb\nc\na\nb\nc" | grep a -A 1
+a
+b
+--
+a
+b
+

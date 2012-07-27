@@ -1,0 +1,105 @@
+Basic regular expression primer
+
+
+Regular expressions are the heart of the pattern-matching based text-processing techniques. For fluency in writing text-processing tools, one must have basic understanding of regular expressions. Regular expressions are a form of tiny, highly-specialized programming language used to match text. Using? wild card techniques, the scope of matching text with patterns is very limited. This recipe is a walk through of basic regular expressions. 
+
+Getting ready
+Regular expressions are the language used in most text processing utilities. Hence you will use the techniques learned in this recipe in many other recipes. [a-z0-9_]+@[a-z0-9]+\.[a-z]+ is an example of regular expression for matching an e-mail address. 
+
+Does this seem weird? Don't worry, it is really simple once you understand the concepts.
+
+How to do it...
+In this section, we will go through regex, the POSIX character class, and meta characters.
+
+Let's first go through the basic components of regular expressions (regex).
+
+regex  Description  Example  
+^  The start of the line marker.  ^tux matches a string that starts the line with tux.  
+$  The end of the line marker.  tux$ matches strings of a line that ends with tux.  
+.  Matches any one character.  Hack. matches Hack1, Hacki but not Hack12, Hackil, only one additional character matches.  
+[]  Matches any one of the characters enclosed in [chars].  coo[kl] matches cook or cool.  
+[^]  Matches any one of the characters EXCEPT those that are enclosed in [^chars].  9[^01] matches 92, 93 but not 91 or 90.  
+[-]  Matches any character within the range specified in [].  [1-5] matches any digits from 1 to 5.  
+?  The preceding item must match one or zero times.  colou?r matches color or colour but not colouur.  
++  The preceding item must match one or more times.  Rollno-9+ matches Rollno-99, Rollno-9 but not Rollno-.  
+*  The preceding item must match zero or more times.  co*l matches cl, col, coool.  
+()  Creates a substring from the regex match.  ma(tri)?x matches max or matrix.  
+{n}  The preceding item must match n times.  [0-9]{3} matches any three-digit number. [0-9]{3} can be expanded as: [0-9][0-9][0-9].  
+{n,}  Minimum number of times that the preceding item should match.  [0-9]{2,} matches any number, that is, two digits or more.  
+{n, m}  Specifies the minimum and maximum number of times the preceding item should match.  [0-9]{2,5} matches any number that is having two digits to five digits.  
+|  Alternation¡ªone of the items on either of sides of | should match.  Oct (1st | 2nd) matches Oct 1st or Oct 2nd.  
+\  The escape character for escaping any of the special characters mentioned above.  a\.b matches a.b but not ajb. It ignores special meaning of .by prefexing \.  
+
+
+
+
+A POSIX character class is a special meta sequence of the form [:...:] that can be used to match a range of specified characters. The POSIX classes are as follows: 
+
+Regex  Description  Example  
+[:alnum:]?  Alphanumeric character  [[:alnum:]]+  
+[:alpha:]?  Alphabet character (lowercase and uppercase)  [[:alpha:]]{4}  
+[:blank:]?  Space and tab  [[:blank:]]*  
+[:digit:]?  Digit  [[:digit:]]?  
+[:lower:]?  Lowercase alphabet  [[:lower:]]{5,}  
+[:upper:]?  Uppercase alphabet  ([[:upper:]]+)?  
+[:punct:]?  Punctuation  [[:punct:]]  
+[:space:]?  All whitespace characters including newline, carriage return, and so on.  [[:space:]]+  
+
+
+
+
+Meta characters are a type of Perl-style regular expression that is supported by a subset of text processing utilities. Not all of the utilities will support the following notations. But the above character classes and regular expression are universally accepted. 
+
+Regex  Description  Example  
+\b  Word boundary  \bcool\b matches only cool not coolant.  
+\B  Non-word boundary  cool\B matches coolant and not cool.  
+\d  Single digit character  b\db matches b2b not bcb.  
+\D  Single non-digit  b\Db matches bcb not b2b.  
+\w  Single word character(alnum and _)  \w matches 1 or a not&.  
+\W  Single non-word character  \w matches& not 1 or a.  
+\n  Newline  \n Matches a new line.  
+\s  Single whitespace  x\sx matches xx not xx.  
+\S  Single non-space  x\Sx matches xkx not xx.  
+\r  Carriage return  \r matches carriage return.  
+
+
+
+
+How it works...
+The tables seen in the previous section are the key element tables for regular expressions. By using the suitable keys from the tables, we can construct any suitable regular expression string to match text according to the context. regex is a generic language to match text. Therefore, we are not introducing any tools in this recipe. However, it follows in the other recipes in this chapter.
+
+Let's see a few examples of text matching:
+
+In order to match all words in a given text, we can write the regex as: 
+
+( ?[a-zA-Z]+ ?)
+"?" is the notation for optional space that precedes and follows a word. The [a-zA-Z]+ notation represents one or more alphabet characters (a-z and A-Z). 
+
+To match an IP address, we can write the regex as: 
+
+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}
+
+or 
+
+[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}
+
+We know that an IP address is in the form 192.168.0.2. It is in the form of four integers (each from 0-255) separated by dots (for example, 192.168.0.2). 
+
+[0-9]or[:digit:] represents a match for digits 0-9. {1,3} matches one to three digits and \.matches ".". 
+
+
+There's more...
+Let's see how the special meanings of certain characters are specified in the regular expressions.
+
+Treatment of special characters
+Regular expressions use some characters such as $, ^, ., *, +, {, and } as special characters. But what if we want to use these characters as non-special characters (a normal text character)? Let's see an example. 
+
+regex: [a-z]*.[0-9] 
+
+How is this interpreted? 
+
+It can be zero or more [a-z] ([a-z]*), then any one character (.), and then one character in the set[0-9] such that it matches abcdeO9.
+
+It can also be interpreted as one of [a-z], then a character *, then a character. (period), and a digit such that it matches x*.8.
+
+In order to overcome this problem, we precede the character with a forward slash "\" (doing this is called "escaping the character"). Characters such as * that have multiple meanings are prefixed with "\" to make them into a special meaning or to make them non special. Whether special characters or non-special characters are to be escaped varies depending on the tool that you are using.

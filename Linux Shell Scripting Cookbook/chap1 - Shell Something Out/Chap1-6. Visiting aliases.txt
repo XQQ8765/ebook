@@ -1,0 +1,47 @@
+Visiting aliases
+
+
+An alias is basically a shortcut that takes the place of typing a long command sequence. 
+
+Getting ready
+Aliases can be implemented in multiple ways, either by using functions or by using the alias command.
+
+How to do it...
+An alias can be implemented as follows:
+
+$ alias new_command='command sequence'
+
+
+Giving a shortcut to the install command, apt-get install, can be done as follows:
+
+$ alias install='sudo apt-get install'
+
+
+Therefore, we can use install pidgin instead of sudo apt-get install pidgin.
+
+The alias command is temporary; aliasing exists until we close the current terminal only. In order to keep these shortcuts permanent, add this statement to the ~/.bashrc file. Commands in ~/.bashrc are always executed when a new shell process is spawned.
+
+$ echo 'alias cmd="command seq"' >> ~/.bashrc
+
+
+To remove an alias, remove its entry from ~/.bashrc or use the unalias command. Another method is to define a function with a new command name and write it in ~/.bashrc.
+
+We can alias rm so that it will delete the original and keep a copy in a backup directory:
+
+alias rm='cp $@ ~/backup; rm $@'
+
+
+When you create an alias, if the item being aliased already exists, it will be replaced by this newly aliased command for that user.
+
+There's more...
+There are situations when aliasing can also be a security breach. See how to identify them:
+
+Escaping aliases
+The alias command can be used to alias any important command, and you may not always want to run the command using the alias. We can ignore any aliases currently defined by escaping the command we want to run. For example: 
+
+$ \command
+
+
+The \ character escapes the command, running it without any aliased changes. While running privileged commands on an untrusted environment, it is always a good security practise to ignore aliases by prefixing the command with \. The attacker might have aliased the privileged command with his own custom command to steal the critical information that is provided to the command by the user.
+
+

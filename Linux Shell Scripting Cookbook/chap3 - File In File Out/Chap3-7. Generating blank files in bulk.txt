@@ -1,0 +1,38 @@
+Generating blank files in bulk
+
+
+Sometimes we many need to generate test cases. We may use programs that operate on 1000s of files. But how are test files generated? 
+
+Getting ready
+touch is a command that can create blank files or modify the timestamp of files if they already exist. Let's take a look at how to use them. 
+
+How to do it...
+A blank file with the name filename will be created using the following command:
+
+$ touch filename
+
+
+Generate bulk files with a different name pattern as follows:
+
+for name in {1..100}.txt
+do
+touch $name
+done
+
+
+In the above code {1..100} will be expanded as a string "1, 2, 3, 4, 5, 6, 7...100". Instead of {1..100}.txt, we can use various shorthand patterns such as test{1..200}.c, test{a..z}.txt, and so on. 
+
+If a file already exists, then the touch command changes all timestamps associated with the file to the current time. However, if we want to specify that only certain stamps are to be modified, we use the following options:
+
+touch -a modifies only the access time
+
+touch -m modifies only the modification time
+
+Instead of using the current time for the timestamp, we can specify the time and date with which to stamp the file as follows:
+
+$ touch -d "Fri Jun 25 20:50:14 IST 1999" filename
+
+
+The date string that is used with d need not always be in the same format. It will accept any standard date formats. We can omit time from the string and provide handy date formats like "Jan 20 2010".
+
+

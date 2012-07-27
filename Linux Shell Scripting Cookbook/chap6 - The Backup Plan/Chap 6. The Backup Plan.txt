@@ -1,0 +1,29 @@
+Chapter 6. The Backup Plan
+In this chapter, we will cover:
+
+Archiving with tar
+
+Archiving with cpio
+
+Compressing with gunzip (gzip)
+
+Compressing with bunzip (bzip)
+
+Compressing with lzma
+
+Archiving and compressing with zip
+
+Heavy compression squashfs fileystem
+
+Encrypting files and folders (with standard algorithms)
+
+Backup snapshots with rsync
+
+Version controlled backups with git
+
+Cloning disks with dd
+
+Introduction
+Taking snapshots and backups of data are regular tasks we come across. When it comes to a server or large data storage systems, regular backups are important. It is possible to automate backups via shell scripting. Archiving? and compression seems to find usage in the everyday life of a system admin or a regular user. There are various compression formats that can be used in various ways so that best results can be obtained.? Encryption is another task that comes under frequent usage for protection of data. In order to reduce the size of encrypted data, usually files are archived and compressed before encrypting. Many standard encryption algorithms are available and it can be handled with shell utilities. This chapter walks through different recipes for creating and maintaining files or folder archives, compression formats, and encrypting techniques with shell. Let's go through the recipes. 
+
+

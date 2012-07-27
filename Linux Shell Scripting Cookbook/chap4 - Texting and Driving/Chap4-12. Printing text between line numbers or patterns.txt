@@ -1,0 +1,49 @@
+Printing text between line numbers or patterns
+
+
+We may require to print certain section of text lines based on conditions such as a range of line numbers, range matched by start and end pattern and so on. Let's see how to do it. 
+
+Getting ready
+We can use utilities such as awk, grep, and sed to perform the printing of a section based on conditions. Still I found awk to be the simplest one to understand. Let's do it using awk.
+
+How to do it...
+In order to print lines of text in a range of line numbers, M to N, use the following syntax:
+
+$ awk 'NR==M, NR==N' filename
+
+
+Or, it can take stdin input as follows:
+
+$ cat filename | awk 'NR==M, NR==N'
+
+
+Replace M and N with numbers as follows:
+
+$ seq 100 | awk 'NR==4,NR==6'
+4
+5
+6
+
+
+To print lines of text in a section with start_pattern and end_pattern, use the following syntax:
+
+$ awk '/start_pattern/, /end _pattern/' filename
+
+
+For example:
+
+$ cat section.txt
+line with pattern1
+line with pattern2
+line with pattern3
+line end with pattern4
+line with pattern5
+$ awk '/pa.*3/, /end/' section.txt
+line with pattern3
+line end with pattern4
+
+
+The patterns used in awk are regular expressions. 
+
+See also
+Basic awk primer, explains the awk command

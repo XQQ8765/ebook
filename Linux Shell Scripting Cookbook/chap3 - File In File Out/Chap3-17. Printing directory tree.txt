@@ -1,0 +1,68 @@
+Printing directory tree
+
+
+Graphically representing directories and filesystem as tree hierarchy is quite useful when preparing tutorials and documents. Also they are sometimes useful in writing certain monitoring scripts that helps to look at the filesystem using easy-to-read tree representations. Let's see how to do it. 
+
+Getting ready
+The tree command is the hero that helps to print graphical trees of files and directories. Usually, tree does not come with Linux distributions. You need to install it using the package manager. 
+
+How to do it...
+The following is a sample UNIX file system tree to show an example:
+
+$ tree ~/unixfs
+unixfs/
+|-- bin
+| |-- cat
+| `-- ls
+|-- etc
+| `-- passwd
+|-- home
+| |-- pactpub
+| | |-- automate.sh
+| | `-- schedule
+| `-- slynux
+|-- opt
+|-- tmp
+`-- usr
+8 directories, 5 files
+
+
+The tree command comes with many interesting options, let us look at few of them.
+
+Highlight only files matched by pattern as follows:
+
+$ tree path -P PATTERN # Pattern should be wildcard
+
+
+For example:
+
+$ tree PATH -P "*.sh" # Replace PATH with a directory path
+|-- home
+| |-- pactpub
+| | `-- automate.sh
+
+
+Highlight only files excluding the match pattern by using:
+
+$ tree path -I PATTERN
+
+
+In order to print size along with files and directories use the -h option as follows:
+
+$ tree -h
+
+There's more...
+Let's see an interesting option that is available with the tree command.
+
+HTML output for tree
+It is possible to generate HTML output from the tree command. For example, use the following command to create an HTML file with tree output. 
+
+$ tree PATH -H http://localhost -o out.html
+
+
+Replace http://localhost with the URL where you would like to host the file. Replace PATH with a real path for the base directory. For the current directory use '.' as the PATH.
+
+The web page generated from the directory listing will look as follows:
+
+ 
+

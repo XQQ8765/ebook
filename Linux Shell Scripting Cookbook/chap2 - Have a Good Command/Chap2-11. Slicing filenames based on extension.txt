@@ -1,0 +1,115 @@
+Slicing filenames based on extension
+
+
+Several custom shell scripts perform manipulations based on file names. We may need to perform actions like renaming the files by preserving extension, converting files from one format to another (change the extension by preserving the name), extracting a portion of the file name, and so on. The shell comes with inbuilt functionalities for slicing filenames based on different conditions. Let's see how to do it. 
+
+How to do it…
+The name from name.extension can be easily extracted by using the % operator. You can extract the name from"sample.jpg" as follows:
+
+file_jpg="sample.jpg"
+name=${file_jpg%.*}
+echo File name is: $name
+
+
+The output is:
+
+File name is: sample
+
+
+The next task is to extract the extension of a file from its filename. The extension can be extracted using the # operator.
+
+Extract .jpg from the a filename stored in variable file_jpg as follows:
+
+extension=${file_jpg#*.}
+echo Extension is: jpg
+
+
+The output is:
+
+Extension is: jpg
+
+
+How it works..
+In the first task, in order to extract the name from the file name in the format name.extension we have used the % operator. 
+
+${VAR%.*} can be interpreted as:
+
+Remove the string match from the $VARIABLE for the wildcard pattern that appears to the right-hand side of % (.* in the previous example). Evaluating from the right to the left direction should make the wildcard match.
+
+Let VAR=sample.jpg. Therefore, the wildcard match for .* from right to left is .jpg. Thus it is removed from the $VAR string and the output will be "sample".
+
+% is a non-greedy operation. It finds the minimal match for the wildcard from the right to left. There is an operator %%, which is similar to %. But it is greedy in nature. That means it matches the maximal string for the wildcard.
+
+For example, we have:
+
+VAR=hack.fun.book.txt
+
+
+By using the % operator, we have:
+
+$ echo ${VAR%.*}
+
+
+The output will be: hack.fun.book.
+
+The operator % performs a non-greedy match for .* from right to left (.txt).
+
+By using the %% operator, we have:
+
+$ echo ${VAR%%.*}
+
+
+The output will be: hack 
+
+The %% operator matches greedy match for .* from right to left (.fun.book.txt). 
+
+In the second task, we have used the # operator to extract the extension from the filename. It is similar to %. But it evaluates from left to right.
+
+${VAR#*.} can be interpreted as:
+
+Remove the string match from the $VARIABLE for the wildcard pattern match appears right side to the # (*. in the above example). Evaluating from the left to right direction should make the wildcard match.
+
+Similarly, as in the case of %%, we have another greedy operator for #, which is ##.
+
+It makes greedy matches by evaluating from left to right and removes the match string from the specified variable.
+
+Let's use this example:
+
+VAR=hack.fun.book.txt
+
+
+By using the # operator, we have:
+
+$ echo ${VAR#*.}
+
+
+The output will be: fun.book.txt.
+
+The operator # performs a non-greedy match for *. from left to right (hack.).
+
+By using the ## operator, we have:
+
+$ echo ${VAR##*.}
+
+
+The output will be: txt.
+
+The operator ## matches greedy match for *. from left to right (txt).
+
+
+The ## operator is more preferred over the # operator to extract an extension from a filename since the filename may contain multiple '.' characters. Since ## makes greedy match, it always extract extensions only.
+
+
+
+
+Here is practical example that can be used to extract different portions of a domain name, given URL="www.google.com": 
+
+Code View: Scroll / Show All
+$ echo ${URL%.*} # Remove rightmost .*
+www.google
+$ echo ${URL%%.*} # Remove right to leftmost .* (Greedy operator)
+www
+$ echo ${URL#*.} # Remove leftmost part before *.
+google.com
+$ echo ${URL##*.} # Remove left to rightmost part before *. (Greedy operator)
+com

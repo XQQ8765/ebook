@@ -1,0 +1,64 @@
+1.2. Some real-world examples
+You are probably affected by rule-based software every day, whether you realize it or not. Many commonplace activities in a modern office are controlled by rules. Let¡¯s look at a few examples.
+
+1.2.1. Mail filtering
+¡°I can¡¯t keep up with all the email I get!¡± is a common complaint in this Net-connected world. Huge numbers of email messages are sent, delivered, and read every day. Rules to the rescue! There are many technological solutions to the problem of sorting email, and almost without exception, these solutions are simple rule-based systems.
+
+The venerable program sendmail (http://www.sendmail.org/) delivers most of the email on the Internet. It sports a famously cryptic rule-based configuration language. The following example is lifted verbatim from the sendmail web site. It shows a sendmail rule that translates BITNET addresses like decvax!user and research!user into user@decvax.dec.com and user@research.att.com, respectively:
+
+# translate UUCP addresses to SMTP ones
+LOCAL_RULE_3
+UUCPSMTP(`decvax', `decvax.dec.com')
+UUCPSMTP(`research', `research.att.com')
+
+Microsoft Outlook, Eudora, Netscape Messenger, OS X Mail, and other popular mail clients include the ability to automatically sort messages into mailboxes according to the sender¡¯s address, the recipient¡¯s address, the subject, and other characteristics. In all cases, the user programs the filter in a rule-based language. For these graphical mail clients, the rule language is generally a pattern of checkboxes and pop-up menus in a mail-filtering dialog box.
+
+Programs like procmail (http://www.procmail.org/) and filter (http://www.math.fu-berlin.de/~guckes/elm/elm.index.html) do this same kind of filtering in batch mode on Unix systems. I¡¯d personally perish under the weight of the hundreds of messages I receive each day without procmail to sort through and organize my mail. Instead of dialog boxes, these programs offer a simple textual language. For example, here are two of the rules in my procmail configuration:
+
+# Put all messages mentioning Jess in their subject line
+# into the IN.jess-users folder.
+:0:
+* ^Subject:.*jess
+Mail/IN.jess-users
+
+# Send all messages from "Out-of-Office Autoreply" to
+# /dev/null ¨C the UNIX "Trash can."
+:0:
+* ^From:.*Autoreply
+/dev/null
+
+Other programs exist that can automatically filter mail at a mail server to remove spam or to strip viruses from attachments. Again, these programs offer a wide range of features and interfaces, generally programmed via rules.
+
+Email handling is one common example of how rules can make life easier for individuals. Now let¡¯s look at some applications of rules in the enterprise.
+
+1.2.2. Product configuration
+When a complex, customizable product like a computer is sold to a customer, the seller must make sure the order corresponds to a functional system. If a given peripheral requires a specific cable, then the order must include that cable. Likewise, if the chassis can hold only two full-height disk drives, then the order better not include four of them. For many kinds of custom-manufactured goods, hundreds or thousands of these kinds of restrictions exist, making order validation a difficult and painstaking process.
+
+The XCON system and its predecessors,[1] developed at Digital Equipment Corporation (DEC), are well-known examples of using rule-based systems in this application area. The original XCON included 210 rules for validating orders for DEC hardware. By 1989, XCON included 17,500 rules and knew about 31,000 hardware components. The estimated savings to DEC at the time was $40 million annually due to increased accuracy, reduced testing costs, and higher customer satisfaction, compared to configuration by human workers. Such systems have become common not only in manufacturing but in the mail-order and Internet sales industry, where rule-based systems help to recommend related products, optimize packaging, and perform other routine order-configuration tasks. Part VI of this book describes a series of web-enabled systems for order configuration built around the Jess rule engine using Java servlets and JavaServer pages.
+
+[1] D. O¡¯Connor and V. Barker, ¡°Expert Systems for Configuration at Digital: XCON and Beyond,¡± Communications of the ACM 32, no. 3 (1989).
+
+1.2.3. Implementing business rules
+Corporations invariably define policies and strategies that specify how the business should respond to events ranging from individual sales to hostile takeover attempts. A business rule is a policy or strategy written in executable form, such that a computer can follow it. Here are two simple examples of business rules governing common situations:
+
+IF
+    employee's length of service > 1 year
+AND employee category is regular employee
+AND employee contributes to 401k plan
+THEN
+    employee is vested in 401k plan
+END
+
+IF
+    customer order is more than ten units
+AND customer type is wholesaler
+THEN
+    deduct 10 percent from order
+END
+
+If a company¡¯s business rules are implicit¡ªnot written as rules per se, but embedded in procedural logic¡ªand scattered throughout corporate computer applications, then a change in a single policy might require significant programmer effort to implement. Furthermore, if business rules are to be embedded directly into application software, it becomes difficult to use commercial, off-the-shelf (COTS) products, increasing the company¡¯s development costs. The corporation will be forced to make a choice between containing development costs and making policy adjustments in response to changing circumstances.
+
+The solution to this dilemma is to remove the business rules from the individual applications, make them explicit, and embed them in a centralized rule engine for execution. Any business policy can then theoretically be changed at a single point. The rule engine is often embedded in a network-based server so that it can be accessible across an enterprise.
+
+This enterprise-level use of a rule engine is probably the fastest growing and most visible market for rule-based systems programming today. Some application servers, like BEA¡¯s WebLogic, include integrated rule engines. Other vendors like ILOG sell rule engines meant to be used with third-party servers. There are literally dozens of rule engines to choose from, targeted toward this product niche. Part VII of this book discusses the use of rule engines in general and the Jess rule engine in particular in enterprise applications based on the Java 2 Enterprise Edition (J2EE) architecture.
+

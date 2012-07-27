@@ -1,0 +1,77 @@
+Cloning hard drive and disks with dd
+While working with hard drives and partitions, we may need to create copies or make backups of full partitions rather than copying all contents (not only hard disk partitions but also copy an entire hard disk without missing any information, such as boot record, partition table, and so on). In this situation we can use the dd command. It can be used to clone any type of disks, such as hard disks, flash drives, CDs, DVDs, floppy disks, and so on.
+
+Getting ready
+The dd command expands to Data Definition. Since its improper usage leads to loss of data, it is nicknamed as "Data Destroyer". Be careful while using the order of arguments. Wrong arguments can lead to loss of entire data or can become useless. dd is basically a bitstream duplicator that writes the entire bit stream from a disk to a file or a file to a disk. Let's see how to use dd. 
+
+How to do it...
+The syntax for dd is as follows: 
+
+$ dd if=SOURCE of=TARGET bs=BLOCK_SIZE count=COUNT
+
+
+In this command:
+
+if stands for input file or input device path
+
+of stands for target file or target device path
+
+bs stands for block size (usually, it is given in the power of 2, for example, 512, 1024, 2048, and so on). COUNT is the number of blocks to be copied (an integer).
+
+Total bytes copied = BLOCK_SIZE * COUNT 
+
+bs and count are optional. 
+
+By specifying COUNT we can limit the number of bytes to be copied from input file to target. If COUNT is not specified, dd will copy from input file until it reaches the end of file (EOF) marker. 
+
+In order to copy a partition into a file use:
+
+# dd if=/dev/sda1 of=sda1_partition.img
+
+
+Here /dev/sda1 is the device path for the partition.
+
+Restore the partition using the backup as follows:
+
+# dd if=sda1_partition.img of=/dev/sda1
+
+
+You should be careful about the argument if and of. Improper usage may lead to data loss.
+
+By changing the device path /dev/sda1 to the appropriate device path, any disk can be copied or restored.
+
+In order to permanently delete all of the data in a partition, we can make dd to write zeros into the partition by using the following command:
+
+# dd if=/dev/zero of=/dev/sda1
+
+
+/dev/zero is a character device. It always returns infinite zero '\0' characters.
+
+Clone one hard disk to another hard disk of the same size as follows: 
+
+# dd if=/dev/sda of=/dev/sdb
+
+
+Here /dev/sdb is the second hard disk.
+
+In order to take the image of a CD ROM (ISO file) use:
+
+# dd if=/dev/cdrom of=cdrom.iso
+
+
+There's more...
+When a file system is created in a file which is generated using dd, we can mount it to a mount point. Let's see how to work with it.
+
+Mounting image files
+Any file image created using dd can be mounted using the loopback method. Use the -o loop with the mount command. 
+
+# mkdir /mnt/mount_point
+# mount -o loop file.img /mnt/mount_point
+
+
+Now we can access the contents of the image files through the location /mnt/mount_point.
+
+See also
+Creating ISO files, Hybrid ISO of Chapter 3, explains how to use dd to create an ISO file from a CD
+
+

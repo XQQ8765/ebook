@@ -1,0 +1,110 @@
+Field separators and iterators
+
+
+The Internal Field Separator is an important concept in shell scripting. It is very useful while manipulating text data. We will now discuss delimiters that separate different data elements from single data stream. An Internal Field Separator is a delimiter for a special purpose. An Internal Field Separator (IFS) is an environment variable that stores delimiting characters. It is the default delimiter string used by a running shell environment. 
+
+Consider the case where we need to iterate through words in a string or comma separated values (CSV). In the first case we will use IFS=" " and in the second,IFS=",". Let's see how to do it.
+
+Getting ready
+Consider the case of CSV data?: 
+
+data="name,sex,rollno,location"
+#To read each of the item in a variable, we can use IFS.
+oldIFS=$IFS
+IFS=, now,
+for item in $data;
+do
+echo Item: $item
+done
+IFS=$oldIFS
+
+
+The output is as follows:
+
+Item: name
+Item: sex
+Item: rollno
+Item: location
+
+
+The default value of IFS is a space component (newline, tab, or a space character).
+
+When IFS is set as "," the shell interprets the comma as a delimiter character, therefore, the $item variable takes substrings separated by a comma as its value during the iteration.
+
+If IFS were not set as "," then it would print the entire data as a single string.
+
+How to do it...
+Let's go through another example usage of IFS by taking /etc/passwd file into consideration. In the /etc/passwd file, every line contains items delimited by":". Each line in the file corresponds to an attribute related to a user. 
+
+Consider the input:root:x:0:0:root:/root:/bin/bash. The last entry on each line specifies the default shell for the user. In order to print users and their default shells, we can use the IFS hack as follows:
+
+#!/bin/bash
+#Description: Illustration of IFS
+line="root:x:0:0:root:/root:/bin/bash"
+oldIFS=$IFS;
+IFS=":"
+count=0
+for item in $line;
+do
+[ $count -eq 0 ] && user=$item;
+[ $count -eq 6 ] && shell=$item;
+let count++
+done;
+IFS=$oldIFS
+echo $user\'s shell is $shell;
+
+
+The output will be:
+
+root's shell is /bin/bash
+
+
+Loops are very useful in iterating through a sequence of values. Bash provides many types of loops. Let's see how to use them.
+
+For loop:? 
+
+for var in list;
+do
+commands; # use $var
+done
+list can be a string, or a sequence.
+
+
+We can generate different sequences easily.
+
+echo {1..50}can generate a list of numbers from 1 to 50
+
+echo {a..z}or{A..Z} or we can generate partial list using {a..h}. Similarly, by combining these we can concatenate data.
+
+In the following code, in each iteration, the variable i will hold a character in the range a to z: 
+
+for i in {a..z}; do actions; done;
+
+
+The for loop can also take the format of the for loop in C. For example: 
+
+for((i=0;i<10;i++))
+{
+commands; # Use $i
+}
+
+
+While loop:? 
+
+while condition
+do
+commands;
+done
+
+
+For an infinite loop, use true as the condition.
+
+Until loop:? 
+
+A special loop called until is available with Bash. This executes the loop until the given condition becomes true. For example:
+
+x=0;
+until [ $x -eq 9 ]; # [ $x -eq 9 ] is the condition
+do let x++; echo $x;
+done
+

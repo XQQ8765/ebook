@@ -1,0 +1,96 @@
+Image crawler and downloader
+
+
+Image crawlers are very useful when we need to download all the images that appear in a web page. Instead of going through the HTML sources and picking all the images, we can use a script to parse the image files and download them automatically. Let's see how to do it. 
+
+How to do it...
+Let's write a Bash script to crawl and download the images from a web page as follows:
+
+Code View: Scroll / Show All
+#!/bin/bash
+#Description: Images downloader
+#Filename: img_downloader.sh
+if [ $# -ne 3 ];
+then
+echo "Usage: $0 URL -d DIRECTORY"
+exit -1
+fi
+for i in {1..4}
+do
+case $1 in
+-d) shift; directory=$1; shift ;;
+*) url=${url:-$1}; shift;;
+esac
+done
+mkdir -p $directory 
+baseurl=$(echo $url | egrep -o "https?://[a-z.]+")
+curl s $url | egrep -o "<img src=[^>]*>" | sed 's/<img src=\"\([^"]*\).*/\1/g' > /tmp/$$.list
+sed -i "s|^/|$baseurl/|" /tmp/$$.list
+cd $directory;
+while read filename;
+do
+curl s -O "$filename" --silent
+done < /tmp/$$.list
+
+
+					  
+
+An example usage is as follows:
+
+$ ./img_downloader.sh http://www.flickr.com/search/?q=linux -d images
+
+
+How it works...
+The above image downloader script parses an HTML page, strips out all tags except<img>, then parses src="URL" from the<img> tag and downloads them to the specified directory. This script accepts a web page URL and the destination directory path as command-line arguments. The first part of the script is a tricky way to parse command-line arguments. The [ $# -ne 3 ] statement checks whether the total number of arguments to the script is three, else it exits and returns a usage example. 
+
+If it is 3 arguments, then parse the URL and the destination directory. In order to do that a tricky hack is used:
+
+for i in {1..4}
+do
+case $1 in
+-d) shift; directory=$1; shift ;;
+*) url=${url:-$1}; shift;;
+esac
+done
+
+
+A for loop is iterated four times (there is no significance to the number four, it is just to iterate a couple of times to run the case statement). 
+
+The case statement will evaluate the first argument ($1), and matches -d or any other string arguments that are checked. We can place the -d argument anywhere in the format as follows:
+
+$ ./img_downloader.sh -d DIR URL
+
+
+Or:
+
+$ ./img_downloader.sh URL -d DIR
+
+
+shift is used to shift arguments such that when shift is called $1 will be assigned with $2, when again called $1=$3 and so on as it shifts $1 to the next arguments. Hence we can evaluate all arguments through $1 itself.
+
+When -d is matched ( -d) ), it is obvious that the next argument is the value for the destination directory. *) corresponds to default match. It will match anything other than -d. Hence while iteration $1="" or $1=URL in the default match, we need to take $1=URL avoiding"" to overwrite. Hence we use the url=${url:-$1} trick. It will return a URL value if already not"" else it will assign $1.
+
+egrep -o "<img src=[^>]*>" will print only the matching strings, which are the<img> tags including their attributes. [^>]* used to match all characters except the closing>, that is,<img src="image.jpg" бн. >.
+
+sed 's/<img src=\"\([^"]*\).*/\1/g' parses src="url" so that all image URLs can be parsed from the<img> tags already parsed.
+
+There are two types of image source paths: relative and absolute. Absolute paths contain full URLs that start with http:// or https://. Relative URLs starts with / or image_name itself.
+
+An example of an absolute URL is: http://example.com/image.jpg 
+
+An example of a relative URL is: /image.jpg 
+
+For relative URLs the starting / should be replaced with the base URL to transform it to http://example.com/image.jpg.
+
+For that transformation, we initially find out baseurl sed by parsing.
+
+Then replace every occurrence of the starting / with baseurl sed as sed -i "s|^/|$baseurl/|" /tmp/$$.list.
+
+Then a while loop is used to iterate the list line by line and download the URL using curl. The --silent argument is used with curl to avoid other progress messages from being printed on the screen.
+
+See also
+A primer on curl, explains the curl command
+
+Basic sed primer of Chapter 4, explains the sed command
+
+Searching and mining "text" inside a file with grep of Chapter 4, explains the grep command

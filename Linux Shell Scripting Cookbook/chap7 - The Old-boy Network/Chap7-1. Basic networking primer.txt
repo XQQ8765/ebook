@@ -1,0 +1,250 @@
+Basic networking primer
+Before digging through recipes based on networking, it is essential for you to have a basic understanding of setting up a network, the terminology and commands for assigning an IP address, adding routes, and so on. This recipe will give an overview of different commands used in GNU/Linux for networking and their usages from the basics.
+
+Getting ready
+Every node in a network requires many parameters to be assigned to work successfully and interconnect with other machines. Some of the different parameters are the IP address, subnet mask, gateway, route, DNS, and so on. 
+
+This recipe will introduce commands ifconfig, route, nslookup, and host.
+
+How to do it...
+Network interfaces are used to connect to a network. Usually, in the context of UNIX-like Operating Systems, network interfaces follow the eth0, eth1 naming convention. Also, other interfaces, such as usb0, wlan0, and so on, are available for USB network interfaces, wireless LAN, and other such networks. 
+
+ifconfig is the command that is used to display details about network interfaces, subnet mask, and so on. 
+
+ifconfig is available at /sbin/ifconfig. Some GNU/Linux distributions will display an error "command not found" when ifconfig is typed. This is because /sbin in not included in the user's PATH environment variable. When a command is typed, the Bash looks in the directories specified in PATH variable.
+
+By default, in Debian, ifconfig is not available since /sbin is not in PATH.
+
+/sbin/ifconfig is the absolute path, so try run ifconfig with the absolute path (that is, /sbin/ifconfig). For every system, there will be a by default interface 'lo' called loopback that points to the current machine. For example:
+
+$ ifconfig
+lo Link encap:Local Loopback
+inet addr:127.0.0.1 Mask:255.0.0.0
+inet6addr: ::1/128 Scope:Host
+UP LOOPBACK RUNNING MTU:16436 Metric:1
+RX packets:6078 errors:0 dropped:0 overruns:0 frame:0
+TX packets:6078 errors:0 dropped:0 overruns:0 carrier:0
+collisions:0 txqueuelen:0
+RX bytes:634520 (634.5 KB) TX bytes:634520 (634.5 KB)
+wlan0 Link encap:EthernetHWaddr 00:1c:bf:87:25:d2
+inet addr:192.168.0.82 Bcast:192.168.3.255 Mask:255.255.252.0
+inet6addr: fe80::21c:bfff:fe87:25d2/64 Scope:Link
+UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+RX packets:420917 errors:0 dropped:0 overruns:0 frame:0
+TX packets:86820 errors:0 dropped:0 overruns:0 carrier:0
+collisions:0 txqueuelen:1000
+RX bytes:98027420 (98.0 MB) TX bytes:22602672 (22.6 MB)
+
+
+The left-most column in the ifconfig output lists the name of network interfaces and the right-hand columns show the details related to the corresponding network interface. 
+
+There's more...
+There are several additional commands that frequently come under usage for querying and configuring the network. Let's go through the essential commands and usage.
+
+Printing the list of network interfaces
+Here is a one-liner command sequence to print the list of network interface available on a system. 
+
+$ ifconfig | cut -c-10 | tr -d ' ' | tr -s '\n'
+lo
+wlan0
+
+
+The first 10 characters of each line in the ifconfig output is reserved for writing the name of the network interface. Hence we use cut to extract the first 10 characters of each line. tr -d ' ' deletes every space character in each line. Now the \n newline character is squeezed using tr -s '\n' to produce a list of interface names.
+
+Assigning and displaying IP addresses
+The ifconfig command displays details of every network interface available on the system. However, we can restrict it to a specific interface by using: 
+
+$ ifconfig iface_name
+
+
+For example:
+
+$ ifconfig wlan0
+wlan0 Link encap:Ethernet HWaddr 00:1c:bf:87:25:d2
+inet addr:192.168.0.82 Bcast:192.168.3.255
+Mask:255.255.252.0
+
+
+From the outputs of the previously mentioned command, our interests lie in the IP address, broadcast address, hardware address, and subnet mask. They are as follows:
+
+HWaddr 00:1c:bf:87:25:d2 is the hardware address (MAC address)
+
+inet addr:192.168.0.82 is the IP address
+
+Bcast:192.168.3.255 is the broadcast address
+
+Mask:255.255.252.0 is the subnet mask
+
+In several scripting contexts, we may need to extract any of these addresses from the script for further manipulations.
+
+Extracting the IP address is a common task. In order to extract the IP address from the ifconfig output use: 
+
+$ ifconfig wlan0 | egrep -o "inet addr:[^ ]*" | grep -o "[0-9.]*"
+192.168.0.82
+
+
+Here the first command egrep -o "inet addr:[^ ]*" will print inet addr:192.168.0.82.
+
+The pattern starts with inet addr: and ends with some non-space character sequence (specified by [^ ]*). Now in the next pipe, it prints the character combination of digits and '.'.
+
+In order to set the IP address for a network interface, use:
+
+# ifconfig wlan0 192.168.0.80
+
+
+You will need to run the above command as root. 192.168.0.80 is the address to be set.
+
+Set the subnet mask along with IP address as follows:
+
+# ifconfig wlan0 192.168.0.80 netmask 255.255.252.0
+
+
+Spoofing Hardware Address (MAC Address)
+In certain circumstances where authentication or filtering of computers on a network is provided by using the hardware address, we can use hardware address spoofing. The hardware address appears in ifconfig output as HWaddr 00:1c:bf:87:25:d2. 
+
+We can spoof the hardware address at the software level as follows:
+
+# ifconfig eth0 hw ether 00:1c:bf:87:25:d5
+
+
+In the above command, 00:1c:bf:87:25:d5 is the new MAC address to be assigned.
+
+This can be useful when we need to access the Internet through MAC authenticated service providers that provide access to the Internet for a single machine.
+
+Name server and DNS (Domain Name Service)
+The elementary addressing scheme for the Internet is? IP addresses (dotted decimal form, for example, 202.11.32.75). However, the resources on the Internet (for example, websites) are accessed through a combination of ASCII characters called URLs or domain names. For example, google.com is a domain name. It actually corresponds to an IP address. Typing the IP address in the browser can also access the URL www.google.com. 
+
+This technique of abstracting IP addresses with symbolic names is called Domain Name Service (DNS). When we enter google.com, the DNS servers configured with our network resolve the domain name into the corresponding IP address. While on a local network, we setup the local DNS for naming local machines on the network symbolically using their hostnames. 
+
+Name servers assigned to the current system can be viewed by reading /etc/resolv.conf. For example: 
+
+$ cat /etc/resolv.conf
+nameserver 8.8.8.8
+
+
+We can add name servers manually as follows:
+
+# echo nameserver IP_ADDRESS >> /etc/resolv.conf
+
+
+How can we obtain the IP address for a corresponding domain name?
+
+The easiest method to obtain an IP address is by trying to ping the given domain name and looking at the echo reply. For example:
+
+$ ping google.com
+PING google.com (64.233.181.106) 56(84) bytes of data.
+Here 64.233.181.106 is the corresponding IP address.
+
+
+A domain name can have multiple IP addresses assigned. In that case, the DNS server will return one address among the list of IP addresses. To obtain all the addresses assigned to the domain name, we should use a DNS lookup utility.
+
+DNS lookup
+There are different DNS lookup utilities available from the command line. These will request a DNS server for an IP address resolution. host and nslookup are two DNS lookup utilities.
+
+When host is executed it will list out all of the IP addressed attached to the domain name. nslookup is another command that is similar to host, which can be used to query details related to DNS and resolving of names. For example:
+
+$ host google.com
+google.com has address 64.233.181.105
+google.com has address 64.233.181.99
+google.com has address 64.233.181.147
+google.com has address 64.233.181.106
+google.com has address 64.233.181.103
+google.com has address 64.233.181.104
+
+
+It may also list out DNS resource records like MX (Mail Exchanger?) as follows: 
+
+$ nslookup google.com
+Server: 8.8.8.8
+Address: 8.8.8.8#53
+Non-authoritative answer:
+Name: google.com
+Address: 64.233.181.105
+Name: google.com
+Address: 64.233.181.99
+Name: google.com
+Address: 64.233.181.147
+Name: google.com
+Address: 64.233.181.106
+Name: google.com
+Address: 64.233.181.103
+Name: google.com
+Address: 64.233.181.104
+Server: 8.8.8.8
+
+
+The last line above corresponds to the default nameserver used for DNS resolution.
+
+Without using the DNS server, it is possible to add a symbolic name to IP address resolution just by adding entries into file /etc/hosts.
+
+In order to add an entry, use the following syntax:
+
+# echo IP_ADDRESS symbolic_name >> /etc/hosts
+
+
+For example:
+
+# echo 192.168.0.9 backupserver.com >> /etc/hosts
+
+
+After adding this entry, whenever a resolution to backupserver.com occurs, it will resolve to 192.168.0.9.
+
+Setting default gateway, showing routing table information
+When a local network is connected to another network, it needs to assign some machine or network node through which an interconnection takes place. Hence the IP packets with a destination exterior to the local network should be forwarded to the node machine, which is interconnected to the external network. This special node machine, which is capable of forwarding packets to the external network, is called a gateway. We set the gateway for every node to make it possible to connect to an external network. 
+
+The operating system maintains a table called the routing table, which contains information on how packets are to be forwarded and through which machine node in the network. The routing table can be displayed as follows:
+
+$ route
+Kernel IP routing table
+Destination Gateway Genmask Flags Metric Ref UseIface
+192.168.0.0 * 255.255.252.0 U 2 0 0wlan0
+link-local * 255.255.0.0 U 1000 0 0wlan0
+default p4.local 0.0.0.0 UG 0 0 0wlan0
+
+
+Or, you can also use:
+
+$ route -n
+Kernel IP routing table
+Destination Gateway Genmask Flags Metric Ref Use Iface
+192.168.0.0 0.0.0.0 255.255.252.0 U 2 0 0 wlan0
+169.254.0.0 0.0.0.0 255.255.0.0 U 1000 0 0 wlan0
+0.0.0.0 192.168.0.4 0.0.0.0 UG 0 0 0 wlan0
+
+
+Using -n specifies to display the numerical addresses. When -n is used it will display every entry with a numerical IP addresses, else it will show symbolic host names instead of IP addresses under the DNS entries for IP addresses that are available.
+
+A default gateway is set as follows:
+
+# route add default gw IP_ADDRESS INTERFACE_NAME
+
+
+For example:
+
+# route add default gw 192.168.0.1 wlan0
+
+
+Traceroute
+When an application requests a service through the Internet, the server may be at a distant location and connected through any number of gateways or device nodes. The packets travel through several gateways and reach the destination. There is an interesting command traceroute that displays the address of all intermediate gateways through which the packet travelled to reach the destination. traceroute information helps us to understand how many hops each packet should take in order reach the destination. The number of intermediate gateways or routers gives a metric to measure the distance between two nodes connected in a large network. An example of the output from traceroute is as follows?: 
+
+Code View: Scroll / Show All
+$ traceroute google.com
+traceroute to google.com (74.125.77.104), 30 hops max, 60 byte packets
+1 gw-c6509.lxb.as5577.net (195.26.4.1) 0.313 ms 0.371 ms 0.457 ms
+2 40g.lxb-fra.as5577.net (83.243.12.2) 4.684 ms 4.754 ms 4.823 ms
+3 de-cix10.net.google.com (80.81.192.108) 5.312 ms 5.348 ms 5.327 ms
+4 209.85.255.170 (209.85.255.170) 5.816 ms 5.791 ms 209.85.255.172 (209.85.255.172) 5.678 ms
+5 209.85.250.140 (209.85.250.140) 10.126 ms 9.867 ms 10.754 ms
+6 64.233.175.246 (64.233.175.246) 12.940 ms 72.14.233.114 (72.14.233.114) 13.736 ms 13.803 ms
+7 72.14.239.199 (72.14.239.199) 14.618 ms 209.85.255.166 (209.85.255.166) 12.755 ms 209.85.255.143 (209.85.255.143) 13.803 ms
+8 209.85.255.98 (209.85.255.98) 22.625 ms 209.85.255.110 (209.85.255.110) 14.122 ms
+*
+9 ew-in-f104.1e100.net (74.125.77.104) 13.061 ms 13.256 ms 13.484 ms
+
+
+					  
+
+See also
+Playing with variables and environment variables of Chapter 1, explains the PATH variable
+
+Searching and mining "text" inside a file with grep of Chapter 4, explains the grep command

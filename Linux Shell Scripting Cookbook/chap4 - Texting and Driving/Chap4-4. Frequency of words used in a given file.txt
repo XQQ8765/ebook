@@ -1,0 +1,54 @@
+Frequency of words used in a given file
+
+
+Finding the frequency of words used in a file is an interesting exercise to apply the text processing skills. It can be done in many different ways. Let's see how to do it. 
+
+Getting ready
+We can use associative arrays, awk, sed, grep, and so on to solve this problem in different ways.
+
+How to do it...
+Words are alphabetic characters delimited by space and dot. First we should parse all the words in the given file. Hence the count of each word needs to be found out. Words can be parsed by using regex with any of the tools such as sed, awk, or grep. 
+
+To find out the count of each word, we can have a different approach. One way of doing it is to loop through each word, and then use another loop to go through the words and check if they are equal. If they are equal, increment a count and print it at the end of file. This is an inefficient method. In an associative array, we use the word as the array index and count as the array value. We will only need one loop to achieve this by looping through each word. array[word] = array[word] + 1 while initially its value is set 0. Hence we can get an array containing the counts for each word.
+
+Now let's do it. Create the shell script as follows:
+
+#!/bin/bash
+#Name: word_freq.sh
+#Description: Find out frequency of words in a file
+if [ $# -ne 1 ];
+then
+echo "Usage: $0 filename";
+exit -1
+fi
+filename=$1
+egrep -o "\b[[:alpha:]]+\b" $filename | \
+awk '{ count[$0]++ }
+END{ printf("%-14s%s\n","Word","Count") ;
+for(ind in count)
+{ printf("%-14s%d\n",ind,count[ind]); }
+}'
+
+
+A sample output is as follows:
+
+$ ./word_freq.sh words.txt
+Word Count
+used 1
+this 2
+counting 1
+
+
+How it works...
+Here egrep -o "\b[[:alpha:]]+\b" $filename is used to output only words. The -o option will print the matching character sequence delimited by a newline character. Hence we receive words in each line. 
+
+\b is the word boundary character. [:alpha:] is a character class for alphabets.
+
+The awk command is used to avoid the iteration through each word. Since awk, by default, executes the statements in the { } block for each row, we don't need a specific loop for doing that. Hence the count is incremented as count[$0]++ using the associative array. Finally, in the END{} block, we print the words and their count by iterating through the words. 
+
+See also
+	* Arrays and associative arrays of Chapter 1, explains the arrays in Bash
+
+	* Basic awk primer, explains the awk command
+
+

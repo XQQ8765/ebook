@@ -1,0 +1,56 @@
+Parsing e-mail addresses and URLs from text
+
+
+Parsing required text from a given file is a common task that we encounter in text processing. Items such as e-mail, URL, and so on can be found out with the help of correct regex sequences. Mostly, we need to parse e-mail addresses from a contact list of a e-mail client which is composed of many unwanted characters and words or from a HTML web page. 
+
+Getting ready
+This problem can be solved with utilities egrep.
+
+How to do it...
+The regular expression pattern to match an e-mail address is:
+
+egrep regex:[A-Za-z0-9.]+@[A-Za-z0-9.]+\.[a-zA-Z]{2,4}
+
+For example:
+
+Code View: Scroll / Show All
+$ cat url_email.txt
+this is a line of text contains,<email> #slynux@slynux.com. </email> and email address, blog "http://www.google.com", test@yahoo.com dfdfdfdddfdf;cool.hacks@gmail.com<br />
+<ahref="http://code.google.com"><h1>Heading</h1>
+$ egrep -o '[A-Za-z0-9.]+@[A-Za-z0-9.]+\.[a-zA-Z]{2,4}' url_email.txt
+slynux@slynux.com
+test@yahoo.com
+cool.hacks@gmail.com
+
+
+					  
+
+The egrep regex pattern for an HTTP URL is:
+
+http://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,4}
+
+
+For example:
+
+$ egrep -o "http://[a-zA-Z0-9.]+\.[a-zA-Z]{2,3}" url_email.txt
+http://www.google.com
+http://code.google.com
+
+
+How it works...
+The regular expressions are really easy to design part by part. In the e-mail regex, we all know that an e-mail address takes the form name@domain.some_2-4_letter. Here the same is written in regex language as follows: 
+
+[A-Za-z0-9.]+@[A-Za-z0-9.]+\.[a-zA-Z]{2,4}
+
+
+[A-Za-z0-9.]+ means that some combination of characters in the [] block should appear one or more times (that is the meaning of +) before a literal @ character appears. Then [A-Za-z0-9.] also should appear one or more times (+). The pattern \.means that a literal period should appear and finally the last part should be of length 2 to 4 alphabetic characters.
+
+The case of an HTTP URL is similar to that of an e-mail address but without the name@ match part of e-mail regex. 
+
+http://[a-zA-Z0-9.]+\.[a-zA-Z]{2,3}
+
+
+See also
+Basic sed primer, explains the sed command
+
+Basic regular expression primer, explains how to use regular expressions
