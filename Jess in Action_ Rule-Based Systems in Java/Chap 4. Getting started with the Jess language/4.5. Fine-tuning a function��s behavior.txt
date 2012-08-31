@@ -1,0 +1,74 @@
+4.5. Fine-tuning a function¡¯s behavior
+
+If you¡¯re a Java programmer, it probably bothers you that functions like nth$ number list items starting at one rather than zero. In some languages, you¡¯d be stuck. But Jess makes it easy to fine-tune the behavior of any function, so if you¡¯d like nth$ to use zero-based indices, you can have it your way by using advice. Advice is code that you add to a function to change its behavior.
+
+The function defadvice lets you easily wrap advice around any Jess function, such that it executes before (and thus can alter the argument list seen by the real function, or short-circuit it completely by returning a value of its own) or after the real function (and thus can see the return value of the real function and possibly alter it). This is a great way for Jess add-on authors to extend Jess without needing to change any internal code. It was named after a similar feature in Emacs Lisp.
+
+To make nth$ accept a zero-based index, all you need to do is intercept any call to nth$ and add one to the first argument before nth$ sees it. That way, when you call nth$, you can pass zero-based indices, but nth$ will see one-based indices.
+
+Imagine that the variable ?argv holds a copy of a function call to nth$ using a zero-based index; that is, it¡¯s a list like this:
+
+(nth$ 0 ?grocery-list)
+
+You need to write some Jess code to change this list to use a one-based index:
+
+(nth$ 1 ?grocery-list)
+
+The code to make this change looks like this:
+
+;; Strip off the function name
+(bind ?tail (rest$ ?argv))
+;; Convert zero-based to one-based index
+(bind ?index (+ 1 (nth$ 1 ?tail)))
+;; Put the argument list back together.
+(bind ?argv (create$ nth$ ?index (rest$ ?tail)))
+
+You saw the rest$ function in section 4.2.4: It strips the first element from a list and returns the remainder. You needed to use nth$ to write this code, and you used a one-based index, because that¡¯s what nth$ wants by default.
+
+Now you can use this block of code to modify the behavior of nth$. In the body of a defadvice call, the variable ?argv is special: It points to the actual function call being executed. By modifying the contents of ?argv, you can modify the arguments the built-in nth$ function sees.
+
+First, let¡¯s watch the default behavior of nth$ in action:
+
+Jess> (bind ?grocery-list (create$ peas beans butter milk))
+(peas beans butter milk)
+Jess> (nth$ 1 ?grocery-list)
+peas
+
+Now, you add some advice to nth$, and then call it again:
+
+Jess> (defadvice before nth$
+          ;; Strip off the function name
+          (bind ?tail (rest$ ?argv))
+          ;; Convert zero-based to one-based index
+          (bind ?index (+ 1 (nth$ 1 ?tail)))
+          ;; Put the argument list back together.
+          (bind ?argv (create$ nth$ ?index (rest$ ?tail))))
+TRUE
+Jess> (nth$ 1 ?grocery-list)
+beans
+
+The result is different this time¡ªthe index is interpreted as one-based, and the answer is beans instead of peas. The nth$ function will continue to behave this way until Jess is restarted, the clear function (discussed in chapter 6) is called, or the advice is removed with undefadvice:
+
+Jess> (undefadvice nth$)
+TRUE
+Jess> (nth$ 1 ?grocery-list)
+peas
+
+You may be surprised that you were able to call nth$ in the previous advice code. It looks as though you¡¯re redefining nth$ in terms of itself¡ªa recipe for an infinite loop. To prevent this kind of problem, Jess doesn¡¯t apply advice to any function calls invoked in an advice block. That¡¯s why your call to nth$ inside the advice block uses a one-based index.
+
+In the nth$ example, the advice code executes before the built-in nth$ function is invoked. If the first argument to defadvice were after instead of before, the advice would execute after nth$. In this case, the special variable ?retval is also defined; it holds the result returned by the adviced function. The advice code can modify this variable if it wants to return a different value.
+
+4.5.1. Take my advice, please
+
+You can only apply advice to actual functions (built-in or user-defined), not to function-like constructs like deffunction, defglobal, deftemplate, defrule, or defquery. Here¡¯s a short deffunction to confirm whether something is a function:
+
+Jess> (deffunction is-a-function (?name)
+    (neq FALSE (member$ ?name (list-function$))))
+TRUE
+Jess> (is-a-function printout)
+TRUE
+Jess> (is-a-function deftemplate)
+FALSE
+
+Let¡¯s figure out how this function works¡ªit¡¯ll be good practice in reading Jess code, and it includes calls to a couple of built-in functions you haven¡¯t seen before. To read complex nested Jess language expressions, it¡¯s usually best to start from the inside and work your way out. The innermost function call in this deffunction is to list-function$, which returns (not surprisingly) a list of all the functions currently defined in Jess, including all deffunctions and user-defined functions written in Java. The member$ function returns FALSE if the first argument is not found in the second argument (which must be a list), and returns the index at which the first argument was found otherwise. Finally, is-a-function uses neq (Not EQual) to convert member$¡¯s somewhat odd return value into a simple TRUE or FALSE. The whole deffunction then returns TRUE if the argument appears in the list of defined functions or FALSE otherwise. The two examples confirm that it works.
+

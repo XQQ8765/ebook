@@ -1,0 +1,160 @@
+4.3. Control flow
+
+Up until this point, the code you¡¯ve written executes sequentially, one statement at a time. It¡¯s hard to write interesting programs this way. Luckily, the Jess language has a number of functions that affect the flow of control and let you group statements, make decisions, and execute loops.
+
+In describing these control-flow functions, I¡¯ll use the term expression. An expression is any Jess value: a symbol, number, string, variable, or function call. To evaluate an expression means to use the value of the constant expression, take the value that the variable represents, or evaluate the function and use its result.
+
+We¡¯ll discuss the following control-flow functions in this section:
+
+apply¡ª Calls a function on a given set of arguments
+
+build¡ª Parses and executes a function call from a string
+
+eval¡ª Parses and executes a function call from a string
+
+foreach¡ª Executes a block of code once for each item in a list
+
+if/then/else¡ª Chooses among alternative courses of action
+
+progn¡ª Executes a group of function calls
+
+while¡ª Executes a block of code while an expression is true
+
+You¡¯ll use some of these control-flow functions (like foreach, while, and if/then/else) all the time, and some of them only rarely. We¡¯ll look at the most common ones first.
+
+4.3.1. foreach
+
+The foreach function provides the perfect way to shop for each item on your grocery list. It evaluates a block of expressions once for each element in a plain list. Each time through the block, a variable you supply is set equal to the corresponding entry from the list you also supply. The syntax diagram looks like this:
+
+(foreach <variable> <list> <expression>+)
+
+Here¡¯s an example of using foreach to print each item on your grocery list on a separate line:
+
+Jess> (bind ?grocery-list (create$ eggs milk bread))
+(eggs milk bread)
+Jess> (foreach ?e ?grocery-list
+    (printout t ?e crlf))
+eggs
+milk
+bread
+
+The foreach function is useful when you already have a list of values for the loop variable. Often, though, you need a more general kind of looping construct, such as while.
+
+4.3.2. while
+
+The while function lets you repeatedly evaluate a group of one or more expressions as long as some condition remains true:
+
+(while <Boolean expression> do <expression>+)
+
+The first argument in the while function must be a Boolean expression¡ªan expression that evaluates to TRUE or FALSE. The while function evaluates the Boolean expression, and if the expression is not FALSE, all other expressions in the body of the while (except the optional symbol do) are evaluated. The Boolean expression is then reevaluated, and the cycle repeats until the expression becomes FALSE. The value of the last expression evaluated is the return value¡ªinvariably, it is FALSE. Here is an example of using while to add the numbers from 1 to 10:
+
+Jess> (bind ?i 1)
+1
+Jess> (bind ?sum 0)
+0
+Jess> (while (<= ?i 10) do
+    (bind ?sum (+ ?sum ?i))
+    (bind ?i (+ ?i 1)))
+FALSE
+Jess> ?sum
+55
+
+Note that if the Boolean expression is FALSE the first time it is evaluated, the body of the while is never executed.
+
+The while loop implicitly makes a decision about what code to execute each time it evaluates the Boolean expression. The if/then/else function lets you make this kind of choice explicitly.
+
+4.3.3. if/then/else
+
+You can use the if function to choose what code to execute next. The syntax of Jess¡¯s if function is similar to the if statement in Java:
+
+(if <Boolean expression> then <expression>+ [else <expression>+])
+
+The first argument to if is a Boolean expression. If the value of the expression is not FALSE, the if function evaluates the group of expressions that follows the symbol then, in order. If the expression is FALSE, then the statements after else are evaluated (if the optional else clause is present.)
+
+This example uses the function member$, which accepts a value and a plain list as arguments and returns TRUE if the value appears in any position of the list:
+
+Jess> (bind ?grocery-list (create$ eggs milk bread))
+(eggs milk bread)
+Jess> (if (member$ eggs ?grocery-list) then
+      (printout t "I need to buy eggs" crlf)
+    else
+      (printout t "No eggs, thanks" crlf))
+I need to buy eggs
+
+Either the if block or the else block can be terminated early using the return function. The return value of the whole if function call is the value of the last expression evaluated.
+
+You can chain if functions together, much as you can in Java. All you need to do is to use a second if function call as the body of an else block. In this example, three if function calls are nested together:
+
+Jess> (bind ?x 1)
+1
+Jess> (if (= ?x 3) then
+         (printout t "?x is three." crlf)
+      else
+        (if (= ?x 2) then
+           (printout t "?x is two." crlf)
+         else
+          (if (= ?x 1) then
+            (printout t "?x is one." crlf))))
+?x is one.
+
+The if function, like the while function, takes a single Boolean expression as its first argument. What if you need to write several expressions to compute a Boolean value? The progn function is there to help.
+
+4.3.4. progn
+
+The progn function evaluates a list of expressions and returns the value of the last one:
+
+(progn <expression>+)
+
+The progn function is useful when you need to group multiple expressions together into one expression, usually due to syntax restrictions of other functions, as in the following example:
+
+Jess> (bind ?n 2)
+2
+Jess> (while (progn (bind ?n (* ?n ?n)) (< ?n 1000)) do
+    (printout t ?n crlf))
+4
+16
+256
+FALSE
+
+Of course, this particular example could also be written more succinctly as follows:
+
+Jess> (bind ?n 2)
+2
+Jess> (while (< (bind ?n (* ?n ?n)) 1000) do
+    (printout t ?n crlf))
+
+However, in many important cases progn is the only real alternative. Many of these cases come up during pattern matching on the left-hand sides of rules, which you will see in chapter 7.
+
+The next few functions are used less frequently than the ones we¡¯ve covered so far in this section¡ªbut when you need them, you need them badly. These functions have no equivalents in Java; they are powerful features available only in the Jess environment. They are used to convert directly between data and code, something that can¡¯t be done in a compiled language like Java.
+
+4.3.5. apply
+
+In Java, you write a different line of code to add two numbers than you would to multiply them, print them, or save them in a file. In Jess, you can write one line of code that, depending on the values of some arguments, can do any of these things, and more.
+
+The first argument of apply is the name of a function. Invoking apply calls that function with all the other expressions as arguments:
+
+(apply <function-name> <expression>+)
+
+The function name can be held in a variable or can itself be the return value of a function. In this example, the user is prompted for the name of a function, which is then called with a list of numbers as arguments; the result is then printed. The user enters + when prompted:
+
+Jess> (apply (read) 1 2 3)
++
+6
+
+Because the user typed +, apply added the numbers and displayed the result. If the input had been ¨C instead, the result would have been ¨C4. The apply function therefore turns a bit of data¡ªthe name of a function¡ªinto code for Jess to execute. The eval and build functions take this idea one step further.
+
+4.3.6. eval and build
+
+Because Jess is an interpreted language, it doesn¡¯t much care where the code it¡¯s executing comes from. The code can come from a file, from the keyboard, or even from a variable. The eval and build functions convert arbitrary Jess data into Jess code, making it simple to write a Jess program that writes other Jess programs. This means a rule-based program can create and incorporate new rules as it runs¡ªit can learn. This is a powerful feature!
+
+The eval function accepts a single argument: a string containing a complete Jess expression, including parentheses if the expression is a function call. When you call eval, the string is parsed, the expression is evaluated, and the result is returned. In this example, a string is bound to a variable, and then the eval function is used to evaluate the string and produce a result, just as if the contents of the string had been typed at the command line:
+
+Jess> (bind ?x "(+ 1 2 3)")
+"(+ 1 2 3)"
+Jess> (eval ?x)
+6
+
+The build function is a synonym for eval. For historical reasons, build is generally used to assemble rules, and eval is used for function calls¡ªbut they¡¯re identical.
+
+Altogether, Jess has almost 200 built-in functions, including these control structures. If that¡¯s not enough (and of course, it never is) you can define your own functions, too, as described in the next section.
+

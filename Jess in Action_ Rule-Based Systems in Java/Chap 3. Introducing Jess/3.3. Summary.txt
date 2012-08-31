@@ -1,0 +1,10 @@
+3.3. Summary
+
+Jess is a powerful environment for processing rules and scripting the Java platform. You can use it in a wide range of applications, built purely using the Jess rule language, purely in Java, or with some mixture of the two.
+
+You can run Jess as an interactive command-line application during development using the jess.Main class. Jess programs can also be stored as plain text files and executed by jess.Main.
+
+Jess works with any Java 2 virtual machine. Jess is very fast, but its performance is sensitive to the detailed operation of the Java garbage collector. You can often tune the performance of a Jess application by tuning the behavior of the garbage collector.
+
+The next five chapters will teach you the Jess language in detail. First you¡¯ll learn to use Jess as a pure programming language, and then you¡¯ll see how to write rules. Along the way, especially in chapter 8, we¡¯ll peer under the hood and see how Jess works. Let¡¯s get started!
+

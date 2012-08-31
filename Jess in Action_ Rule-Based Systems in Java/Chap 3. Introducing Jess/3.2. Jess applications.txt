@@ -1,0 +1,68 @@
+3.2. Jess applications
+
+Jess has been used to develop a broad range of commercial software, including:
+
+Expert systems that evaluate insurance claims and mortgage applications
+
+Agents that predict stock prices and buy and sell securities
+
+Network intrusion detectors and security auditors
+
+Design assistants that help mechanical engineers
+
+Smart network switches for telecommunications
+
+Servers to execute business rules
+
+Intelligent e-commerce sites
+
+Games
+
+You¡¯ll develop some fairly large applications in this book: the Tax Forms Advisor (an intelligent information kiosk), the PC Repair Assistant (a graphical help desk application), an HVAC Controller (a soft real-time control system), and the Recommendations Agent (a smart e-commerce web site).
+
+You can program with Jess in two different but overlapping ways. First, you can use Jess as a rule engine. A rule-based program can have hundreds or even thousands of rules, and Jess will continually apply them to your data. Often the rules represent the heuristic knowledge of a human expert in some domain, and the knowledge base represents the state of an evolving situation (perhaps an interview or an emergency). In this case, the rules are said to constitute an expert system. Expert systems are widely used in many domains. The newest applications of expert systems include being used as the reasoning part of intelligent agents, in enterprise resource planning (ERP) systems, and in order validation for electronic commerce.
+
+The Jess language is also a general-purpose programming language, and it can directly access all Java classes and libraries. For this reason, Jess is also frequently used as a dynamic scripting or rapid application development environment. Whereas Java code generally must be compiled before it can be run, Jess interprets code and executes it immediately upon being typed. This allows you to experiment with Java APIs interactively and build up large programs incrementally. It is also easy to extend the Jess language with new commands written in Java or in Jess itself, so the Jess language can be customized for specific applications.
+
+Jess is therefore useful in a wide range of situations. In this book, you will see Jess used primarily for its rule engine capabilities¡ªbut there will be plenty of scripting along the way. How can you choose an architecture for a specific application? As with many things in Jess, lots of choices are available.
+
+3.2.1. Command line, GUI, or embedded?
+
+Given its flexibility, Jess can be used in command-line applications, GUI applications, servlets, and applets. Furthermore, Jess can provide the Java main() function for your program, or you can write it yourself. You can develop Jess applications (with or without GUIs) without compiling a single line of Java code. You can also write Jess applications that are controlled entirely by Java code you write, with a minimum of Jess language code. Jess has been deployed in everything from enterprise applications using J2EE on mainframes to personal productivity applications on handheld devices. If you can think of it, you can probably implement it with Jess.
+
+The most important step in developing a Jess application is to choose an architecture from among the almost limitless range of possibilities. You must make this choice early in the development of your application. One way to organize the possibilities is to list them in increasing order of the amount of Java programming involved:
+
+Pure Jess language, with no Java code.
+
+Pure Jess language, but the program accesses Java APIs.
+
+Mostly Jess language code, but with some custom Java code in the form of new Jess commands written in Java.
+
+Half Jess language code, with a substantial amount of Java code providing custom commands and APIs. Jess provides the main() function (the entry point for the program).
+
+Half Jess language code, with a substantial amount of Java code providing custom commands and APIs. You write the main() function.
+
+Mostly Java code, which loads Jess language code at runtime.
+
+All Java code, which manipulates Jess entirely through its Java API.
+
+The sample applications presented in the later parts of this book start at the beginning of this continuum (the Tax Forms Advisor developed in part 3 consists entirely of Jess code) and work their way toward the end (the business-rules systems are mostly written in Java). Experiencing the development of each type of application will help you decide what route to take in future development, based both on the requirements of the application and on the abilities of the programming team that will write it.
+
+3.2.2. Jess performance
+
+Some people will tell you that Java is slow. They¡¯re wrong. Modern Java virtual machines are extremely powerful and sophisticated. In many applications, Java is as fast as comparable C or C++ code. For Jess, being written in Java is not a liability.
+
+Jess is fast. The algorithm used for pattern matching, which we¡¯ll study in chapter 8, is very efficient, and Jess can plow through large piles of rules and facts in little time. Using Sun¡¯s HotSpot JVM on an 800 MHz Pentium III, Jess can fire more than 80,000 rules per second; it can perform almost 600,000 pattern-matching operations per second; it can add more than 100,000 facts to working memory per second; and a simple counting loop can do 400,000 iterations per second. Independent benchmarks have shown that Jess is significantly faster than many rule engines written in the ¡°faster¡± C language. For example, on many problems, Jess outperforms CLIPS by a factor of 20 or more on the same hardware.[1]
+
+[1] See http://aaaprod.gsfc.nasa.gov/teas/Jess/JessUMBC/sld025.htm and http://www.mail-archive.com/ jess-users@sandia.gov/msg03278.html for some benchmarks.
+
+Jess¡¯s rule engine uses an improved form of a well-known method called the Rete algorithm (Rete is Latin for net) to match rules against the working memory. We¡¯ll look at the Rete algorithm in detail in chapter 8. The Rete algorithm explicitly trades space for speed, so Jess can use a lot of memory. Jess does contain commands that let you sacrifice some performance to decrease memory usage. Nevertheless, Jess¡¯ memory usage is not ridiculous, and fairly large programs will fit easily into Java¡¯s default heap size of 64 megabytes.
+
+Because Jess is a memory-intensive application, its performance is sensitive to the behavior of the Java garbage collector. Recent JVMs from Sun feature an advanced Java runtime called HotSpot, which includes a flexible, configurable garbage collection (GC) subsystem. The garbage collector is the part of the JVM that is responsible for finding and deleting unused objects. Excellent articles on GC performance tuning are available at Sun¡¯s web site.[2] Although every Jess rule base is different, in general, Jess benefits if you adjust two parameters: the heap size and the object nursery size. For example, on my machine, Jess¡¯ performance on the Miranker manners benchmark (http://www-2.cs.cmu.edu/afs/cs/project/airepository/ai/areas/expert/bench/bench/0.html) with 90 guests is improved by 25% by adjusting the initial heap size and nursery size to 32MB and 16MB, respectively, from their defaults of 64MB and 640KB. In this case, you make the default heap size smaller, which makes the garbage collector run faster because there is less memory to search. You can tune the HotSpot virtual machine in this way using the following command:
+
+[2] See in particular http://developer.java.sun.com/developer/TechTips/2000/tt1222.html#tip2.
+
+java -XX:NewSize=16m -Xms32m -Xmx32m jess.Main <scriptfile>
+
+The object nursery is a subset of the Java heap set aside for recently allocated objects. The total heap size in this example is 32MB, not 48MB.
+

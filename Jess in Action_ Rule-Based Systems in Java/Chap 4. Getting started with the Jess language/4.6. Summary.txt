@@ -1,0 +1,8 @@
+4.6. Summary
+
+The Jess language has a simple and regular syntax. It¡¯s rather different from Java¡¯s syntax, but it¡¯s easy to learn. It is a full-featured programming language in which you can write real programs. Given that it is an interpreted language, it is surprisingly fast.
+
+The Jess language has only a few built-in data types, including INTEGER, FLOAT, SYMBOL, STRING, and LONG. There are several simple control structures, some of which let you transform data into executable code. All of the control structures are actually functions. Jess comes with almost 200 built-in functions, and you can define your own functions using the deffunction construct. You can modify the behavior of the built-in functions using defadvice.
+
+On top of all that, you can also call any Java function you want from Jess. How to do so is the topic of the next chapter.
+

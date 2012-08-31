@@ -1,0 +1,90 @@
+3. Introducing Jess
+In this chapter you¡¯ll...
+
+Learn how to obtain and install your copy of Jess
+
+Learn how to run Jess programs
+
+See how Jess applications are structured
+
+This is a hands-on book. It walks you through the development of several large software systems that use rule-based technology. You¡¯ll see how each system is architected, and you¡¯ll see the detailed implementation of each one. All the example systems use the Jess rule engine. In this chapter, we¡¯ll take a closer look at Jess itself. Jess is an interpreter for the Jess rule language. The syntax of the Jess rule language is similar to that of Lisp, so it might look strange to you at first; but Jess¡¯s language is simple, easy to learn, and well-suited to both defining rules and procedural programming. Although Jess is in some sense fairly small, it¡¯s a very rich environment. Even after you¡¯ve spent the next few chapters learning about Jess and its rule language, there will be plenty more to learn on the fly as you develop the major applications.
+
+Although previous experience with Lisp might help you begin to understand the Jess rule language, it is not necessary; this book explains all you need to know. On the other hand, I assume you have some familiarity with Java, and I assume you have a Java environment installed and know how to use it to compile and run Java applications.
+
+3.1. The Jess rule engine
+
+Jess (http://herzberg.ca.sandia.gov/jess) is a rule engine and scripting language developed at Sandia National Laboratories in Livermore, California in the late 1990s. It is written in Java, so it is an ideal tool for adding rules technology to Java-based software systems.
+
+The CLIPS expert system shell (http://www.ghgcorp.com/clips/CLIPS.html), an open-source rule engine written in C, was the original inspiration for Jess. Jess and CLIPS were written by entirely different groups of people, however, and their implementations have always been very different. Jess is dynamic and Java-centric, so it automatically gives you access to all of Java¡¯s powerful APIs for networking, graphics, database access, and so on; CLIPS has none of these facilities built in. Still, there is a strong similarity between the rule languages supported by these two systems. Many of the core concepts of Jess were originally derived from CLIPS, which was itself influenced by early rule engines like OPS5 and ART.
+
+Note for Clips Users
+
+Jess¡¯s syntax is quite similar to CLIPS¡¯, but Jess and CLIPS are different and unrelated systems. Some Jess constructs (defclass, definstance, defmodule) have very different semantics in CLIPS, whereas others (defrule) are virtually identical. Jess has many features (defquery, the ability to directly call functions in the host language) that CLIPS doesn¡¯t, and Jess does not implement everything that CLIPS does (COOL, the CLIPS Object Oriented Language, is one notable example). If you have previous experience using CLIPS, don¡¯t assume you can skip over this part of the book.
+
+
+3.1.1. Obtaining Jess
+
+You can download a specially licensed version of Jess from the Manning Publications web site, at http://www.manning.com/friedman-hill. The license lets you use Jess for educational purposes, so you can try out and experiment with the examples in this book. In this chapter I¡¯ll assume you¡¯re using that version of Jess.
+
+Jess is also available from the Jess web site, http://herzberg.ca.sandia.gov/jess. There you can immediately download a trial version, or you can obtain a Jess license and then download a full version with source code. Jess licenses are available free of charge for academic use. You can also purchase a commercial license. See the web site for details.
+
+3.1.2. Installing Jess
+
+To run Jess, you need to have the Java 2 Platform installed. If you don¡¯t already have it, you can download a free implementation directly from Sun Microsystems at http://java.sun.com. Versions are available for Windows, Linux, and Solaris. Apple has its own version, which is included in Macintosh OS X. If Java is properly installed, you should be able to execute the command java -version in a command window and see version information about your installed Java software. If the version number is 1.2.0 or greater, you¡¯re ready to go.
+
+The Jess distribution is a Zip file, and you can open it with many popular archiving tools. (WinZip [http://www.winzip.com] is one useful program for working with Zip files on Microsoft operating systems.) The Zip file contains a single item: a directory named JessXX, where XX is a number (currently 61, for Jess 6.1). Use your archiving tool to unpack that directory to a convenient location¡ªC:\JessXX, for example. The unpacked directory will contain:
+
+A Java archive file jess.jar, which contains the Jess software.
+
+The directory examples/, which contains some simple examples of Jess programs.
+
+A copy of the Jess manual in the directory docs/. Open docs/index.html in your web browser to view the manual.
+
+To complete your installation, add jess.jar to your CLASSPATH environment variable. CLASSPATH tells the Java program where to find installed Java software.
+
+Note
+
+The details of setting environment variables vary between platforms. For older versions of Windows, it involves editing the C:\AUTOEXEC.BAT file. For newer Microsoft operating systems, you can set environment variables in the System control panel. For Unix-like systems, editing your .cshrc or .profile will do the trick. Refer to your operating system¡¯s documentation for details.
+
+
+CLASSPATH consists of a series of filenames joined by the character your operating system uses to separate filenames in other kinds of lists. On Windows, this is the semicolon (;) character, and on Unix-like systems it is the colon (:). Make sure that CLASSPATH, at a minimum, includes the full path to the jess.jar file and a period (.), which represents the current directory. So, on Windows, if there is no pre-existing CLASSPATH setting, you set this variable to .;C:\Jess61\jess.jar. If you find that your system already has a CLASSPATH variable defined, you can simply add these two entries to the existing list.
+
+3.1.3. Running Jess
+
+Jess is primarily intended as a library that can be embedded in other Java software. However, when you¡¯re developing Jess code, it¡¯s nice to have an interactive environment to work with, so Jess comes complete with a simple command prompt. To run Jess as a standalone command-line application, execute the class jess.Main from the JAR file like this:
+
+C:\> java jess.Main
+Jess, the Java Expert System Shell
+Copyright (C) 2003 E.J. Friedman Hill and the Sandia Corporation
+Jess Version 6.1 4/9/2003
+Jess>
+
+Jess displays a welcome banner and then the Jess> prompt. When Jess displays this prompt, it is waiting for you to enter a Jess program. You can probably guess what¡¯s coming next: You¡¯re going to write the Jess version of ¡°Hello, World¡±.
+
+3.1.4. ¡°Hello, World¡±
+
+You can enter a Jess program directly at the command prompt, and Jess will execute it immediately:
+
+Jess> (printout t "Hello, World!" crlf)
+Hello, World!
+Jess>
+
+You can also pass the name of a file that contains Jess code as an argument when you start jess.Main. Jess executes the code in the file and then exits:
+
+C:\Jess61> java jess.Main hello.clp
+Hello, World!
+C:\Jess61>
+
+We will begin our study of the Jess language in the next chapter, but if you¡¯re curious: printout is a function that prints formatted output; t tells printout to print to standard output; and the argument crlf starts a new line, like printing a \n in Java. This parenthesized list of symbols is the Jess way of calling a function. Jess immediately evaluates the call to printout, producing the side effect of printing ¡°Hello, World!¡± to the console.
+
+In addition to jess.Main, the class jess.Console presents the same command-line interface in a graphical console window (see figure 3.1). If you would like a more elaborate graphical interface, you can try JessWin, a free graphical development environment for Jess written by William Wheeler. JessWin (which is also written in Java) is menu-driven and contains an integrated graphical editor (see figure 3.2). You can download JessWin from the Jess web site (http://herzberg.ca.sandia.gov/jess/user.html).
+
+Figure 3.1. The jess.Console interface for Jess. This as an alternative to the command-line jess.Main interface. You can enter Jess code in the small text field at the bottom left, and Jess output appears in the scrolling text area at the top.
+
+
+
+
+Figure 3.2. The JessWin developer¡¯s environment for Jess. JessWin is a third-party add-on that provides a graphical interface to many functions that are useful to Jess programmers.
+
+[View full size image]
+

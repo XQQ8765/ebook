@@ -1,0 +1,171 @@
+4.2. Adding some structure
+
+Tokens by themselves aren¡¯t terribly interesting, any more than isolated words have much to say. Tokens become meaningful when they are put together into code. In the following sections, you¡¯ll see how to put together ¡°sentences¡± in the Jess language.
+
+4.2.1. Lists
+
+The basic unit of structure in Jess code is the list. A list is a group of tokens that includes an enclosing set of parentheses and zero or more tokens or other lists. The following are all valid lists:
+
+(+ 3 2)
+(a b c)
+("Hello, World")
+()
+(1 2 3)
+(deftemplate foo (slot bar))
+
+Lists are a little like arrays in Java and other languages. In Jess, they¡¯re the central way of structuring both code and data. The first element of a list is called the list¡¯s head, and in many contexts it is special. For example, Jess function calls are lists where the head is the name of a function, and rules are written as lists where the head is the special symbol defrule.
+
+Lists remind many new Jess programmers of scopes in Java¡ªthe parentheses group the items in a Jess list just as pairs of brackets delimit Java methods and classes. As a result, some people tend to write Jess code by lining up opening and closing parentheses vertically as they might do in Java. In the worst cases, that might look like this:
+
+(bind ?x (+
+             (* 20 3
+             )
+             (- 37 23
+             )
+         )
+)
+
+In addition to being aesthetically awkward, it can be confusing. It¡¯s better style to simply put the closing parentheses on the last line of the list they close, like this:
+
+(bind ?x (+
+    (* 20 3)
+    (- 37 23)))
+
+This is generally more readable, not less. Whether you use a text editor that helps you balance parentheses may influence your choice of code format. The open-source Emacs editor is available on the Windows, Linux, and Macintosh platforms, and makes editing Jess code easy. A special Jess mode for Emacs is available (http://jess-mode.sourceforge.net).
+
+Jess interprets lists in many different ways depending on where in your program they appear. A list might be a rule, a fact, a pattern on a rule¡¯s left-hand side, a function definition, or a function call, among other things. You¡¯ll see ways to use lists as this chapter continues, but let¡¯s pick just one to get started. The simplest Jess program consists of a single function call¡ªand you¡¯re probably anxious to write a program, so let¡¯s learn about function calls. Later in this chapter we¡¯ll return to the study of lists in general.
+
+4.2.2. Calling functions
+
+If you type an arbitrary list at the Jess> prompt, Jess will assume you¡¯re trying to call a function:
+
+Jess> (+ 2 2)
+4
+
+Here the function + is being called. Jess prints the result (4) on the next line. The result is like the return value of a Java function. The process of executing a function call to determine the result is called evaluating the function call. Every Jess function has a result¡ªthere are no void functions, as there are in Java, that don¡¯t have a return value.
+
+Jess function calls use a prefix notation: the head of the list is the name of the function being called, and the other items in the list are the arguments of the function. The arguments of a function call can be numbers, symbols, strings, or other function calls¡ªthat is, function calls can be nested:
+
+Jess> (+ (+ 2 3) (* 3 3))
+14
+
+The two arguments to + are (+ 2 3) and (* 3 3). Jess evaluates the arguments in left-to-right order before the outer sum is computed.
+
+Jess comes with a large number of built-in functions that compute mathematical quantities, control program flow, manipulate strings, give you access to Java APIs, and perform other useful tasks. Appendix A describes all the functions that are built in to Jess. In section 4.4, you¡¯ll also learn how to define new functions by writing Jess language code. In chapter 15, you¡¯ll even learn how to extend the Jess language by adding functions written in Java. All code in Jess (control structures, assignments, declarations) takes the form of a function call. You have already seen most of the Jess language¡¯s built-in syntax; virtually everything else is accomplished by functions that use these basic elements. Let¡¯s look at some simple functions that are used in most Jess programs. In section 4.3, you¡¯ll learn about more complex functions that implement control structures.
+
+One of the most commonly used functions is printout. The printout function is used to send text to Jess¡¯s standard output or to a file. The first argument tells printout where to send its output. The subsequent arguments are printed one after another, with no spaces between. A complete explanation of the first argument will have to wait, but for now, all you need to know is that if you use the symbol t, printout sends its output to the console. The special symbol crlf is printed as a newline. Here¡¯s an example of printing several arguments:
+
+Jess> (printout t "The answer is " 42 "!" crlf)
+The answer is 42!
+
+Another useful function is batch, which evaluates a file of Jess code. To run the Jess source file examples/hello.clp (which comes with the standard Jess distribution), you can enter the following command:
+
+Jess> (batch examples/hello.clp)
+Hello, World!
+
+Another simple function is long. You can¡¯t enter a literal long value in Jess as you can in Java. Instead, you must use the Jess long function to create one from a string. In Java, you can write
+
+long aLongValue = 123456789L;
+
+The equivalent in Jess is
+
+(bind ?aLongValue (long "123456789"))
+
+As you can see, even assigning a value to a variable is done using a function call. The bind function assigns a value to a Jess variable. Let¡¯s learn more about variables in Jess.
+
+4.2.3. Variables
+
+A Jess variable is a named container that can hold a single value, much like a variable in Java. Jess variables, however, are untyped. This means a Jess variable can hold a value of any data type, and it can hold values of any number of different types during its lifetime. A variable can refer to a single symbol, number, string, list, or other value.
+
+Most variables in Jess are written as symbols that begin with a question mark (?). The question mark is part of the variable¡¯s name. Although it is legal to do so, it is considered bad style to use any other punctuation marks except dashes (-) or underscores (_) in a variable name. In particular, don¡¯t use asterisks (*), because asterisks are used to name global variables (which we¡¯ll discuss soon).
+
+You don¡¯t need to declare variables in the Jess language; they come into being when they are first given a value. To assign a value to a variable, use the bind function:
+
+Jess> (bind ?x "The value")
+"The value"
+
+To see the value of a variable at the Jess> prompt, you can simply type the variable¡¯s name:
+
+Jess> (bind ?a (+ 2 2))
+4
+Jess> ?a
+4
+
+You can use a variable anywhere a value is expected. For example, variables can be passed as arguments in function calls:
+
+Jess> (+ ?a 2)
+6
+
+Global variables
+
+Any variables you create at the Jess> prompt or at the top level of any Jess language program are cleared whenever the reset command is issued. Because reset is an important function¡ªit is used to reinitialize the working memory of Jess¡¯s rule engine¡ªthis makes these top-level variables somewhat transient. They are fine for scratch variables while you are working interactively at the Jess> prompt, but they are not persistent global variables in the normal sense of the word. To create global variables that are not destroyed by reset, you can use the defglobal construct:
+
+(defglobal [?*<global variable name>* = <value>]+)
+
+This syntax diagram says that you can declare one or more defglobals in a single defglobal construct. Each declaration consists of a global variable name, an equals sign, and a value. Global variable names must begin and end with *. Valid global variable names look like this:
+
+?*a*     ?*all-values*     ?*counter*
+
+Aside from the special naming convention, defglobals are similar to ordinary variables and can be used in the same ways.
+
+When a global variable is created, it is initialized to the given value. When the reset command is subsequently issued, the variable may be reset to this same value, depending on the current setting of Jess¡¯s reset-globals property. You can use the set-reset-globals function to set this property. An example will help:
+
+Jess> (defglobal ?*x* = 3)
+TRUE
+Jess> ?*x*
+3
+Jess> (bind ?*x* 4)
+4
+Jess> ?*x*
+4
+Jess> (reset) ;; Jess will reset ?*x* to its initial value of 3
+TRUE
+Jess> ?*x*
+3
+Jess> (bind ?*x* 4)
+4
+Jess> (set-reset-globals nil)
+FALSE
+Jess> (reset) ;; This time, ?*x* will not be changed.
+TRUE
+Jess> ?*x*
+4
+
+You can read about set-reset-globals and the accompanying get-reset-globals function in appendix A.
+
+Multifields
+
+Multifields are another special kind of variable. A multifield is a variable whose first characters are $? (for example, $?x). Multifields have special meaning in only two contexts: in the argument lists of deffunctions (see section 4.4) and on the left-hand-sides of rules (see chapter 7). They are otherwise equivalent to regular variables. In fact, the variable ?x and a multifield $?x refer to the same storage location¡ªthey¡¯re two names for the same thing.
+
+Now that you understand Jess variables, you¡¯re ready to learn more about the structure of Jess code in general. We return now to our study of lists.
+
+4.2.4. More about lists
+
+As you¡¯ve seen, if you type a list directly at the Jess prompt, Jess assumes it¡¯s a function call; if you nest a list inside a function call, Jess assumes that nested list is a function call, too. So how can you create a list that¡¯s not a function call? You use special functions like create$ to make a list, and then you bind the list to a variable:
+
+Jess> (bind ?grocery-list (create$ eggs bread milk))
+(eggs bread milk)
+
+The variable ?grocery-list now holds a list of three items.
+
+This kind of list, which just contains data, is called a plain list. Plain lists are useful data structures in Jess. They¡¯re a lot like Java arrays. You can access the elements of a Java array using square brackets with a numeric subscript: For example, arr[0] is the first element of an array named arr. To access an element of a plain list in Jess, you call the nth$ function, which returns a single list element:
+
+Jess> (printout t (nth$ 2 ?grocery-list) crlf)
+bread
+
+You may have noticed that many of the Jess functions that deal explicitly with lists have names ending in $¡ªthis is just a convention, but a useful one. Two other list-related functions are first$ and rest$:
+
+Jess> (first$ ?grocery-list)
+(eggs)
+Jess> (rest$ ?grocery-list)
+(bread milk)
+
+The function first$ returns a list containing just the first element of its single argument, and rest$ returns a list holding the second and subsequent elements.
+
+You might be tempted to use lists to build trees or other nested data structures. Plain lists can¡¯t be nested, however. Jess will flatten out any nested plain list you attempt to create:
+
+Jess> (bind ?more-groceries (create$ ?grocery-list salt soap))
+(eggs bread milk salt soap)
+
+Usually, when you have a grocery list, you walk through a grocery store, find each item on the list, and put it into your shopping cart. This involves iterating over the list¡ªperforming an action for each item of the list. To do this, you need to learn about control structures in Jess.
+

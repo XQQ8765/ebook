@@ -1,0 +1,76 @@
+4.4. Defining functions with deffunction
+
+Suppose that some time in the near future, you find yourself in Dallas, working on the AI module for a new martial arts video game (you¡¯re using Jess, of course). You¡¯re writing many different rules that have to reason geometrically; in particular, many rules care about the distance between two combatants. If the variables ?X1, ?Y1, and ?Z1 hold the coordinates of one ninja, and ?X2, ?Y2 and ?Z2 the coordinates of another, the Jess code to compute distance in three dimensions looks like this:
+
+(bind ?x (- ?X1 ?X2))
+(bind ?y (- ?Y1 ?Y2))
+(bind ?z (- ?Z1 ?Z2))
+(bind ?distance (sqrt (+ (* ?x ?x) (* ?y ?y) (* ?z ?z))))
+
+The formula takes the difference of each of the X, Y, and Z coordinate pairs, adds them, and takes the square root. It is long and messy, and you surely don¡¯t want to type it more than once. Many different rules need to do the same computation, so you can define a function named distance and call it from each rule as needed.
+
+You can write your own functions in the Jess language using the deffunction construct. Once you define a deffunction, you can use it like any other Jess function. deffunction looks like this:
+
+(deffunction <name> (<parameter>*) [<comment>] <expression>*)
+
+The name of the deffunction must be a symbol. Each parameter must be a variable name, complete with the question mark. A function can have as many parameters as you need to use.
+
+The optional comment is a double-quoted string that can describe the purpose of the function. This special comment is included when a deffunction is displayed. It¡¯s a good idea to provide a comment that succinctly describes the purpose of the function. The comment, like any Jess string, can span multiple lines.
+
+The body of a deffunction is composed of any number of expressions. The return value of the deffunction is the value of the last expression evaluated, unless you use the return function to provide an explicit return value. Here¡¯s what the distance calculation looks like as a deffunction:
+
+Jess> (deffunction distance (?X1 ?Y1 ?Z1 ?X2 ?Y2 ?Z2)
+      "Compute the distance between two points in 3D space"
+      (bind ?x (- ?X1 ?X2))
+      (bind ?y (- ?Y1 ?Y2))
+      (bind ?z (- ?Z1 ?Z2))
+      (bind ?distance (sqrt (+ (* ?x ?x) (* ?y ?y) (* ?z ?z))))
+      (return ?distance))
+TRUE
+
+You can now call distance just as if it were built in to Jess:
+
+Jess> (distance 10 0 0 2 0 0)
+8
+
+Besides being shorter and easier to type, the function call is much easier to understand¡ªthe reader immediately knows what¡¯s being computed, instead of needing to puzzle out those subtractions, multiplications, additions, and square root functions.
+
+The distance function computes a single value. More complex deffunctions can use the control-flow functions like foreach, if, and while that you learned about in section 4.3. Your video-game rules will need to make decisions based on which of several rival ninjas is closest to the player. The following example is a deffunction that returns the smaller of its two numeric arguments:
+
+Jess> (deffunction min (?a ?b)
+    (if (< ?a ?b) then
+      (return ?a)
+    else
+      (return ?b)))
+TRUE
+
+Note that this could also be written as
+
+Jess> (deffunction min (?a ?b)
+    (if (< ?a ?b) then
+       ?a
+    else
+      ?b))
+TRUE
+
+because the expressions in the body of a deffunction do not have to be function calls, and a deffunction returns the value of the last expression evaluated.
+
+One limitation of min is that it takes only two arguments, but your video game will contain scenes with dozens of rival ninjas. A version of min that takes an unlimited number of arguments would be very useful, and you can write such a function in Jess. In the definition of a deffunction, the last parameter can be a multifield (a variable starting with $, as in $?x.) If it is, then the deffunction will accept a variable number of arguments; any arguments in excess of the number of named parameters are compiled into a list, and that list is assigned to the multifield. Here¡¯s a version of min that uses this feature:
+
+Jess> (deffunction min ($?args)
+     "Compute the smallest of a list of positive numbers"
+     (bind ?minval (nth$ 1 ?args))
+      (foreach ?n ?args
+(if (< ?n ?minval) then
+    (bind ?minval ?n)))
+      (return ?minval))
+TRUE
+Jess> (min 10 100 77 6 43)
+6
+
+4.4.1. Late binding
+
+Jess uses late binding for function names, meaning the link between the name of a function and the code it represents can be changed right up until the instant the function is called. In Java, of course, code won¡¯t compile if it calls a function that hasn¡¯t been defined yet. In Jess, you can write code that calls a function, even if you haven¡¯t written that second function yet. Jess won¡¯t try to find the undefined function until the code that calls it is executed. If the undefined function hasn¡¯t been defined at that time, an error will result.
+
+Late binding is a useful property because it also means you can redefine a function at any time, and any code that called the old function will automatically call the new one. To redefine a function, you simply define a new function by the same name, and the old one is replaced. You can even redefine any of the built-in functions this way (although doing so is not recommended). If you want to change the behavior of a built-in function, you can do so using defadvice, described in the next section.
+
