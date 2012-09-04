@@ -1,0 +1,86 @@
+7.7. Searching working memory with defquery
+
+Jess¡¯s working memory is a lot like a relational database. Each deftemplate is like a relation¡ªa table in the database. The individual slots are the columns of the tables. If you¡¯re familiar with industrial-strength relational databases, you¡¯re probably aware of database triggers, which are a lot like forward-chaining rules attached to a database that fire when the data matches some criterion. You can apply rules to relational databases, so it¡¯s a reasonable question to ask whether you can make queries against the working memory of a rule-based system. Jess offers the defquery construct, which lets you do just that.
+
+A defquery is a special kind of rule with no RHS. Jess controls when regular rules fire, but queries are used to search the working memory under direct program control. A rule is activated once for each matching set of facts, whereas a query gives you a java.util.Iterator of all the matches. An example should make this clear. Suppose you have defined the query find-affordable-gifts:
+
+Jess> (deftemplate gift (slot name) (slot price))
+TRUE
+Jess> (defquery find-affordable-gifts
+    "Finds all gifts in a given price range"
+    (declare (variables ?lower ?upper))
+    (gift (price ?p&:(and (> ?p ?lower) (< ?p ?upper)))))
+TRUE
+
+The pattern here matches all the gifts whose price slot holds a number between ?lower and ?upper.
+
+Now you define some facts, including some that match the criterion and some that don¡¯t:
+
+Jess> (deffacts catalog
+     (gift (name red-scarf) (price 20))
+     (gift (name leather-gloves) (price 35))
+     (gift (name angora-sweater) (price 250))
+     (gift (name mohair-sweater) (price 99))
+     (gift (name keychain) (price 5))
+     (gift (name socks) (price 6))
+     (gift (name leather-briefcase) (price 300)))
+TRUE
+
+You can invoke the query to find the perfect gift using concrete upper and lower price limits:
+
+Jess> (reset)
+TRUE
+Jess> (bind ?it (run-query find-affordable-gifts 20 100))
+<External-Address:java.util.AbstractList$Itr>
+Jess> (while (?it hasNext)
+    (bind ?token (call ?it next))
+    (bind ?fact (call ?token fact 1))
+    (bind ?name (fact-slot-value ?fact name))
+    (printout t ?name crlf))
+leather-gloves
+mohair-sweater
+FALSE
+
+Here you¡¯re looking for gifts between $20 and $100, and the query finds mohair-sweater and leather-gloves.
+
+Let¡¯s break down this code to see what it¡¯s doing. As previously stated, (run-query) returns the query results as a Java java.util.Iterator object. The Iterator interface has a method next() that you call to retrieve each individual result; it also has a hasNext() method that returns true as long as there are more results to return. That explains the (while (?it hasNext) ...(call ?it next)) control structure; it steps through each of the results returned by the query.
+
+Each individual result is a jess.Token object. A Token is just a collection of jess.Fact objects; each Token holds one match for the query. You call the fact() method of jess.Token to retrieve the individual jess.Fact objects within the Token. Each match begins with an extra fact, a query trigger fact that initiates the matching process; it is asserted by the run-query command (this fact is retracted automatically after the query is run). Hence the argument to the call to fact() is 1, not 0. Once you have the right fact, you use the fact-slot-value function to extract the contents of the name slot. Printing the name slot of each fact leads to the output shown earlier.
+
+The defquery construct can use virtually all the same features that defrule LHSs can, including all the special conditional elements described in this chapter. The function ppdefrule can also pretty-print queries. Jess treats a defquery as a special kind of defrule in many contexts; for instance, the rules command lists defquerys as well as defrules.
+
+As you can see, the run-query function lets you pass parameters to a query; you passed numbers representing the upper and lower limits of a price range to the find-affordable-gifts query. Let¡¯s examine this process a little more closely.
+
+7.7.1. The variable declaration
+
+You might have already realized that two different kinds of variables can appear in a query: those that are internal to the query, like ?p in find-affordable-gifts, and those that are external, or to be specified in the run-query command when the query is executed. Jess assumes all variables in a query are internal by default; you must declare any external variables explicitly using this syntax:
+
+(declare (variables ?x ?y ...))
+
+When you invoke a query using the run-query function, you must supply exactly as many variables as are listed in the variables declaration. Some queries may not have any external variables; in this case, the variables declaration is optional.
+
+7.7.2. Query trigger facts
+
+When Jess compiles a defquery, it inserts an extra pattern as the first one in the query. This first pattern is of the form
+
+(__query-trigger-name ?x ?y ...)
+
+where name is the name of the query and ?x, ?y, and so on are the variables named in the variables declaration for the query. run-query works by asserting a fact to match this pattern, using the arguments you supply to instantiate the variables. This fact completes any pending matches of the defquery¡¯s LHS, and run-query collects these matches and returns them.
+
+7.7.3. The count-query-results function
+
+To obtain just the number of matches for a query, rather than a full Iterator over all the matches, you can use the count-query-results function. This function accepts the same arguments as run-query but returns an integer specifying the number of matches.
+
+7.7.4. Backward chaining and queries
+
+It can be convenient to use queries as triggers for backward chaining. For example, look back at the backward-chaining example in section 7.4. If you were writing a deffunction that needed to use factorials, that deffunction might want to use a defquery to fetch the ones that are already available from working memory, rather than recomputing them. The backward-chaining rules would then compute missing values.
+
+For this technique to be useful, (run) must somehow be called while the query is being evaluated, to allow the backward chaining to occur. Facts generated by rules fired during this run may appear as part of the query results.
+
+By default, no rules fire while a query is being executed. If you want to allow backward chaining to occur in response to a query, you can include the max-background-rules declaration in that query¡¯s definition. For example, this query allows a maximum of five rules to fire while it is being executed:
+
+Jess> (defquery find-factorial
+    (declare (max-background-rules 5)
+             (variables ?arg))
+    (factorial ?arg ?))
+

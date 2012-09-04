@@ -1,0 +1,204 @@
+7.2. Constraining slot data
+
+The baby-is-wet fact in the previous section didn¡¯t have any slot data. Most facts do, however, and most patterns need to specify some particular set of slot values for the facts they match. These specifications are called constraints, because they constrain the values a slot can have in a fact that matches the pattern. A number of different kinds of constraints can be used to match slot data:
+
+Literal constraints¡ª Specify exact slot values
+
+Variable constraints¡ª Bind a matched value to a variable
+
+Connective constraints¡ª Let you combine conditions to match A and B, or A or B
+
+Predicate constraints¡ª Let you call a function to test for a match
+
+Return value constraints¡ª Test for an exact match between a slot¡¯s contents and the result of a function call
+
+7.2.1. Literal constraints
+
+Literal slot values can be included in patterns as constraints. A pattern including a literal value matches only facts that include that value. In the following example, although both facts have the head letters, only the one with slot data that exactly matches the pattern activates the rule:
+
+
+
+Remember that an ordered fact is implemented as an unordered fact with a single multislot named __data (a multislot, you¡¯ll recall, can hold any number of items). You could therefore write the previous rule as
+
+Jess> (assert (letters b c))
+<Fact-0>
+Jess> (defrule literal-values
+    (letters (__data b c))
+    =>)
+TRUE
+
+and it would behave the same way (I asserted a letters fact first to emphasize that Jess only defines the implicit deftemplate for letters when it sees an ordered letters fact; the rule won¡¯t be parsed correctly until this deftemplate exists). It¡¯s important to keep this relationship in mind as you read this chapter; remember that everything that applies to ordered facts applies equally well to the multislots of unordered facts. The same goes for the regular slots of unordered facts, with the restriction that they can hold only one value at a time.
+
+Finally, note that literal constraints have to match exactly; no conversions are done. Thus the floating-point literal 1.0 doesn¡¯t match the integer 1, and the symbol xyz doesn¡¯t match the string "xyz". This is a common source of problems when using shadow facts (see section 6.5).
+
+7.2.2. Variables as constraints
+
+If all the patterns of a rule had to be given literally, Jess would not be very powerful. However, patterns can also include variables and various kinds of predicates(comparisons and boolean functions), and can be modified by conditional elements. We¡¯ll consider variables and predicates here and conditional elements in the following sections.
+
+You can specify a variable instead of a literal value for any part of the slot data in a pattern. A variable matches any value in that position within the facts that match that pattern. For example, the rule
+
+Jess> (defrule simple-variables
+    (a ?x ?y)
+    =>
+    (printout t "Saw 'a " ?x " " ?y "'" crlf))
+
+is activated each time an ordered fact with head a having two fields is asserted: (a b c), (a 1 2), (a a a), and so forth. The variables thus matched on the LHS of a rule are available on the RHS of the same rule; you can think of them as the arguments to the rule¡¯s RHS when it fires. For example, if the previous rule matched the fact (a b c), then when the rule fired, ?x would have the value b and ?y would have the value c. You can mix literal values and variables in the same pattern, of course.
+
+The same variable can appear in more than one pattern in the same rule, or in several places within one pattern, or both. Every time the variable is used, it must match the same value. In listing 7.2, although two facts could match each pattern individually, only one pair can activate the rule: the fact (a 2) and (b 2).
+
+Listing 7.2. Example of repeating a variable constraint
+
+Jess> (defrule repeated-variables
+    (a ?x)
+    (b ?x)
+    =>
+    (printout t "?x is " ?x crlf))
+TRUE
+Jess> (watch activations)
+TRUE
+Jess> (deffacts repeated-variable-facts
+    (a 1)
+    (a 2)
+    (b 2)
+    (b 3))
+TRUE
+Jess> (reset)
+==> Activation: MAIN::repeated-variables : f-2, f-3
+TRUE
+Jess> (run)
+?x is 2
+1
+
+Note that in Jess 6.1, you can¡¯t use a variable to match the head of a fact or the name of a slot; these things must always be specified as literal values. This capability is planned for a future release, however.
+
+Multifields
+
+Regular variables match exactly one value. Multifields can match any number of values¡ªzero, one, or more. You write a multifield by preceding a variable name with the characters $?¡ªfor example, $?mf is a multifield. You can only use multifields in multislots. They can be used alone, in which case the multifield matches any number of values in that multislot, or in combination with regular variables or literal values. If you use multifields together with single values, the multifields expand to match everything not matched by the other values. For example, the pattern in this rule matches a shopping-cart fact with any number of values in the contents multislot:
+
+(defrule any-shopping-cart
+    (shopping-cart (contents $?items))
+    =>
+    (printout t "The cart contains " ?items crlf))
+
+The pattern in this rule matches any shopping-cart fact with a contents slot that contains milk preceded by any number (zero or more) of items and followed by any number of additional items:
+
+(defrule cart-containing-milk
+    (shopping-cart (contents $?before milk $?after))
+    =>
+    (printout t "The cart contains milk." crlf))
+
+As shown here, multifields are accessible on the RHS of the rules that use them in patterns (just as normal variables are). A multifield always contains the matched values as a list, even if it matches zero or one value. You can (and generally should, as a matter of style) leave the $ sign off a multifield when you refer to it on the RHS of a rule, because there it is acting as a normal variable.
+
+Blank variables
+
+You can match a field without binding it to a variable by omitting the variable name and using a question mark (?) as a placeholder. This is generally only useful as a way to specify that a multislot contains a certain arrangement of values without caring what those values are. For example, a pattern like (poker-hand ten ? ? ? ace) matches any poker-hand starting with a ten, ending with an ace, and containing a total of five cards. You can have blank multifields, too¡ªjust use bare $? characters.
+
+Matching global variables
+
+If you match to a defglobal with a pattern like (score ?*x*), the match only considers the value of the defglobal when the fact is first asserted. Subsequent changes to the defglobal¡¯s value will not invalidate the match¡ªif the rule was activated based on the value of the defglobal, it stays activated even if the defglobal¡¯s value changes. The match does not reflect the current value of the defglobal, but only the value at the time the matching fact was asserted.
+
+7.2.3. Connective constraints
+
+Quite often, matching with a literal value or a variable isn¡¯t enough. You might want a pattern to match if a client is located in either Boston or Hartford, for example, or you might want a pattern to match as long as the client is not from Bangor. You can write these patterns, and many others, using the connective constraints & (and), | (or), and ~ (not).
+
+Any single constraint preceded by a tilde (~) matches the opposite of what the constraint would originally have matched. For example, the following pattern matches any client facts with a city slot that doesn¡¯t contain Bangor:
+
+(client (city ~Bangor))
+
+This pattern matches clients that have purchased exactly two items, which must not be the same:
+
+(client (items-purchased ?x ~?x))
+
+The other connective constraints let you form groups of single constraints. Ampersands (&) represent logical and, and pipes (|) represent logical or. For example, this pattern matches any client that hails from Boston or Hartford:
+
+(client (city Boston|Hartford))
+
+And this one again matches any client not from Bangor, and in addition remembers the contents of city in the variable ?c:
+
+(client (city ?c&~Bangor))
+
+When you use several connective constraints together in a single expression, you should pay attention to operator precedence, or the way Jess groups the constraints together as it evaluates the expression. The ~ connective constraint has the highest precedence, followed by & and |, in that order. ~ always applies to the single constraint immediately following it, so the following (redundant) pattern matches all clients that are not from Bangor and are from Portland:
+
+(client (city ~Bangor&Portland))
+
+This pattern does not mean ¡°all clients that are from neither Bangor nor Portland,¡± which would be written
+
+(client (city ~Bangor&~Portland))
+
+There are no grouping symbols that you can use with constraints¡ªyou can¡¯t use parentheses to change their precedence. If you can¡¯t express what you want using connective constraints, you can do it instead using predicate constraints, as described in the next section.
+
+7.2.4. Constraining matches with predicate functions
+
+Literal constraints, variables, and connectives suffice for many situations, but there are some things they can¡¯t express. Perhaps you want to match any shopping-cart that contains an odd number of items, or a client that lives in a city whose name contains more than 10 letters. Jess lets you specify these constraints, and virtually any other constraint you can imagine, using predicate functions. For our purposes, a predicate function is just a Boolean function¡ªa function that returns TRUE or FALSE. You can use any predicate function as a constraint by preceding it with a colon (:). If you want to use the value of a slot as an argument to the function (and you almost always do), you should bind that value to a variable first, and then connect that binding to the function using the & connective:
+
+Jess> (defrule small-order
+    (shopping-cart (customer-id ?id)
+                   (contents $?c&:(< (length$ $?c) 5)))
+    (checking-out-now ?id)
+    =>
+    (printout t "Wouldn't you like to buy more?" crlf))
+TRUE
+
+The length$ function returns the length of a list. This rule delivers a special message to any customers who go to the checkout with fewer than five items in their cart.
+
+You can use the and, or, and not predicate functions to express complex logical conditions. Although they are more verbose than the simple connective constraints, they are more powerful because you can group them into arbitrary structures. For example, this rule fires if a customer is checking out with more than 50 items, but his cart contains neither milk nor butter:
+
+Jess> (defrule large-order-and-no-dairy
+    (shopping-cart (customer-id ?id)
+                   (contents $?c&
+                    :(and (> (length$ $?c) 50)
+                             (not (or (member$ milk $?c)
+                             (member$ butter $?c))))))
+    (checking-out-now ?id)
+    =>
+    (printout t "Don't you need dairy products?" crlf))
+TRUE
+
+Note that internally, Jess implements the | connective by transforming the whole pattern for that slot into predicate functions, and then using or to represent the |.
+
+When evaluating a predicate constraint, Jess interprets any return value except FALSE as if it were TRUE. The member$ function returns FALSE if the given value is not a member of the list argument; otherwise it returns the position of the value in the list. Even though member$ never returns TRUE, it works perfectly well as a predicate function, because the non-FALSE values are interpreted as TRUE.
+
+7.2.5. Return value constraints
+
+Often you¡¯ll want to constrain the contents of slot to match the return value of a function. For example, if you wanted to find a pair of grocery items such that the price of one was exactly twice the price of another, you might use a predicate constraint like this:
+
+(item (price ?x))
+(item (price ?y&:(eq ?y (* ?x 2))))
+
+(The eq function returns TRUE if the arguments are all equal, or FALSE otherwise.) Although this approach works, it¡¯s not especially pretty. It would be more convenient to write this using a return value constraint. A return value constraint includes an arbitrary function, and the slot data must match whatever the function returns. When you¡¯re writing a return value constraint, the function is preceded by an equals sign (=). You can rewrite the previous example using a return value constraint like so:
+
+(item (price ?x))
+(item (price =(* ?x 2)))
+
+The return value constraint version is simpler because you don¡¯t need the variable ?y or the call to eq.
+
+In fact, pretty-printing a rule containing a return value constraint always shows that Jess has transformed it into an equivalent predicate constraint using eq, so the two forms are equivalent. Which one to use is a matter of taste.
+
+7.2.6. Pattern bindings
+
+To use retract, modify, or duplicate on a fact matched by the LHS of a rule, you need to pass a handle to the fact to the RHS of the rule. To do this, you use a pattern-binding variable:
+
+Jess> (defrule pattern-binding
+    ?fact <- (a "retract me")
+    =>
+    (retract ?fact))
+
+A reference to the jess.Fact object that activates this rule is bound to the variable ?fact when the rule is fired.
+
+You can retrieve the name of a fact, its integer ID, and other useful data by calling the Java member functions of the jess.Fact class directly, like this:
+
+Jess> (defrule call-fact-methods
+    ?fact <- (initial-fact)
+    =>
+    (printout t "Name is " (call ?fact getName) crlf)
+    (printout t "Id is " (call ?fact getFactId) crlf))
+TRUE
+Jess> (reset)
+TRUE
+Jess> (run)
+Name is MAIN::initial-fact
+Id is 0
+1
+
+Note that because pattern bindings have to refer to specific facts, you must be careful when using them with some of the grouping conditional elements described in the following sections. You can¡¯t use them with not or test conditional elements, for example; and when using them with or and and conditional elements, you must be careful that the binding will apply to only one fact. Jess lets you write ambiguous bindings, but they may lead to errors at runtime, depending on how the patterns are matched. The next section presents some additional details on this issue.
+

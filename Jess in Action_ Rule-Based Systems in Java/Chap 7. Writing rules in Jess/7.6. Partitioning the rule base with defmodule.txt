@@ -1,0 +1,192 @@
+7.6. Partitioning the rule base with defmodule
+
+A typical rule-based system can easily include hundreds of rules, and a large one can contain many thousands. Developing such a complex system can be a difficult task, and preventing such a multitude of rules from interfering with one another can be hard too.
+
+You might hope to mitigate the problem by partitioning a rule base into manageable chunks. The defmodule construct lets you divide rules and facts into distinct groups called modules. Modules help you in two ways: First, they help you physically organize large numbers of rules into logical groups. The commands for listing constructs (rules, facts, and so on) let you specify the name of a module and can then operate on one module at a time. Second, modules provide a control mechanism: The rules in a module fire only when that module has the focus, and only one module can be in focus at a time (you¡¯ll learn about module focus in section 7.6.3).
+
+We¡¯ll discuss the following functions and constructs in this section:
+
+clear-focus-stack¡ª Empties the focus stack
+
+defmodule¡ª Defines a new module
+
+focus¡ª Sets the focus module
+
+get-current-module¡ª Returns the current module
+
+get-focus-stack¡ª Returns the focus stack¡¯s contents as a list
+
+list-focus-stack¡ª Displays the focus stack¡¯s contents
+
+pop-focus¡ª Pops a module from the focus stack
+
+7.6.1. Defining constructs in modules
+
+So far in this book, you haven¡¯t explicitly used modules. If you don¡¯t specify a module by name when defining a rule or template, it belongs by default to the current module. If you never explicitly define any modules, the current module is always the main module, which is named MAIN. All the constructs you¡¯ve seen so far have been defined in MAIN, and therefore are often preceded by MAIN:: when displayed by Jess.
+
+You can define a new module using the defmodule construct:
+
+Jess> (defmodule WORK)
+TRUE
+
+You can then place a deftemplate, defrule, or deffacts into a specific module by qualifying the name of the construct with the module name:
+
+Jess> (deftemplate WORK::job (slot salary))
+TRUE
+Jess> (list-deftemplates WORK)
+WORK::job
+For a total of 1 deftemplates.
+
+Once you have defined a module, it becomes the current module:
+
+Jess> (get-current-module)
+WORK
+Jess> (defmodule COMMUTE)
+TRUE
+Jess> (get-current-module)
+COMMUTE
+
+If you don¡¯t specify a module, all deffacts, templates, and rules you define automatically become part of the current module:
+
+Jess> (deftemplate bus (slot route-number))
+TRUE
+Jess> (defrule take-the-bus
+    ?bus <- (bus (route-number 76))
+    (have-correct-change)
+    =>
+    (get-on ?bus))
+TRUE
+Jess> (ppdefrule take-the-bus)
+"(defrule COMMUTE::take-the-bus
+    ?bus <- (COMMUTE::bus (route-number 76))
+    (COMMUTE::have-correct-change)
+    =>
+    (get-on ?bus))"
+
+Note that the implied deftemplate have-correct-change was created in the COMMUTE module, because that¡¯s where the rule was defined. You can set the current module explicitly using the set-current-module function.
+
+7.6.2. Modules, scope, and name resolution
+
+A module defines a namespace for templates and rules. This means two different modules can each contain a rule with a given name without conflicting¡ªfor example, rules named MAIN::initialize and COMMUTE::initialize could be defined simultaneously and coexist in the same program. Similarly, the templates COMPUTER::bus and COMMUTE::bus could both be defined. Obviously, then, Jess needs a way to decide which template the definition of a rule or query is referring to.
+
+When Jess is compiling a rule, query, or deffacts definition, it looks for templates in three places, in order:
+
+If a pattern explicitly names a module, only that module is searched.
+
+If the pattern does not specify a module, then the module in which the rule is defined is searched first.
+
+If the template is not found in the rule¡¯s module, the module MAIN is searched last. Note that this makes the MAIN module a sort of global namespace for templates.
+
+The example in listing 7.5 illustrates each of these possibilities. In this example, three deftemplates are defined in three different modules: MAIN::mortgage-payment, WORK::job, and HOME::hobby. Jess finds the WORK::job template because the rule is defined in the WORK module. It finds the HOME::hobby template because it is explicitly qualified with the module name. And the MAIN::mortgage-payment template is found because the MAIN module is always searched as a last resort if no module name is specified.
+
+Listing 7.5. Examples of Jess¡¯s template lookup rules
+
+Code View: Scroll / Show All
+Jess> (clear)
+TRUE
+Jess> (assert (MAIN::mortgage-payment 2000))
+<Fact-0>
+Jess> (defmodule WORK)
+TRUE
+Jess> (deftemplate job (slot salary))
+TRUE
+Jess> (defmodule HOME)
+TRUE
+Jess> (deftemplate hobby (slot name) (slot income))
+TRUE
+Jess> (defrule WORK::quit-job
+    (job (salary ?s))
+    (HOME::hobby (income ?i&:(> ?i (/ ?s 2))))
+    (mortgage-payment ?m&:(< ?m ?i))
+    =>
+    (call-boss)
+    (quit-job))
+TRUE
+Jess> (ppdefrule WORK::quit-job)
+"(defrule WORK::quit-job
+    (WORK::job (salary ?s))
+    (HOME::hobby (income ?i&:(> ?i (/ ?s 2))))
+    (MAIN::mortgage-payment ?m&:(< ?m ?i))
+    =>
+    (call-boss)
+    (quit-job))"
+
+					  
+
+Commands that accept the name of a construct as an argument (like ppdefrule, ppdeffacts, and so on) search for the named construct as described earlier. Note that many of the commands that list constructs (such as facts, list-deftemplates, and rules) accept a module name or * as an optional argument. If no argument is specified, these commands operate on the current module. If a module name is given, they operate on the named module. If * is given, they operate on all modules (see appendix A for full descriptions of all Jess functions and the arguments they accept).
+
+7.6.3. Module focus and execution control
+
+You¡¯ve learned how modules provide a kind of namespace facility, allowing you to partition a rule base into manageable chunks. You can also use modules to control execution. In general, although any Jess rule can be activated at any time, only rules in the focus module will fire. Note that the focus module is independent from the current module discussed earlier.
+
+Initially, the module MAIN has the focus, so only rules in the MAIN module can fire:
+
+Jess> (defmodule DRIVING)
+TRUE
+Jess> (defrule get-in-car
+    =>
+    (printout t "Ready to go!" crlf))
+TRUE
+Jess> (reset)
+TRUE
+Jess> (run)
+0
+
+In this example, the rule doesn¡¯t fire because the DRIVING module doesn¡¯t have the focus. You can move the focus to another module using the focus function (which returns the name of the previous focus module):
+
+Jess> (focus DRIVING)
+MAIN
+Jess> (run)
+Ready to go!
+1
+
+Note that you can call focus from the RHS of a rule to change the focus while the engine is running. The focus can move many times during a single run of a program.
+
+Jess maintains a focus stack containing an arbitrary number of modules. The focus command pushes the new focus module onto the top of this stack; the focus module is, by definition, the module on top of the stack. When there are no more activated rules in the focus module, it is popped from the stack, and the next module underneath becomes the focus module. The module MAIN is always at least on the bottom of the stack; it can also be explicitly pushed onto the focus stack.
+
+You can manipulate the focus stack directly with the functions pop-focus, clear-focus-stack, list-focus-stack, and get-focus-stack. pop-focus removes the focus module from the focus stack, so that the next module on the stack becomes active. clear-focus-stack removes all the modules from the focus stack. The other functions let you examine the contents of the focus stack.
+
+Rule bases are commonly divided into modules along functional lines. For example, you might put all your input-gathering rules into one module, your data-processing rules into another, and your reporting rules into a third. Then, changing the focus from input, to processing, to output represents a natural progression through well-defined phases of your application¡¯s execution.
+
+The auto-focus declaration
+
+When a rule that declares the auto-focus property is activated, its module automatically gets the focus, as illustrated in listing 7.6. In this example, the rule crash fires even though its module PROBLEMS didn¡¯t have the focus and the agenda of the previous focus module DRIVING was not empty. Modules with auto-focus rules make great background tasks in conjunction with using return from a rule, as described next.
+
+Listing 7.6. An example of using auto-focus
+
+Code View: Scroll / Show All
+Jess> (defmodule PROBLEMS)
+TRUE
+Jess> (defrule crash
+    (declare (auto-focus TRUE))
+    (DRIVING::me ?location)
+    (DRIVING::other-car ?location)
+    =>
+    (printout t "Crash!" crlf)
+    (halt))
+TRUE
+Jess> (defrule DRIVING::travel
+    ?me <- (me ?location)
+    =>
+    (printout t ".")
+    (retract ?me)
+    (assert (me (+ ?location 1))))
+TRUE
+Jess> (assert (me 1))
+<Fact-1>
+Jess> (assert (other-car 4))
+<Fact-2>
+Jess> (focus DRIVING)
+MAIN
+Jess> (run)
+...Crash!
+4
+
+					  
+
+Returning from a rule¡¯s RHS
+
+If the function return is called from a rule¡¯s RHS, the execution of that rule¡¯s RHS is immediately terminated. Furthermore, the current focus module is popped from the focus stack. This suggests that you can call a module like a subroutine. You can call a module from a rule¡¯s RHS using focus, and the module can return from the call using return. Alternatively, a module can act as a kind of background process or periodic task by using auto-focus rules to wake itself and return to put itself back to sleep.
+
+Both forward- and backward-chaining rules can only react to the contents of working memory. They are passive in the sense that they wait for facts to appear before they can take action, and then nothing happens until they get to the top of the agenda. Sometimes you may want to take a more active stance and deliberately search through working memory to find particular information. Jess lets you do this easily, as you¡¯ll see in the next sectio
+

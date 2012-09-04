@@ -1,0 +1,8 @@
+6.6. Summary
+
+Jess¡¯s working memory can contain ordered facts, unordered facts, and shadow facts; each type of fact is useful in certain situations. Unordered facts are general-purpose facts, whereas ordered facts are useful for small bits of information. Shadow facts are used to connect a JavaBean in your Java application to Jess¡¯s working memory, so that rules can react to things that happen outside of your Jess program. You can write rules that operate on any or all of these working memory elements; in the next chapter, you¡¯ll see how.
+
+All facts are created from a deftemplate, which defines the slots a fact can have. Sometimes you define this deftemplate yourself, and sometimes Jess creates it for you. The deftemplates in a rule-based system are like the schema of a database; they define a way of looking at the data relevant to the system.
+
+Now that you know the Jess language and understand something about Jess¡¯s working memory, you¡¯re ready to learn how to write rules. In the next chapter, you¡¯ll learn about writing rules and about pattern matching¡ªhow to make rules react to the contents of working memory.
+

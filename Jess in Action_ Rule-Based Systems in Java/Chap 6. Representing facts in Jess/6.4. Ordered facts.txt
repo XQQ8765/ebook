@@ -1,0 +1,48 @@
+6.4. Ordered facts
+
+Although unordered slots are a great way to organize data when you need many slots per fact, if you only need one slot, they can seem redundant. For example, here¡¯s a deftemplate to hold a fact representing a single number:
+
+Jess> (deftemplate number (slot value))
+TRUE
+Jess> (assert (number (value 123)))
+<Fact-0>
+
+The name value doesn¡¯t add any information¡ªit just clutters things up. For simple cases like this, it would be nice to be able to omit the notion of a slot name altogether¡ªand Jess allows this:
+
+Jess> (clear)
+TRUE
+Jess> (assert (number 123))
+<Fact-0>
+
+You can assert facts that look like simple, flat lists, without explicitly defining a deftemplate for them, as long as no deftemplate using that same head has already been defined. All the facts you used in the first section of this chapter were ordered facts. We¡¯ll use the following functions to take a closer look at ordered facts and their templates:
+
+ppdeftemplate¡ª Displays a pretty-printed deftemplate
+
+show-deftemplates¡ª Lists all the deftemplates currently defined
+
+When you assert the first ordered fact with a given head, Jess automatically generates an implied deftemplate for it. The ppdeftemplate function lets you see the definition of any deftemplate. Let¡¯s use it to examine the implied deftemplate for number:
+
+Jess> (ppdeftemplate number)
+"(deftemplate MAIN::number extends MAIN::__fact \"(Implied)\"
+    (multislot __data))"
+
+ppdeftemplate (the pp stands for pretty print) returns its result as a string, so the definition is enclosed in double quotes and the quotes around the documentation string are escaped with backslashes. The implied deftemplate number contains a single slot named __data. Jess treats facts created from these deftemplates specially. The name of the __data slot is normally hidden when the facts are displayed. This is really just syntactic shorthand, though; ordered facts are unordered facts with a single multislot. Jess understands that the name __data doesn¡¯t add any information and so should normally be hidden.
+
+In practice, the most common kind of ordered facts is the head-only kind like (initial-fact). They are often used for transient information that will soon be retracted and for one-of-a-kind statements like (shutdown-now) and (found-solution). If your fact will hold more than one piece of slot data, unordered facts offer a lot more flexibility and lend structure to the information they hold, so they are generally preferable in most situations. In addition, unordered facts lead to fewer coding errors. The explicit slot labels serve as a sanity check during programming and help prevent mistakes. Finally, unordered facts give better pattern-matching performance, as you¡¯ll learn in chapter 7.
+
+The show-deftemplates function lists any implied deftemplates along with any explicitly created ones. You can also use show-deftemplates to see Jess¡¯s built-in deftemplates:
+
+Jess> (show-deftemplates)
+(deftemplate MAIN::__clear extends MAIN::__fact "(Implied)")
+(deftemplate MAIN::__fact "Parent template")
+(deftemplate MAIN::__not_or_test_CE
+    extends MAIN::__fact "(Implied)")
+(deftemplate MAIN::initial-fact extends MAIN::__fact "(Implied)")
+(deftemplate MAIN::number extends MAIN::__fact "(Implied)"
+    (multislot __data))
+FALSE
+
+In this example you can see the three special templates Jess uses internally: __clear, __fact, and __not_or_test_CE, as well as the initial-fact template and your number template.
+
+The third and final category of facts is perhaps the most interesting, because these facts connect Jess¡¯s working memory to the real world outside.
+

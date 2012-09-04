@@ -1,0 +1,100 @@
+7.4. Backward-chaining rules
+
+The rules you¡¯ve seen so far have been forward-chaining rules; as I¡¯ve said, that means the rules are treated as if ... then statements, with the engine simply executing the RHSs of activated rules. Some rule-based systems, notably Prolog and its derivatives, support backward chaining. In a backward-chaining system, rules are still if ... then statements, but the engine actively tries to make rules fire. If the if clause of one rule is only partially matched and the engine can determine that firing some other rule would cause it to be fully matched, the engine tries to fire that second rule. This behavior is often called goal seeking.
+
+As an example, think about the ways Sherlock Holmes might solve a mystery. He has a collection of evidence (a handkerchief, a fingerprint, a dead body) and can proceed in two different ways. First, he can draw conclusions from the available evidence, adding his conclusions to the available information, and continue until he¡¯s found a link between the evidence and the crime. This is a forward-chaining method. Alternatively, he can start from the circumstances of the crime, form a hypothesis about how it happened, and then search for clues that support this hypothesis. This latter technique is an example of backward chaining. Holmes generally used both techniques in combination to solve a mystery; as a Jess programmer, you¡¯ll do the same.
+
+Jess supports both forward and backward chaining, but Jess¡¯s version of backward chaining is not transparent to the programmer. You have to declare which kinds of facts can serve as backward-chaining triggers, and only specific rules you define can be used in backward chaining. In truth, Jess¡¯s reasoning engine is strictly a forward-chaining engine, and so backward chaining is effectively simulated in terms of forward-chaining rules. Still, the simulation is quite effective, and Jess¡¯s backward-chaining mechanism has many useful applications. You will apply it in several of the systems you develop later in this book.
+
+Backward chaining is often used as a way to pull required data into Jess¡¯s working memory from a database on demand. In the example given here, backward chaining is used to avoid computing the factorial of a number more than once (the factorial of an integer is the product of every integer between 1 and the number itself, inclusive; for large numbers this value can be expensive to compute). You use the deftemplate factorial to store computed factorials. The fact (factorial 5 125) signifies that the factorial of 5 is 125. Figure 7.1 shows how this example works: The rule print-factorial-10 won¡¯t fire unless a fact giving the factorial of 10 is present. Because factorial has been registered for backward chaining with the do-backward-chaining function, Jess automatically asserts the fact (need-factorial 10 nil). This fact matches the need-factorial pattern in the do-factorial rule, which fires and asserts the fact (factorial 10 3628800). Finally, this fact activates the print-factorial-10 rule, which fires and prints its output.
+
+Figure 7.1. A pictorial representation of the factorial example from the text
+
+
+
+
+To use backward chaining in Jess, you must first declare that specific deftemplates are backward-chaining reactive using the do-backward-chaining function:
+
+Jess> (do-backward-chaining factorial)
+TRUE
+
+If the template is unordered¡ªif it is explicitly defined with a deftemplate or defclass construct¡ªthen you must define it before calling do-backward-chaining. You can use do-backward-chaining on ordered deftemplates before they are created, however.
+
+Once you have declared your reactive deftemplates, you can define rules with patterns that match facts of the corresponding types. Note that you must call do-backward-chaining before defining any rules that use the template.
+
+This rule prints the factorial of 10, assuming a fact recording this information exists:
+
+Jess> (defrule print-factorial-10
+    (factorial 10 ?r1)
+    =>
+    (printout t "The factorial of 10 is " ?r1 crlf))
+TRUE
+
+Patterns that match backward-chaining reactive deftemplates are called goals. When the rule compiler sees a goal pattern, it rewrites the rule and inserts some special code into the internal representation of the rule¡¯s LHS. If, when the rule engine is reset, there are no matches for this pattern, the code asserts a fact into working memory that looks like this:
+
+(need-factorial 10 nil)
+
+The head of the fact is constructed by taking the head of the reactive pattern and adding the prefix need-. These need-x facts are called goal-seeking or trigger facts. This particular trigger fact means that another fact (factorial 10 ?) is needed to satisfy some rule. Jess got the number 10 directly from the pattern in print-factorial-10; nil is a placeholder that means ¡°any value.¡±
+
+Now, let¡¯s write a rule that calculates the factorial of a number when it is needed. The rule should directly match the need-factorial trigger facts:
+
+Jess> (defrule do-factorial
+    (need-factorial ?x ?)
+    =>
+    ;; compute the factorial of ?x in ?r
+    (bind ?r 1)
+    (bind ?n ?x)
+    (while (> ?n 1)
+        (bind ?r (* ?r ?n))
+        (bind ?n (- ?n 1)))
+    (assert (factorial ?x ?r)))
+TRUE
+
+The rule compiler rewrites rules like this too: It adds a negated match for the (factorial ?x ?) pattern to the rule¡¯s LHS, so the rule won¡¯t fire if both the goal fact and the corresponding goal-seeking fact are both present.
+
+The end result is that you can write rules that match on factorial facts, and if they are close to firing except they need a factorial fact to do so, any need-factorial rules may be activated. If these rules fire, then the needed facts appear, and the factorial-matching rules fire. This, then, is backward chaining! Note that any needed factorial facts are created only once, so the expensive computation need not be repeated. Often, avoiding redundant computation is one of the main benefits of backward chaining.
+
+Jess chains backward through any number of reactive patterns. In the example in listing 7.4, imagine you have a database that allows you to look up the price of an item given its item number, or the item number given its name. To find the price given the name, you need to do two separate queries. When the price-check fact is first asserted, none of the rules can be activated. Jess sees that price-check could be activated if there were an appropriate price fact, so it generates the trigger (need-price waffles nil). This matches part of the LHS of rule find-price, but this rule cannot be activated because there is no item-number fact. Jess therefore creates a (need-item-number waffles nil) request. This matches the LHS of the rule find-item-number, which fires and asserts something like (item-number waffles 123). This fact activates find-price, which fires and asserts (price waffles "$1.99"), thereby activating rule price-check, which then fires. The price is reported. Each of the rules has fired once. The definitions of the functions fetch-price-from-database and fetch-number-from-database are not shown; they are presumably written in Java using JDBC.
+
+Listing 7.4. Multilevel backward chaining
+
+Code View: Scroll / Show All
+Jess> (clear)
+TRUE
+Jess> (do-backward-chaining item-number)
+TRUE
+Jess> (do-backward-chaining price)
+TRUE
+Jess> (defrule price-check
+    (do-price-check ?name)
+    (price ?name ?price)
+    =>
+    (printout t "Price of " ?name " is " ?price crlf))
+TRUE
+Jess> (defrule find-price
+    (need-price ?name ?)
+    (item-number ?name ?number)
+    =>
+    (bind ?price (fetch-price-from-database ?number))
+    (assert (price ?name ?price)))
+TRUE
+Jess> (defrule find-item-number
+    (need-item-number ?name ?)
+    =>
+    (bind ?number (fetch-number-from-database ?name))
+    (assert (item-number ?name ?number)))
+TRUE
+Jess> (reset)
+TRUE
+Jess> (assert (do-price-check waffles))
+<Fact-1>
+Jess> (run)
+Price of waffles is $1.99
+3
+
+					  
+
+You can wrap a special conditional element, (explicit), around a pattern to inhibit backward chaining on an otherwise reactive pattern. explicit can be used in any combination with all other conditional elements.
+
+Most rule-based systems consist of dozens if not hundreds of rules. While such a program is running, at any one time a large number of rules may be simultaneously activated. How does Jess decide which rule to fire next? Read on to find out.
+

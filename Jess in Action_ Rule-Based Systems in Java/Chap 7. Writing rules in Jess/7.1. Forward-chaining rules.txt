@@ -1,0 +1,148 @@
+7. Writing rules in Jess
+In this chapter you¡¯ll...
+
+Learn to write rules
+
+Learn the difference between forward and backward chaining
+
+Learn how to partition your rules with modules
+
+Learn to probe working memory with queries
+
+Now that you¡¯ve learned how to populate the working memory, you can develop a knowledge base to go with it. This is the whole reason you¡¯re here: The knowledge base is the collection of rules that make up a rule-based system. Rules can take actions based on the contents of working memory.
+
+There are two main classes of rules in Jess: forward-chaining and backward-chaining rules. Forward-chaining rules are somewhat like if ... then statements in a procedural language, and they¡¯re the most common and important kind of rule in Jess. Backward-chaining rules, on the other hand, don¡¯t have a clear analogy in procedural programming. They are also similar to if ... then statements, but a backward-chaining rule actively tries to satisfy the conditions of its if part.
+
+You can access working memory directly with queries. You can design queries to search working memory, to find specific facts, and to explore their relationships. Queries have a lot in common with rules¡ªif you can write one, you know how to write the other. You¡¯ll learn how to write and invoke queries in section 7.7.
+
+7.1. Forward-chaining rules
+
+A forward-chaining rule is something like an if ... then statement in a procedural language, but it is not used in a procedural way. Whereas if ... then statements are executed at a specific time and in a specific order, according to how the programmer writes them, a Jess rule¡¯s then part can be executed whenever the if part is satisfied. This makes rules less obviously deterministic than a typical procedural program, because Jess decides the order in which to fire the rules. (See section 8.3¡¯s discussion of the Rete algorithm for an explanation of why this architecture can be many orders of magnitude faster than an equivalent set of traditional if ... then statements.)
+
+This section discusses the following functions and constructs:
+
+defrule¡ª Defines a new rule
+
+ppdefrule¡ª Pretty-prints a rule
+
+run¡ª Begins firing activated rules from the agenda
+
+undefrule¡ª Deletes a rule
+
+watch rules¡ª Prints a diagnostic when a rule fires
+
+watch activations¡ª Prints a diagnostic when a rule is activated
+
+All Jess rules are defined using the defrule construct. The simplest possible rule looks like this:
+
+Jess> (defrule null-rule
+  "A rule that does nothing"
+  =>
+  )
+TRUE
+
+The symbol null-rule is the name of the rule. A hyphen (-) is often used to separate words in a symbol. Rules are uniquely identified by their name. If a rule named my-rule exists, and you define another rule named my-rule, the first version is deleted. There is also an undefrule function that can delete a rule by name.
+
+The name is followed by an optional documentation string that describes the purpose of the rule. The symbol => (an equals sign followed by a greater-than sign) separates the rule¡¯s left-hand side (LHS, or if part) from its right-hand side (RHS, or then part). The symbol => can thus be read as then. The previous rule has no conditions on its LHS and no actions on its RHS. It will therefore always execute, and it will accomplish nothing.
+
+The following example uses two new arguments to the watch function, activations and rules (you used (watch facts) in chapter 6):
+
+Jess> (watch facts)
+TRUE
+Jess> (watch activations)
+TRUE
+Jess> (watch rules)
+TRUE
+Jess> (reset)
+==> f-0 (MAIN::initial-fact)
+==> Activation: MAIN::null-rule : f-0
+Jess> (run)
+FIRE 1 MAIN::null-rule f-0
+1
+
+The function call (watch activations) tells Jess to print a message whenever an activation record is placed on, or removed from, the agenda. An activation record associates a set of facts with a rule. It means the given set of facts matches the LHS of the given rule, and so the rule should be executed. In this case, because null-rule doesn¡¯t specify a LHS, Jess has automatically made it conditional on the presence of the initial fact. You¡¯ll recall from chapter 6 that the reset function places a fact (initial-fact) in working memory. This is one important role for (initial-fact): to serve as a trigger for rules with an empty LHS. You can see the change using the ppdefrule function, which pretty-prints a rule by re-creating its text from Jess¡¯s internal representation:
+
+Jess> (ppdefrule null-rule)
+"(defrule MAIN::null-rule
+\"A rule that does nothing\"
+  (MAIN::initial-fact)
+  =>)"
+
+The return value of ppdefrule is a string, so when it is displayed to the console, the embedded quotation marks are escaped with a backslash character. It is important to note that all the work of pattern matching¡ªcomparing the LHSs of rules to a given fact¡ªis done while that fact is being asserted. Because (initial-fact) is asserted by the reset function, null-rule is activated whenever the reset function is called, and that¡¯s what happens here.
+
+The function call (watch rules) tells Jess to print a message whenever a rule is fired. A rule is said to be fired when the actions on its RHS are executed. The run function tells Jess to start firing rules; no rules will fire except during a call to run. Jess¡¯s rule engine then fires the rules on the agenda, one at a time, until the agenda is empty. run returns the number of rules fired¡ªso 1 is printed in the previous example.
+
+Now let¡¯s look at a more complex rule:
+
+Jess> (defrule change-baby-if-wet
+    "If baby is wet, change its diaper."
+    ?wet <- (baby-is-wet)
+    =>
+    (change-baby)
+    (retract ?wet))
+TRUE
+
+This rule again has two parts, separated by =>. The LHS consists of the pattern(baby-is-wet). The RHS consists of two function calls, to change-baby and retract. Note that the definition of change-baby isn¡¯t shown here. Although you might at first find it hard to tell due to the Lisp-like syntax, the LHS of a rule consists of patterns that are used to match facts in the working memory, while the RHS contains function calls.
+
+Let me say that again: The left-hand side of a rule (the if part) consists of patterns that match facts; they are not function calls. The right-hand side of a rule (the then clause) is made up of function calls. The following rule does not work:
+
+Jess> (defrule wrong-rule
+(eq 1 1)
+=>
+(printout t "Just as I thought, 1 == 1!" crlf))
+
+Many novice Jess users write rules like this, intending (eq 1 1) to be interpreted as a function call. This rule will not fire just because the function call (eq 1 1) would evaluate to TRUE. Instead, Jess tries to find a fact in the working memory that looks like (eq 1 1). Unless you have previously asserted such a fact, this rule will not be activated and will not fire. If you want to fire a rule based on the evaluation of a function, you can use the test conditional element, described in section 7.3.4.
+
+The example rule, then, will be activated when the fact (baby-is-wet) appears in the working memory. When the rule fires, the function (change-baby) is called, and the (baby-is-wet) fact is retracted. This rule forms part of a complete program in listing 7.1.
+
+Listing 7.1. A simple but complete Jess program
+
+Code View: Scroll / Show All
+Jess> (clear)
+TRUE
+Jess> (watch all)
+TRUE
+Jess> (reset)
+==> f-0 (MAIN::initial-fact)
+TRUE
+Jess> (deffunction change-baby ()
+    (printout t "Baby is now dry" crlf))
+TRUE
+Jess> (defrule change-baby-if-wet
+    "If baby is wet, change its diaper."
+    ?wet <- (baby-is-wet)
+    =>
+    (change-baby)
+    (retract ?wet))
+change-baby-if-wet: +1+1+1+t
+TRUE
+Jess> (assert (baby-is-wet))
+==> f-1 (MAIN::baby-is-wet)
+==> Activation: MAIN::change-baby-if-wet : f-1
+<Fact-1>
+Jess> (run)
+FIRE 1 MAIN::change-baby-if-wet f-1
+Baby is now dry
+<== f-1 (MAIN::baby-is-wet)
+1
+
+					  
+
+The watch all command in listing 7.1 tells Jess to print diagnostics for everything important that happens while this program runs. Many of the diagnostics in the listing are interesting. You first see how issuing the reset command again asserts the fact (initial-fact). Although this rule won¡¯t need the initial fact, in most programs the initial fact will be needed by many rules, so you should always issue a reset command at some point before running a program.
+
+When the rule is entered at the Jess prompt, you see the line +1+1+1+t. This result tells you something about Jess interprets the rule internally (see chapter 8 for more information). When the fact (baby-is-wet) is asserted, you see the diagnostic Activation: MAIN::change-baby-if-wet : f-1. This means Jess has noticed that all the LHS conditions of the rule change-baby-if-wet are met by the given list of facts¡ªhere the single fact f-1¡ªand an activation record has been created. Note how the activation record associates the specific fact with the rule; this action will be important later.
+
+Again, the rule doesn¡¯t fire until you issue the run command. As soon as you enter (run), the activated rule fires. Because you entered the watch all command, Jess prints the diagnostic FIRE 1 MAIN::change-baby-if-wet f-1 to notify you of this action. The f-1 is a list of the facts that matched this rule¡¯s LHS.
+
+You then see the output of the rule¡¯s RHS actions. First the function change-baby is called. Second, the fact f-1 is retracted. The variable ?wet is called a pattern binding; the <- operator stores a reference to the fact (baby-is-wet) in this variable, and the retract function can then access this variable on the rule¡¯s RHS. Note, then, that rules cannot only react to the contents of working memory¡ªthey can change it. Thus one rule can put information into working memory, which in turn can cause another rule to fire.
+
+The final number 1 is the number of rules that fired (the return value of the run command). The run function returns when there are no more activated rules to fire.
+
+What would happen if you entered (run) again? Nothing. Jess activates a rule only once for a given working memory state. Once the rule has fired, it will not fire again for the same list of facts. You won¡¯t change the baby again until a new baby-is-wet fact is asserted.
+
+7.1.1. Patterns and shadow facts
+
+Jess¡¯s working memory can hold JavaBeans as well as facts. Actually, you¡¯ll recall that this isn¡¯t quite correct: The working memory contains only facts; but some of those facts, called shadow facts, are stand-ins for JavaBeans. A shadow fact has a slot for every property of a JavaBean, and for dynamic shadow facts¡ªdefined using the definstance dynamic function¡ªthose slots track the contents of the Java-Bean¡¯s properties in real time.
+
+Therefore, everything about patterns in this chapter applies equally to patterns that match facts and to patterns that match JavaBeans. There¡¯s no way to tell by looking at a pattern whether it¡¯s intended to match deftemplate facts or shadow facts.
+

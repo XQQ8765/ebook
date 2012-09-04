@@ -1,0 +1,156 @@
+6. Representing facts in Jess
+In this chapter you¡¯ll...
+
+Explore Jess¡¯s working memory
+
+Learn about the different kinds of facts, and when to use them
+
+Find out how to store Java objects in working memory
+
+Now that we¡¯ve looked at the basic syntax of the Jess language, it¡¯s time to begin our study of Jess¡¯s rule-based programming features. In this chapter, we¡¯ll look at how to create and manage the data that rules can act on¡ªthe working memory we first discussed in chapter 1. The working memory, sometimes called the fact base, contains all the pieces of information Jess is working with. The working memory can hold both the premises and the conclusions of your rules.
+
+Jess stores the contents of working memory using a set of customized indices that make looking up a particular piece of information very fast¡ªmuch as a relational database does. Even though Jess uses a data-centric index internally, your view of working memory will look like a simple list. Each item in working memory appears on this list in the order in which it was added. We¡¯ll begin our study of working memory by looking at the individual items it contains¡ªthe working memory elements, or facts.
+
+6.1. Jess¡¯s working memory
+
+Jess maintains a collection of information nuggets called facts. This collection of facts is known as the working memory. All the pieces of information your rules work with are represented as facts in the working memory. For example, if your program is a smart environmental control system for an office building, the facts in the working memory may be temperature and humidity readings from around the building, and sensor readings and switch settings from the building¡¯s air-conditioning systems (see figure 6.1). The contents of Jess¡¯s working memory are held in your computer¡¯s RAM.
+
+Figure 6.1. Facts in the working memory are Jess¡¯s representation of information about the outside world.
+
+
+
+
+Facts come in different types. However, like most other constructs in Jess, facts are stored as lists. Each of the following is a valid fact:
+
+(initial-fact)
+(little red Corvette)
+(groceries milk eggs bread)
+
+As it happens, these are all examples of ordered facts, which will be discussed in section 6.4.
+
+It is important to recognize that we¡¯re using the word fact in a specific, technical sense, and the meaning differs slightly from the colloquial English usage. In rule-based systems terminology, fact is another word for working memory element. A fact is therefore the smallest unit of information that can be separately added to or removed from the working memory of a rule-based system. Jess facts aren¡¯t generally atomic; rather, they have some structure to them, as you¡¯ll see in the following sections.
+
+6.1.1. Manipulating the working memory
+
+Intuitively, a collection is a group of items you can add to or remove from. Depending on your tastes as a collector, you can acquire new baseball cards, or discard a chipped ceramic unicorn. Working memory is a collection of facts, and if you were to write a rule-based program about trading cards, each card in your collection might be represented by a single fact.
+
+Jess offers a set of functions to let a program perform the basic collection operations (add, remove, modify, duplicate) on the working memory. You can also use these functions interactively while you¡¯re programming, along with others that let you examine, initialize, and clear the working memory. This section describes the following functions and constructs; as a Jess programmer, you¡¯ll use all of these frequently:
+
+assert¡ª Adds facts to working memory
+
+clear¡ª Clears all of Jess
+
+deffacts¡ª Defines the initial contents of working memory
+
+facts¡ª Displays the contents of working memory
+
+reset¡ª Initializes the working memory
+
+retract¡ª Removes facts from working memory
+
+watch¡ª Tells Jess to print diagnostics when interesting things happen
+
+Jess includes several functions that let you peer into working memory and see what¡¯s happening. We¡¯ll cover these first so you¡¯ll be able to follow the action in later sections.
+
+The watch function
+
+Many Jess programs are developed interactively by typing at the Jess> prompt and watching the results. It would therefore be useful to be able to see when Jess¡¯s working memory has changed. You can use the watch function to tell Jess to print messages when various interesting things happen. Depending on the arguments you pass to watch, you can get Jess to report on several different kinds of events, including changes to the working memory. If you type the expression (watch facts), then you¡¯ll see a message whenever any facts are added or removed from then on. The reset function initializes the working memory and creates the fact (MAIN::initial-fact), and you can see the fact being added to working memory if (watch facts) is in effect:
+
+Jess> (watch facts)
+TRUE
+Jess> (reset)
+==> f-0 (MAIN::initial-fact)
+TRUE
+Jess> (unwatch facts)
+TRUE
+
+The ==> symbol given by Jess in a response means the fact is being added to working memory, whereas a <== symbol is printed to show a fact being removed.
+
+In the rest of this chapter, we¡¯ll show Jess¡¯s output as if the watch function has not been issued, but you can use it whenever you want to keep an eye on what¡¯s happening with working memory. As you may have inferred from the example, the unwatch function reverses the effect of watch.
+
+The facts function
+
+Although watch can tell you when new facts appear and old ones are removed, it can¡¯t give you the big picture. You can get that using facts. You can see a list of all the facts in the working memory using the facts function. If you continue the previous example by typing (facts) at the prompt, you¡¯ll see that the fact (MAIN::initial-fact) is the only one in working memory:
+
+Jess> (facts)
+f-0 (MAIN::initial-fact)
+For a total of 1 facts.
+
+The (initial-fact) turns out to be useful, but it¡¯s not especially interesting. Let¡¯s add some more facts to working memory so you have something worth looking at.
+
+Creating facts with assert
+
+Rules can only act on information that is represented by facts in Jess¡¯s working memory. In any nontrivial program, then, you need to create new facts of your own. New facts are added to the working memory using the assert function:
+
+Jess> (reset)
+TRUE
+Jess> (assert (groceries milk eggs bread))
+<Fact-1>
+Jess> (facts)
+f-0 (MAIN::initial-fact)
+f-1 (MAIN::groceries milk eggs bread)
+For a total of 2 facts.
+
+The grocery list has been added to the working memory and assigned an index 1, called the fact-id. Every fact in the working memory has a fact-id, assigned in order starting with 0, so that a fact with a larger fact-id was always added to working memory at a later time than a fact with a smaller fact-id. Here the fact-id 0 was assigned to (MAIN::initial-fact). The fact-id serves as a convenient way to refer to a fact when you want to modify it or remove it from working memory. Jess also uses fact-ids when it decides the order in which rules will be fired.
+
+The qualifier MAIN:: that was prepended to the first field in the list (called the fact¡¯s head; see chapter 4) is the name of the current module. A module is a named subset of the rules, facts, and other constructs you¡¯ve entered into Jess. Modules are often used to divide rules and facts into functional groups, and we¡¯ll study them in detail in chapter 7. For now, it¡¯s enough to know that MAIN is the default module name and all the facts you define belong to it.
+
+The assert function takes any number of facts as arguments and returns the fact-id of the last fact asserted, or FALSE if the last fact couldn¡¯t be asserted. Typically, this means the argument was a duplicate of a fact that was already in working memory. (Jess¡¯s working memory contains only unique facts.)
+
+Real collections both grow and shrink: You can sell baseball cards as well as buy them. Facts, likewise, come and go. When you¡¯re through with your grocery shopping, you¡¯ll want to erase the list from working memory.
+
+Removing facts with retract
+
+If a fact represents a true statement about the world, then when the world changes, that fact needs to be removed from the working memory. You can remove individual facts from the working memory using the retract function. Arguments for retract can be actual facts¡ªthat is, a jess.Value object of type RU.FACT, which holds a reference to a jess.Fact Java object¡ªor they can be numeric fact-ids. Let¡¯s retract the two facts you currently have in working memory, one at a time:
+
+
+
+This example retracts the grocery-list fact using its fact-id and the initial-fact fact by using the Fact object directly (you first have to look up the Fact object using the fact-id function). Both approaches work, but if you already have a reference to a Fact object, then using that reference is faster. Using fact-ids is more convenient when you¡¯re working interactively at the Jess> prompt.
+
+You retracted two facts, one at a time. It would have been possible to get the same effect using a single call to the clear function, as you¡¯ll see in the next section.
+
+Clearing and initializing working memory
+
+As you work interactively in Jess, the working memory tends to become full of bits and pieces of information that are no longer relevant. When this happens, you might want to clean things up to make it easier to see what you¡¯re doing. Similarly, a running program might want to periodically start from a known state¡ªfor instance, when a particular customer signs on to your e-commerce site, the program should have on hand only the information relevant to that customer.
+
+You can remove all the facts from working memory using the clear function. However, clear goes beyond just erasing working memory; it also erases all variables, rules, and deffunctions from Jess. Because clear essentially deletes the entire active program, it¡¯s not used very often¡ªgenerally only if you¡¯re in an interactive session and want to start from a clean slate.
+
+To restore the initial state of an application without erasing it completely, you can use reset. The reset function puts working memory into a known state. By default, working memory is empty except for the special fact (MAIN::initial-fact), as you¡¯ve seen in the earlier examples. This initial fact is special because Jess uses it internally. Many rules implicitly expect it to be there and won¡¯t work correctly without it. Before you use the working memory, it¡¯s important to use the reset function at least once, while your program is starting up or at the beginning of an interactive session. You (or your program) can issue reset again whenever you want to reinitialize the working memory.
+
+You can specify the initial contents of working memory, in addition to (MAIN::initial-fact), using the deffacts construct.
+
+The deffacts construct
+
+Typing separate assert functions for each of many facts is rather tedious. It¡¯s also common to initialize the Jess engine using the reset function, which clears the working memory, and then immediately want to put the working memory into a known state containing a number of initial facts. For example, in an e-commerce program, the initial facts might include the product catalog.
+
+To make this process easier, Jess includes the deffacts construct. A deffacts construct is a simply a named list of facts. You can define any number of deffacts constructs. The facts in all existing deffacts are asserted into the working memory whenever the reset function is issued. Listing 6.1 demonstrates the operation of deffacts.
+
+Listing 6.1. A deffacts construct in action
+
+Jess> (clear)
+TRUE
+Jess> (deffacts catalog "Product catalog"
+    (product 354 sticky-notes "$1.99")
+    (product 355 paper-clips "$0.99")
+    (product 356 blue-pens "$2.99")
+    (product 357 index-cards "$0.99")
+    (product 358 stapler "$5.99"))
+TRUE
+Jess (facts)
+For a total of 0 facts.
+Jess> (reset)
+TRUE
+Jess> (facts)
+f-0 (MAIN::initial-fact)
+f-1 (MAIN::product 354 sticky-notes "$1.99")
+f-2 (MAIN::product 355 paper-clips "$0.99")
+f-3 (MAIN::product 356 blue-pens "$2.99")
+f-4 (MAIN::product 357 index-cards "$0.99")
+f-5 (MAIN::product 358 stapler "$5.99")
+
+For a total of 6 facts.
+
+Whenever reset is called, the facts in the deffacts are asserted. This is a convenient way to set up the product catalog in working memory for the first time and to restore it after working memory has been cleared.
+
+Using the functions we¡¯ve discussed in this section, you add and remove facts from Jess¡¯s working memory and see the effects of your changes. Now let¡¯s examine the individual facts themselves in more detail.
+

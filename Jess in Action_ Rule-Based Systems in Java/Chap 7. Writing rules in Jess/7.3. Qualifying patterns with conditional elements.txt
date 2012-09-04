@@ -1,0 +1,221 @@
+7.3. Qualifying patterns with conditional elements
+
+We¡¯ve just been looking at increasingly sophisticated ways to match the data within individual facts. Now we¡¯ll look at ways to express more complex relationships between facts, and to qualify the matches for entire facts. Conditional elements(CEs) are pattern modifiers. They can group patterns into logical structures, and they can say something about the meaning of a match. There¡¯s even one conditional element, test, that doesn¡¯t involve matching a fact at all.
+
+Before we begin, let me caution you that many of these conditional elements have the same names as predicate functions we looked at in the last section. There¡¯s an and conditional element, and there¡¯s an and predicate function. Although they may look similar, they¡¯re entirely unrelated. The and predicate function operates on Boolean expressions, but the and conditional element operates on patterns. You can always tell which you¡¯re dealing with by the context¡ªpredicate functions can appear only as constraints on slot data. The following are all of Jess¡¯s conditional elements:
+
+and¡ª Matches multiple facts
+
+or¡ª Matches alternative facts
+
+not¡ª Matches if no facts match
+
+exists¡ª Matches if at least one fact matches
+
+test¡ª Matches if a function call doesn¡¯t evaluate to FALSE
+
+logical¡ª Matching facts offer logical support to new facts
+
+7.3.1. The and conditional element
+
+The LHS of every rule consists of a list of zero or more patterns. Each of those patterns must match for the whole LHS to match. You might recognize this as the intersection operation from formal logic. You can express the intersection of a group of patterns in Jess using the and conditional element. The entire LHS of every rule is enclosed in an implicit and.
+
+Any number of patterns can be enclosed in a list with and as the head. The resulting pattern is matched if and only if all of the enclosed patterns are matched. The following rule matches only if (flaps-up) and (engine-on) both match:
+
+Jess> (defrule ready-to-fly
+    (and (flaps-up)
+         (engine-on))
+    =>)
+
+Of course, this rule would behave precisely the same way if the and CE was omitted, so by itself, and isn¡¯t very interesting. Combined with or and not conditional elements, though, you can use the and CE to construct complex logical conditions.
+
+7.3.2. The or conditional element
+
+Any number of patterns can be enclosed in a list with or as the head. The or CE matches if one or more of the patterns inside it matches. If more than one of the patterns inside the or matches, the entire or is matched more than once:
+
+Jess> (clear)
+TRUE
+Jess> (deftemplate used-car (slot price) (slot mileage))
+TRUE
+Jess> (deftemplate new-car (slot price) (slot warrantyPeriod))
+TRUE
+Jess> (defrule might-buy-car
+    ?candidate <- (or (used-car (mileage ?m&:(< ?m 50000)))
+                      (new-car (price ?p&:(< ?p 20000))))
+    =>
+    (assert (candidate ?candidate)))
+Jess> (assert (new-car (price 18000)))
+<Fact-0>
+Jess> (assert (used-car (mileage 30000)))
+<Fact-1>
+Jess> (run)
+2
+
+The rule fires twice: once for the new car and once for the used car. In this rule, only one of the two branches of the or conditional element will match at a time, but the rule can be activated separately as many times as there are facts to match. Each of the vehicles listed matches only one or the other of the branches. For some activations, the first branch of the or will match, and for others, it will be the second branch. Note that the variable ?candidate is bound to whatever fact matches the or in each particular activation. If might-buy-car¡¯s RHS tried to modify the mileage slot of the used-car template, runtime errors would occur whenever ?candidate was bound to a new-car fact, because the new-car template doesn¡¯t have such a slot.
+
+If the RHS of a rule uses a variable defined by matching on the LHS of that rule, and the variable is defined by one or more branches of an or pattern but not all branches, then a runtime error may occur. For example, if the RHS of might-buy-car used the variable ?m (which is defined only when the rule matches a used-car fact), then when it fired in response to a new-car fact, you¡¯d see an error message and Jess would stop firing rules.
+
+The and group can be used inside an or group and vice versa. In the latter case, Jess rearranges the patterns so that there is a single or at the top level. For example, the rule
+
+Jess> (defrule prepare-sandwich
+    (and (or (mustard)
+             (mayo))
+         (bread))
+    =>)
+
+is automatically rearranged as follows:
+
+Jess> (defrule prepare-sandwich
+    (or (and (mustard) (bread))
+        (and (mayo) (bread)))
+    =>)
+
+Jess rearranges the patterns of any rule that has or conditional elements in it so that in the end, there is at most one or per rule, and it appears at the top level. Jess may use DeMorgan¡¯s rules to accomplish this result. DeMorgan¡¯s rules are a set of two formulas that describe legal ways of substituting logical expressions. Written in Jess syntax, they can be stated as follows:
+
+(not (or (x) (y)))  is the same as (and (not (x)) (not (y)))
+(not (and (x) (y))) is the same as (or (not (x)) (not (y)))
+
+Jess does this rearrangement so that it can form subrules, which are the topic of the next section.
+
+Subrule generation and the or conditional element
+
+A rule containing an or conditional element with n branches is precisely equivalent to n rules, each of which has one of the branches on its LHS. In fact, this is how Jess implements the or conditional element: Jess internally divides the rule, generating one rule for each branch. Each of these generated rules is a subrule. For a rule named rule-name, the first subrule is also named rule-name, the second is rule-name&1, the third is rule-name&2, and so on. Each of these subrules is added to the Rete network individually. If you execute the (rules) command, which lists all the defined rules, you will see each of the subrules listed separately. If you use the ppdefrule function to see a pretty-print representation of a subrule, you will see only the representation of that particular subrule. Note that because & is a token delimiter in the Jess grammar, you can only refer to a subrule with an ampersand in the name by placing the whole name in quotes¡ªfor example, (ppdefrule "rule-name&6").
+
+Jess knows that the subrules created from a given rule are related. If the original rule is removed (either using undefrule or implicitly by defining a new rule with the same name as an existing one), every subrule associated with that rule is also removed.
+
+A note regarding subrules and efficiency: You¡¯ll learn in chapter 8 that similar patterns are shared between rules in the Rete network, avoiding duplicated computation. Therefore, splitting a rule into subrules does not mean the amount of pattern-matching work is increased; much of the splitting may indeed be undone when the rules are compiled into the network.
+
+On the other hand, keep the implementation in mind when you define your rules. If an or conditional element is the first pattern on a rule, all the subsequent pattern-matching on that rule¡¯s LHS won¡¯t be shared between the subrules, because sharing occurs only as far as two rules are similar reading from the top down. Placing or conditional elements near the end of a rule leads to more sharing between the subrules, and thus more efficient pattern matching.
+
+Finally, I should mention that although subrules will probably always be part of the implementation of the or conditional element in Jess, it is likely that they will no longer be user-visible at some time in the future.
+
+7.3.3. The not conditional element
+
+You may have heard the saying ¡°two wrongs don¡¯t make a right¡± when you were growing up. How can the opposite of the opposite of something not be the same as the original thing? Well, as it turns out, it¡¯s quite often not. Such is the case in real-world logic: The concept of negation is a tricky thing. It¡¯s tricky in Jess, too.
+
+Imagine that you want a rule to fire when no red cars are available. Your first try might look something like this:
+
+Jess> (defrule no-red-cars
+    (auto (color ~red))
+    =>)
+
+But this rule fires for each car that is not red. If there are no cars at all, it won¡¯t fire. This result isn¡¯t the same as firing when there are no red cars.
+
+Luckily, Jess has the not conditional element. Most patterns can be enclosed in a list with not as the head. In this case, the pattern is considered to match if a fact (or set of facts) that matches the pattern is not found. For example, this rule will fire if there are no cars at all, or if there are only blue cars, but not if there are any red ones:
+
+Jess> (defrule no-red-cars-2
+    (not (auto (color red)))
+    =>)
+
+Because a not pattern matches the absence of a fact, it cannot define any variables that are used in subsequent patterns on the LHS. You can introduce variables in a not pattern as long as they are used only within that pattern:
+
+Jess> (defrule no-odd-numbers
+    (not (number ?n&:(oddp ?n)))
+    =>
+    (printout t "There are no odd numbers." crlf))
+
+Similarly, a not pattern can¡¯t have a pattern binding; again, because it doesn¡¯t match an actual fact, there would be no fact to bind to the variable.
+
+Now, here comes the tricky part I alluded to earlier. You already know that pattern matching is driven by facts being asserted¡ªthe matching computation happens during the assert, definstance, modify, duplicate, or reset function that creates the fact. Because a not CE matches the absence of a fact, when can it be evaluated? The answer is that a not CE is evaluated only in these cases:
+
+When a fact matching it is asserted (in which case the pattern match fails)
+
+When a fact matching it is removed (in which case the pattern match succeeds)
+
+When the pattern immediately before the not on the rule¡¯s LHS is evaluated
+
+If a not CE is the first pattern on a rule¡¯s LHS, the first pattern in an and group, or the first pattern on a given branch of an or group, the pattern (initial-fact) is inserted before the not to become this important preceding pattern. Therefore, the initial fact created by the reset command is necessary for the proper functioning of many not patterns. For this reason, it is especially important to issue a reset command before attempting to run the rule engine when working with not patterns.
+
+The not CE can be used in arbitrary combination with the and and or CEs. You can define complex logical structures this way. For example, suppose you want a rule to fire once, and only once, if for every car of a given color, there exists a bus of the same color. You could express that as follows:
+
+Jess> (defrule forall-example
+    (not (and (car (color ?c)) (not (bus (color ?c)))))
+    =>)
+
+Decoding complex logical expressions is easier if you start from the inside and work your way out. The innermost pattern here is (bus (color ?c)), which matches any bus fact. The not around that matches only when there are no bus facts. The (car (color ?c)) pattern matches any car facts, and the and groups these two patterns together. The entire and thus matches when there is a car, but no bus of the same color. Putting the and group into the outermost not means the whole pattern matches only when the and doesn¡¯t; thus the whole thing can be translated as ¡°It is not true that for some color ?c, there is a car of that color but no bus of that same color.¡±
+
+In the next section we¡¯ll look at another interesting way to combine not CEs into more complex groups.
+
+The exists conditional element
+
+You can nest multiple not CEs to produce some interesting effects. Two nots nested one inside the other are so useful that there¡¯s a shorthand notation: the exists CE. A pattern can be enclosed in a list with exists as the head. An exists CE is true if there exist any facts that match the pattern, and false otherwise¡ªwhich is precisely the meaning of two nested nots. The exists CE is useful when you want a rule to fire only once, although there may be many facts that could potentially activate it:
+
+Jess> (defrule exists-an-honest-man
+    (exists (honest ?))
+    =>
+    (printout t "There is at least one honest man!" crlf))
+
+If there are any honest men in the world, the rule will fire once and only once. The exists CE is implemented as two nested not CEs; that is, (exists (A)) is exactly the same as (not (not (A))). Therefore, you can¡¯t bind any variables in an exists CE for use later in the rule, and you also can¡¯t use pattern bindings with exists.
+
+7.3.4. The test conditional element
+
+A pattern with test as the head is special; the body consists not of a pattern to match against the working memory but of a Boolean function. The result determines whether the pattern matches. A test pattern fails if and only if the function evaluates to the symbol FALSE; if it evaluates to TRUE, the pattern succeeds. For example, suppose you wanted to find people whose age is less than 30 years old:
+
+Jess> (deftemplate person (slot age))
+TRUE
+Jess> (defrule find-trustworthy-people-1
+     (person (age ?x))
+     (test (< ?x 30))
+     =>
+     (printout t ?x " is under 30!" crlf))
+TRUE
+
+A test pattern, like a not, cannot contain any variables that are not bound before that pattern, and it can¡¯t have a pattern binding.
+
+Because a test CE, like a not CE, doesn¡¯t match an actual fact, its implementation is similar to the way not is implemented. A test CE is evaluated every time the preceding pattern on the rule¡¯s LHS is evaluated, just like a not. Therefore the following rule is equivalent to the previous one:
+
+Jess> (defrule find-trustworthy-people-2
+     (person (age ?x&:(< ?x 30)))
+     =>
+     (printout t ?x " is under 30!" crlf))
+
+Which form you use here is mostly a matter of taste. I tend to use the test CE only for long or complex functions that would be hard to read if they were written as predicate constraints. Of course, the test CE can also be used to write tests that are unrelated to any facts:
+
+(import java.util.Date)
+(defrule fire-next-century
+      (test ((new Date) after (new Date "Dec 31 2099")))
+      =>
+      (printout t "Welcome to the 22nd century!" crlf))
+
+For rules like this, in which a test CE is the first pattern on the LHS, or the first pattern in an and CE, or the first pattern in any branch of an or CE, Jess inserts the pattern (initial-fact) to serve as the preceding pattern for the test. The fact (initial-fact) is therefore also important for the proper functioning of the test conditional element; the caution about reset in the preceding section applies equally to test. The rule fire-next-century won¡¯t fire until reset is called after the twenty-second century begins.
+
+The test and not conditional elements may be combined, so that
+
+(not (test (eq ?x 3)))
+
+is equivalent to
+
+(test (neq ?x 3))
+
+The conditional elements we¡¯ve looked at so far affect how a rule matches working memory. There is one conditional element we haven¡¯t covered yet, and it¡¯s unusual in that instead of affecting how a rule matches, it affects what happens when a rule fires.
+
+7.3.5. The logical conditional element
+
+When you turn on your kitchen faucet, you expect water to come out (if it doesn¡¯t, you¡¯ve got a plumbing problem). When you turn off the faucet, the flow of water stops as a result. This kind of relationship is called a logical dependency¡ªthe water flowing is logically dependent on the faucet being open. To express this idea in Jess, you could write the following two rules:
+
+Jess> (defrule turn-water-on
+      (faucet open)
+      =>
+      (assert (water flowing)))
+TRUE
+Jess> (defrule turn-water-off
+      (not (faucet open))
+      ?water <- (water flowing)
+      =>
+      (retract ?water))
+TRUE
+
+Given these two rules, asserting (faucet open) will automatically cause (water flowing) to be asserted as well, and retracting (faucet open) will retract (water flowing)¡ªif you call run so the rules can fire, of course. The fact (water flowing) can therefore be said to be logically dependent on (faucet open).
+
+Writing two rules to express the one idea of logical dependency gets the job done, but there is an easier way. The logical conditional element lets you specify these logical dependencies among facts more concisely. All the facts asserted on the RHS of a rule are logically dependent on any facts that matched a pattern inside a logical CE on that rule¡¯s LHS. If any of the matches later become invalid¡ªfor instance, because one of the facts is deleted¡ªthe dependent facts are retracted automatically. In the simple example in listing 7.3, the (water-flowing) fact is again logically dependent on the (faucet-open) fact, so when the latter is retracted, the former is removed, too.
+
+Listing 7.3. An example of using the logical CE
+
+
+
+If fact 1 is logically dependent on fact 2, you can also say that fact 1 ¡°receives logical support from¡± fact 2. A fact may receive logical support from multiple sources¡ªit may be asserted multiple times with a different set of logical supports each time. Such a fact isn¡¯t automatically retracted unless each of its logical supports is removed. If a fact is asserted without explicit logical support, it is said to be unconditionally supported. If an unconditionally supported fact also receives explicit logical support, removing that support will not cause the fact to be retracted. You can find out what logical support a fact is receiving with the dependencies function. The dependents function tells you what facts are dependent on another given fact. Both functions take either a single fact object or an integer fact ID as an argument.
+
+If one or more logical CEs appear in a rule, they must be the first patterns in that rule; a logical CE cannot be preceded in a rule by any other kind of CE. You can use the logical CE together with all the other CEs, including not and exists. A fact can thus be logically dependent on the nonexistence of another fact or on the existence of some category of facts in general.
+
+Shadow facts from definstances are no different than other facts with regard to the logical CE. Shadow facts can provide logical support and can receive logical support.
+

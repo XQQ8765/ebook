@@ -1,0 +1,19 @@
+6.2. Just the facts, ma¡¯am
+
+Jess¡¯s working memory is stored in a complex data structure with multiple indexes, so that searching the working memory is a very fast operation. The working memory is therefore something like a relational database, and the individual facts are like rows in a database table (see figure 6.2). This implies that facts, like table rows, must have a specific structure so that they can be indexed. Jess offers three different kinds of facts; each kind has its own structure and is indexed and used in a different way.
+
+Figure 6.2. Working memory is something like a relational database.
+
+[View full size image]
+
+
+Unordered facts are the workhorses of the working memory. An unordered fact is quite literally like a row in a relational database table, with individual named data fields corresponding to the table¡¯s columns. When you assert an unordered fact, you can specify the slots in any order¡ªhence the name unordered. Unordered facts are the most common kind of fact and a good choice for most situations. An unordered fact looks like this:
+
+(person (name "John Q. Public") (age 34) (height 5 10) (weight 170))
+
+An ordered fact lacks the structure of named fields¡ªit is just a short, flat list¡ªbut ordered facts are convenient for simple bits of information that don¡¯t need structure. All the facts we¡¯ve used as examples so far have been ordered facts. If you used an ordered fact to represent the same ¡°person¡± data, it would look like this:
+
+(person "John Q. Public" 34 5 10 170)
+
+Finally, shadow facts are unordered facts that are linked to Java objects in the real world¡ªthey provide a way to reason about events as they occur outside of Jess. In the following sections, we¡¯ll cover each of these categories of fact in detail.
+

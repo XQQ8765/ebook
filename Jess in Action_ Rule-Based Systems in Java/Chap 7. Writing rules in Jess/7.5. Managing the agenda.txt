@@ -1,0 +1,41 @@
+7.5. Managing the agenda
+
+In section 7.1, you used (watch activations) and (watch rules) to observe the operation of a simple rule. In particular, you learned that a rule is activated when its LHS matches working memory, but it won¡¯t immediately fire. The agenda is the list of rules that have been activated but haven¡¯t fired yet. For some applications, the agenda never contains more than one activated rule, and so managing the agenda isn¡¯t a very interesting topic. But in most applications, the agenda contains multiple rules at once. When this is the case, managing the agenda becomes important. In this section, we¡¯ll study how Jess chooses which rule to fire next from among all the activated rules on the agenda, and how you can influence this choice.
+
+7.5.1. Conflict resolution
+
+A typical rule-based system may contain hundreds or thousands of rules. It¡¯s very likely that at any given moment, more than one rule is activated. The set of activated rules that are eligible to be fired is called the conflict set, and the process of putting the rules in firing order is called conflict resolution. The output of the conflict-resolution process is the ordered list of activations called the agenda. You can see this ordered list of activated, but not yet fired, rules with the agenda function.
+
+Conflict resolution in Jess is controlled by pluggable conflict-resolution strategies. Jess comes with two strategies: depth (the default) and breadth. You can set the current strategy with the set-strategy command. Using (set-strategy depth) causes the most recently activated rules to fire first, and (set-strategy breadth) makes rules fire in activation order¡ªthe most recently activated rules fire last. In many situations, the difference does not matter, but for some problems the conflict-resolution strategy is important. Although the default strategy is intuitive and correct in most situations, it runs into trouble if every rule that fires activates another rule. The oldest activations then get pushed far down the agenda and never get a chance to fire. The breadth strategy avoids this problem, but the ¡°first-in, first-out¡± firing order can be confusing.
+
+You can write your own strategies in Java by implementing the jess.Strategy interface and then calling set-strategy with the name of your class as the argument. The Strategy interface has a single nontrivial method compare that compares two activations and returns -1, 1, or 0 to signify that the first activation, the second activation, or either one should fire first.
+
+The conflict-resolution strategy determines how activations are ordered based on when they are added to the agenda. Sometimes, though, you may find that you want to fine-tune the ordering a bit. You can use salience to accomplish this.
+
+7.5.2. Changing rule priority with salience
+
+Sometimes you may find that a particular rule should be treated as a special case by the conflict-resolution strategy. A rule that reports a security breach might need to fire immediately, regardless of what else is on the agenda. On the other hand, a rule that cleans up unused facts might only need to run during the idle time when no other rules are activated. You can tell the conflict resolver to treat these rules specially using rule salience.
+
+Each rule has a property called salience that acts as a priority setting for that rule. Activated rules of the highest salience always fire first, followed by rules of lower salience. Within a set of rules with identical salience, the order is determined as described in the previous section. You can use a salience declaration to set the salience of a rule:
+
+Jess> (defrule defer-exit-until-agenda-empty
+    (declare (salience -100))
+    (command exit-when-idle)
+    =>
+    (printout t "exiting..." crlf))
+TRUE
+
+This rule won¡¯t fire until no other rules of higher salience are on the agenda. Declaring a low salience value for a rule makes it fire after all other rules of higher salience. A high value makes a rule fire before all rules of lower salience. The default salience value is 0, so if this is the only rule with an explicit salience value, it will not fire until the agenda is empty.
+
+You can specify salience values using literal integers, global variables, or function calls. How the salience values are evaluated depends on the current value of the salience evaluation method. These values are as follows:
+
+when-defined¡ª (Default.) A fixed salience value is computed when the rule is defined.
+
+when-activated¡ª The salience of a rule is reevaluated each time the rule is activated.
+
+every-cycle¡ª The salience value of every rule on the agenda is recomputed after every rule firing. Evaluating every-cycle is very computationally expensive and isn¡¯t used much.
+
+You can query or set the salience evaluation method with the set-salience-evaluation and get-salience-evaluation functions.
+
+Note that extensive use of salience is generally discouraged, for two reasons. First, use of salience has a negative impact on performance, at least with the built-in conflict-resolution strategies. Second, it is considered bad style in rule-based programming to try to force rules to fire in a particular order. If you find yourself using salience on most of your rules, or if you are using more than two or three different salience values, you probably need to reconsider whether you should be using a rule-based approach to your problem. If you want strict control over execution order, then you¡¯re trying to implement a procedural program. Either change your rules to be less sensitive to execution order, or consider implementing your algorithm as one or more deffunctions or as Java code. Alternatively, you might consider structuring your program using modules.
+

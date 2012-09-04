@@ -1,0 +1,134 @@
+6.3. Unordered facts
+
+A table in a relational database has a name and a set of named columns. Each row of data in a table provides a value for each of the columns. Unordered facts are working memory elements that behave like rows in a database table (although the columns are traditionally called slots). Here are some examples of unordered facts:
+
+(person (name "Bob Smith") (age 34) (gender Male))
+(automobile (make Ford) (model Explorer) (year 1999))
+(box (location kitchen) (contents spatula))
+
+The person fact has slots name, age, and gender; the automobile fact has slots make, model, and year. The head of an unordered fact (person, automobile, box) is like the table name, and the slot names are like the column names.
+
+Before you can work with unordered facts, you have to specify their structure using the deftemplate construct. Once you have created some unordered facts and put them in working memory, functions such as modify and duplicate let you change or copy them.
+
+6.3.1. The deftemplate construct
+
+Typically, a relational database contains many tables, one for each type of information the database holds. In a real relational database, to create a new table, you have to specify the names of the columns that will be found in the table. Thereafter, every row in the table has those same columns¡ªno more and no less.
+
+Similarly, in Jess, you define many different kinds of unordered facts. Before you can assert an unordered fact with a given head, you have to use the deftemplate construct to define the slots that kind of fact. This example defines an unordered fact type with three slots:
+
+Jess> (deftemplate person "People in actuarial database"
+    (slot name)
+    (slot age)
+    (slot gender))
+TRUE
+Jess> (assert (person (age 34) (name "Bob Smith")
+                (gender Male)))
+<Fact-1>
+Jess> (facts)
+f-0 (MAIN::initial-fact)
+f-1 (MAIN::person (name "Bob Smith") (age 34)
+    (gender Male))
+For a total of 2 facts.
+
+The name of the deftemplate (person) is used as the head of the facts. You can define as many slots as you want in your deftemplate. You can also include a short description, as shown in the example.
+
+When you assert an unordered fact, you can specify the slots in any order, and you don¡¯t have to include every slot. When Jess displays an unordered fact (for instance, when you type the (facts) function), the slots are always displayed in a standard order¡ªthe order in which you defined them in the deftemplate.
+
+If you omit any slots when you assert an unordered fact, they¡¯re filled in using default values.
+
+6.3.2. Default slot values
+
+Most relational databases support the idea of a ¡°don¡¯t care¡± value in a particular column. If you add a row to a table and don¡¯t specify a value for one or more columns, then this default value¡ªusually called NULL¡ªis used. Jess lets you do the same thing with unordered facts. When you assert unordered facts, you can omit values for any number of slots, and Jess will fill in the default value nil:
+
+Jess> (assert (person (age 30) (gender Female)))
+<Fact-2>
+Jess> (facts)
+f-0 (MAIN::initial-fact)
+f-1 (MAIN::person (name "Bob Smith") (age 34)
+    (gender Male))
+f-2 (MAIN::person (name nil) (age 30)
+    (gender Female))
+For a total of 3 facts.
+
+Sometimes nil is an acceptable default value, but often it¡¯s not. You can specify your own default value by using a slot qualifier:
+
+Jess> (clear)
+TRUE
+Jess> (deftemplate person "People in actuarial database"
+    (slot name (default "OCCUPANT"))
+    (slot age)
+    (slot gender))
+TRUE
+
+Note
+
+If you¡¯re following along, you may have entered a previous definition for the person template. You can¡¯t redefine a deftemplate until you use the clear function to completely erase Jess¡¯s internal state, as this example does.
+
+
+Notice that when you assert a person fact and don¡¯t specify a value for the name slot, the default value OCCUPANT is used:
+
+Jess> (assert (person (age 30) (gender Female)))
+<Fact-0>
+Jess> (facts)
+f-0 (MAIN::person (name "OCCUPANT") (age 30)
+    (gender Female))
+For a total of 1 facts.
+
+What if the appropriate default value isn¡¯t constant, but changes over time? As an example, a slot might be initialized to hold a timestamp indicating when the fact was asserted. The default-dynamic qualifier lets you accomplish this. Jess evaluates the given value each time a new fact is created using this template. Usually you¡¯ll use a function call with default-dynamic. For example, to create the timestamp, you could use (default-dynamic (time)).
+
+The slots we¡¯ve looked at so far have all contained single values. Slots that hold multiple values are useful, too. You¡¯ll learn how to create them next.
+
+6.3.3. Multislots
+
+The normal slots we¡¯ve looked at so far can each hold only a single value. Sometimes, though, it¡¯s handy to keep a list of things in a slot. For example, if you wanted to keep track of a person¡¯s hobbies in a hobbies slot, you¡¯d need to be able to handle people who have more than one way to spend their free time. You can create slots that can hold multiple values by using the multislot keyword:
+
+Jess> (clear)
+TRUE
+Jess> (deftemplate person "People in actuarial database"
+    (slot name (default OCCUPANT))
+    (slot age)
+    (slot gender)
+    (multislot hobbies))
+TRUE
+Jess> (assert (person (name "Jane Doe") (age 22)
+    (hobbies snowboarding "restoring antiques")
+    (gender Female)))
+<Fact-0>
+
+Now Jane has two hobbies, both listed in the single hobbies multislot.
+
+If you don¡¯t specify a default value for a multislot, Jess uses an empty list. Usually this is what you want, but you can specify a different default if you need to.
+
+The values contained in the slots of an unordered fact are not fixed; you can change them whenever you want using the modify function.
+
+6.3.4. Changing slot values with modify
+
+Very often, a rule acts on a fact by updating it. For example, a rule about the passage of time might occasionally need to update the age slot of all the persons in the working memory. You can change the values in the slots of an unordered fact using the modify function. Continuing the previous example:
+
+Jess> (modify 0 (age 23))
+<Fact-0>
+Jess> (facts)
+f-0 (MAIN::person (name "Jane Doe") (age 23)
+    (gender Female)
+    (hobbies snowboarding "restoring antiques"))
+For a total of 1 facts.
+
+The first argument to modify is either a Fact object or a numeric fact-id, and all the other arguments are slot name, value pairs that specify a new value for the named slot. You can modify any number of slots in a fact with a single modify function. You can use modify on multislots, too.
+
+Note that the fact-id of a fact does not change when you use the modify function. It¡¯s the same fact¡ªit just has new slot values. If you¡¯ve used CLIPS, you might notice that this is an important difference between CLIPS and Jess; in CLIPS, the fact-id changes when you use modify. This simple property is extremely useful. A slot of one fact can hold the fact-id of another fact as slot data, and in this way, you can build structures of related facts. Because the fact-id of a fact is constant, the relationships won¡¯t be broken if the facts are modified.
+
+6.3.5. Copying facts with duplicate
+
+If you know that John Doe is the same age as Jane and likes the same things, but is male instead of female, you can create a fact representing him using the duplicate function. The duplicate function is similar to modify, except that instead of modifying an existing fact, it makes a copy, and then modifies the copy. Continuing the previous example, let¡¯s make a copy of the Jane Doe fact (fact-id 0):
+
+Jess> (duplicate 0 (name "John Doe") (gender Male))
+<Fact-1>
+Jess> (facts)
+f-0 (MAIN::person (name "Jane Doe") (age 23)
+    (gender Female) (hobbies snowboarding "restoring antiques"))
+f-1 (MAIN::person (name "John Doe") (age 23)
+    (gender Male) (hobbies snowboarding "restoring antiques"))
+For a total of 2 facts.
+
+Just like modify, duplicate does nothing if the new fact would be an exact copy of an existing fact. The duplicate function returns the fact-id of the newly created fact, or FALSE if no fact was created. The modify and duplicate functions only work with unordered facts, because they require a slot name as an argument, which ordered facts don¡¯t have. Let¡¯s look at some things that ordered facts can do.
+

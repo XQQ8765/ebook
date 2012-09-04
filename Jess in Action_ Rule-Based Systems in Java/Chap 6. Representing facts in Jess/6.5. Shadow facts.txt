@@ -1,0 +1,141 @@
+6.5. Shadow facts
+
+A shadow fact is an unordered fact whose slots correspond to the properties of a Java-Bean. JavaBeans are a kind of normal Java object; therefore, shadow facts serve as a connection between the working memory and the Java application inside which Jess is running. They¡¯re called shadow facts because they are like images, or shadows, of JavaBeans outside of Jess. The function defclass lets you create a special deftemplate to be used with shadow facts, and definstance lets you create an individual shadow fact. Let¡¯s briefly look at what JavaBeans are, and then see how they can be connected to Jess¡¯s working memory. We¡¯ll discuss these Jess functions:
+
+defclass¡ª Creates a deftemplate from a JavaBean class
+
+definstance¡ª Adds a JavaBean to Jess¡¯s working memory
+
+6.5.1. Jess and JavaBeans
+
+You can view Jess¡¯s working memory as sort of an electronic organizer for your rule-based system. A piece of data must be part of the working memory for it to be used in the premises of a Jess rule. Ordered and unordered facts are useful in many situations, but in many real-world applications, it¡¯s useful to have rules respond to things that happen outside of the rule engine. Jess lets you put regular Java objects in working memory¡ªinstances of your own classes that can serve as hooks into a larger software system¡ªas long as those objects fulfill the minimal requirements necessary to be JavaBeans.
+
+As previously mentioned, unordered facts look a bit like Java objects. Specifically, they look a lot like JavaBeans. The JavaBean component architecture specification (http://java.sun.com/products/javabeans/) defines a JavaBean simply as a self-contained, reusable component that can be used from a graphical builder tool. JavaBeans, like other kinds of software components (for instance, Visual Basic controls), often serve as interfaces to more complex systems such as databases or special hardware.
+
+6.5.2. JavaBeans have ¡°slots¡±
+
+The similarity between JavaBeans and unordered facts is that both have a list of slots (for JavaBeans, they¡¯re called properties) containing values that might change over time. There¡¯s plenty more to JavaBeans than just properties; however, those features go beyond the scope of this book.[1]
+
+[1] Plenty of great books on JavaBeans are available if you¡¯re interested. For example: Lawrence Rodrigues, The Awesome Power of Java Beans (Greenwich, CT: Manning Publications, 1998).
+
+A JavaBean property is most often a pair of methods named in a standard way. If the property is a String named label, the Java methods look like this:
+
+String getLabel();
+void setLabel(String);
+
+The get method is used to read the value of the property, and the set method to change it. The java.beans API includes a class named Introspector that can examine JavaBeans and find properties defined according to this get/set naming system. There are a few wrinkles having to do with capitalization and other details, but this simple convention works most of the time.
+
+Jess can use Introspector to automatically generate a deftemplate that represents any specific JavaBean class (see figure 6.3). A fact created from this deftemplate can then serve as a sort of adapter to store the JavaBean in working memory, the shadow facts. A shadow fact has one slot for each JavaBean property. If a JavaBean has array properties, those properties become multislots, and all other properties become normal slots. The slots are automatically populated with the values of the JavaBean¡¯s properties. In the next section, you¡¯ll watch Jess use Introspector to create a custom template for a JavaBean.
+
+Figure 6.3. Jess uses the java.beans.Introspector class to turn JavaBeans into deftemplates.
+
+[View full size image]
+
+
+6.5.3. An example JavaBean
+
+Now let¡¯s work through an example of how a JavaBean can be connected to Jess¡¯s working memory. Listing 6.2 shows a simple JavaBean class. This JavaBean has one property called brightness. Note that when you set the brightness property, the Bean calls the method adjustTriac that brightens or dims an attached lighting fixture (the code for adjustTriac presumably uses the Java Native Interface to access code written in another language, like C). The value you read using the getBrightness method is thus always tied to the brightness of the light. If you had a DimmerSwitch object in Jess¡¯s working memory, then your rules would be able to reason in real time about the lighting in a building.
+
+Listing 6.2. A simple JavaBean with one property: brightness
+
+public class DimmerSwitch {
+    private int brightness = 0;
+    public int getBrightness() { return brightness; }
+    public void setBrightness(int b) {
+        brightness = b;
+        adjustTriac(b);
+    }
+    private void adjustTriac(int brightness) {
+        // Code not shown
+    }
+}
+
+You need a special deftemplate to plug a DimmerSwitch into Jess¡ªlet¡¯s learn how to create one.
+
+6.5.4. Creating a deftemplate for DimmerSwitch
+
+The Jess functions that let you put JavaBeans into working memory are defclass and definstance. The defclass function tells Jess to generate a special template to represent a specific JavaBean class, whereas definstance puts a shadow fact connected to one particular JavaBean instance into working memory.
+
+Before you can insert an instance of DimmerSwitch into Jess¡¯s working memory, you need a deftemplate to represent the class. You use defclass to tell Jess to generate it:
+
+Jess> (defclass dimmer DimmerSwitch)
+DimmerSwitch
+Jess> (ppdeftemplate dimmer)
+"(deftemplate MAIN::dimmer extends MAIN::__fact
+    \"$JAVA-OBJECT$ DimmerSwitch\"
+    (slot brightness
+        (default <External-Address:jess.SerializablePD>))
+    (slot class (default <External-Address:jess.SerializablePD>))
+    (slot OBJECT (type 2048)))"
+
+To run this code, you first need to compile the DimmerSwitch class and make the .class file available on your CLASSPATH. The resulting template is a bit strange looking (especially the default values). It does have a slot called brightness, as you¡¯d expect, which arises from the brightness property of the JavaBean. All shadow facts have the other slots in common. The slot class comes from the method getClass that every Java object inherits from java.lang.Object, and the slot OBJECT is added by Jess. This special OBJECT slot always contains a reference to the JavaBean to which a given shadow fact. The first argument to defclass¡ªdimmer, here¡ªis used as the deftemplate name. (Some people like to use the name of the Java class itself; my personal preference is to use a shorter name with a lowercase initial.)
+
+6.5.5. Putting a DimmerSwitch into working memory
+
+Now you can put a DimmerSwitch into working memory. Here you¡¯ll create one from Jess code, but it could come from anywhere (later in this book, you¡¯ll learn many strategies for passing objects back and forth between Jess and Java code). After you create a DimmerSwitch, you use the definstance function to add it to the working memory:
+
+Jess> (bind ?ds (new DimmerSwitch))
+<External-Address:DimmerSwitch>
+Jess> (definstance dimmer ?ds static)
+<Fact-0>
+Jess> (facts)
+f-0 (MAIN::dimmer
+    (brightness 0)
+    (class <External-Address:java.lang.Class>)
+    (OBJECT <External-Address:DimmerSwitch>))
+For a total of 1 facts.
+
+The first argument to definstance is the name of a template created by defclass, and the second argument is a corresponding JavaBean. We¡¯ll discuss the meaning of static in the next section.
+
+As soon as you call the definstance function, a shadow fact representing the Bean appears in the working memory. Rules can react to this dimmer fact just as they can to any other fact in working memory. If you imagine thousands of dimmer facts, representing the brightness of every light fixture in a large office building, you can see how letting Jess reason about DimmerSwitch objects could be useful.
+
+6.5.6. Static vs. dynamic shadow facts
+
+The working memory representation of a JavaBean can be either static (changing infrequently, like a snapshot of the properties at one point in time) or dynamic (changing automatically whenever the JavaBean¡¯s properties change). The definstance you have defined already is static. What happens if you change the brightness property of your Bean, turning on the light? You can invoke the setBrightness method using the call function you learned about in chapter 5:
+
+Jess> (call ?ds setBrightness 10)
+Jess> (facts)
+f-0 (MAIN::dimmer
+    (brightness 0)
+    (class <External-Address:java.lang.Class>)
+    (OBJECT <External-Address:DimmerSwitch>))
+For a total of 1 facts.
+
+Nothing changed. The working memory still thinks the Bean¡¯s brightness is set at 0, even though you changed it to 10. This is expected behavior for a static definstance. Obviously, though, you¡¯d like the shadow fact to track changes in the Bean¡¯s properties. What happens if you call reset?
+
+Jess> (reset)
+TRUE
+Jess> (facts)
+f-0 (MAIN::initial-fact)
+f-1 (MAIN::simple
+    (brightness 10)
+    (class <External-Address:java.lang.Class>)
+    (OBJECT <External-Address:DimmerSwitch>))
+For a total of 2 facts.
+
+The reset function updates the shadow fact to match the JavaBean. This behavior is what you get when you specify static in the definstance function as you did earlier. Static shadow facts are refreshed only when a reset is issued. In between reset calls, their properties do not change in response to property changes in their JavaBean.
+
+If you want to have a shadow fact continuously track property changes in a Java-Bean, Jess needs to be notified whenever a property changes in that JavaBean. The JavaBean can notify Jess by sending it a special kind of Java event, a java.beans.PropertyChangeEvent. Many commercially available JavaBeans already support this kind of notification, and you can easily add it to Beans you write yourself. If DimmerSwitch offered support for PropertyChangeListeners, then it could notify Jess when its brightness changed, and the shadow facts could stay in sync with the Beans. Let¡¯s add that support now.
+
+6.5.7. Adding PropertyChangeListener support to DimmerSwitch
+
+Let¡¯s modify the DimmerSwitch class to send PropertyChangeEvents. The modified class DimmerSwitchDynamic is shown in listing 6.3. The interesting method in DimmerSwitchDynamic is setBrightness. This method saves the original value of the brightness member variable, then gives it its new value, and then sends a property change notification using the PropertyChangeSupport utility class. The addPropertyChangeListener and removePropertyChangeListener methods are boilerplate code that is always used with PropertyChangeSupport. These methods allow interested external code like Jess to register to be notified when a property changes.
+
+Listing 6.3. A JavaBean that sends property change notifications
+
+[View full size image]
+
+Now if you use definstance without the static qualifier to register a Dimmer-SwitchDynamic instance with Jess, the shadow fact tracks the brightness property whenever it changes, as listing 6.4 demonstrates. This time, calling setBrightness to change the JavaBean changes the shadow fact, too; Jess receives a Property-ChangeEvent and modifies the shadow fact accordingly.
+
+Listing 6.4. A demonstration of dynamic definstances
+
+[View full size image]
+
+6.5.8. Shadow facts and working memory functions
+
+Many of the functions and constructs you¡¯ve seen so far work on shadow facts just as they work on other kinds of facts, but there are some differences. Most of these differences are obvious. For example, you can¡¯t use the assert function to assert a shadow fact; you use definstance instead. You can, however, use retract to remove a shadow fact. You also can¡¯t put a shadow fact in a deffacts construct. Note, though, that each individual definstance behaves like its own deffacts¡ªwhen you call reset, the shadow fact for every instance is reinitialized.
+
+The modify function operates on shadow facts just as it works on regular facts. Furthermore, if you modify the contents of a slot of a shadow fact, Jess automatically updates the corresponding JavaBean property. This happens for both static and dynamic definstances.
+
+Finally, the duplicate function cannot be used with shadow facts. Jess throws an exception if you try to duplicate one.
+

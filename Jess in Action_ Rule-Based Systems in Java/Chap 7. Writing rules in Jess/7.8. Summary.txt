@@ -1,0 +1,8 @@
+7.8. Summary
+
+You can define rules to take action based on the contents of Jess¡¯s working memory, and you can write queries to investigate it procedurally. Both rules and queries can use constraints (conditions on the slot data of facts) and conditional elements(relationships between facts) to express specify detailed requirements on working memory elements.
+
+You can write both forward- and backward-chaining rules. Roughly, you can say that forward-chaining rules discover the conclusions that can be drawn from an existing set of facts, and backward-chaining rules search for the premises from which existing facts can be derived. You can also write queries to probe working memory directly.
+
+In real systems, many rules are activated simultaneously. Conflict resolution, or choosing which rule to fire next, is an important part of any rule-based system. Jess lets you influence conflict resolution in a number of ways: by setting the conflict-resolution strategy, by using salience, or by partitioning your rule base into modules.
+
