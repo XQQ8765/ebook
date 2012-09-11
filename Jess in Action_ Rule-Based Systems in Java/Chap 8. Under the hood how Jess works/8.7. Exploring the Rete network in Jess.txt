@@ -1,0 +1,57 @@
+8.7. Exploring the Rete network in Jess
+
+The compiled Rete network is a complex and (often) large data structure. Sometimes, understanding it can mean the difference between an efficient program and a dreaded OutOfMemoryError. In this section, we¡¯ll look at some functions that will help you explore the Rete network: watch compilations, view, and match.
+
+8.7.1. The (watch compilations) command
+
+You can see the amount of node sharing in a Rete network by using Jess¡¯s (watch compilations) function. Executing this function tells the rule compiler to print some diagnostics to the screen when each rule is compiled. For each rule, Jess prints a string of characters something like this, the actual output from compiling rule example-1 from section 8.3.1:
+
+MAIN::example-1: +1+1+1+2+t
+
+Each time +1 appears in this string, it means a new one-input node was created. +2 indicates a new two-input node. +t indicates a terminal node.
+
+Now, watch what happens when we compile example-2 from the same section:
+
+MAIN::example-2: =1=1+1=1=2+2+t
+
+The string =1 is printed whenever a preexisting one-input node was shared; similarly, =2 means a two-input node was shared. You can see from these diagnostics that, as expected, one of the two join nodes in example-2 was shared, along with most of the pattern nodes. If you want to study what happens more precisely, you can use the view command, described in the next section.
+
+8.7.2. The view function
+
+The view command (see figure 8.4) is a graphical viewer for the Rete network. By giving you feedback about the data structures Jess builds from your rule definitions, it may help you to design more efficient rule-based systems. Issuing the view command after entering the rules example-1 and example-2 from section 8.3.1 produces a very good facsimile of the diagram in figure 8.3 (with some subtle differences). The various nodes are color-coded according to their roles in the network. Nodes in the pattern network are red, normal join nodes are green, not nodes are yellow, and terminal nodes are blue. The bottom node in the left column of the figure is a right to left adapter; one of these is always used to connect the first pattern on a rule¡¯s LHS to the network. Passing the mouse over a node displays information about the node and the tests it contains. Double-clicking on a node brings up a dialog box containing additional information; for join nodes, the memory contents are also displayed (the same information displayed by the matches function), and for terminal nodes, a pretty-print representation of the rule is shown. You can move the individual nodes around by dragging them with your mouse. In figure 8.4, the nodes have been dragged into position by hand to resemble the diagrams in the other figures.
+
+Figure 8.4. Jess¡¯s view command displays the Rete network in a window.
+
+
+
+
+To fully appreciate what¡¯s happening in the view command¡¯s display, you need to know something about how Jess implements the Rete algorithm. Jess¡¯s network is literally a network of interconnected Node objects. Network nodes are represented by subclasses of the abstract type jess.Node. Pattern network nodes, which perform tests on single facts, have Node1 as part of their name. There are also three classes of join nodes¡ªjess.Node2, jess.NodeNot2, and NodeTest¡ªthat implement normal joins, the not conditional element, and the test conditional element, respectively. Terminal nodes are instances of jess.NodeTerm.
+
+There are quite a few different Node1 classes. jess.Node1TECT nodes, for example, test the head of a fact, and therefore provide the entrance route into the network. Node1TEQ nodes compare the value of a single slot to a constant value, and Node1TEV1 nodes test whether two slots within a single fact contain the same value. There are separate multislot variations of these types; their names begin with Node1M. Node1MTEQ nodes, for example, compare a single datum at a particular location in a multislot to a constant value. Finally, there are negated versions, too: Node1TNEV1 nodes test that two slots in a single fact do not contain the same value.
+
+Besides the menagerie of nodes types listed here, other types serve a structural role in the network: Node1RTL nodes, for example, adapt an output that would normally lead to the right input of a join node so that it connects to the left input instead, and Node1NONE nodes serve as stand-ins for nodes that aren¡¯t really there¡ªspecifically, for the part of the pattern network that leads to the right input of a NodeTest. The information that the matches or view functions display about individual nodes is generally fairly descriptive of each node¡¯s function.
+
+8.7.3. The matches function
+
+The matches function lets you see the contents of the left and right memories of the join nodes used by any rule. It can be an invaluable aid in determining why a particular rule isn¡¯t behaving the way you expect. It also is a good way to check for computational hot spots that might be slowing down your programs.
+
+The matches function is easy to use. Give it the name of a rule as an argument, and it will show you information about each of the rule¡¯s join nodes in left-to-right order. In the following example, the rule matches-demo¡¯s single join node has one token in its left memory and one in its right; each memory gets its input from one pattern of the original rule:
+
+Jess> (defrule matches-demo
+    (a)
+    (b)
+    =>)
+TRUE
+Jess> (deffacts matches-demo-facts (a) (b))
+TRUE
+Jess> (reset)
+TRUE
+Jess> (matches matches-demo)
+>>> [Node2 ntests=0 ;usecount = 1;unique = false]
+*** Left Memory:
+[Token: size=1;sortcode=1;tag=ADD;negcnt=0;facts=(MAIN::a);]
+*** RightMemory:
+[Token: size=1;sortcode=2;tag=ADD;negcnt=0;facts=(MAIN::b);]
+
+TRUE
+

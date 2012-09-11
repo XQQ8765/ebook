@@ -1,0 +1,8 @@
+8.8. Summary
+
+Jess uses the fast, efficient Rete algorithm for pattern matching. The strength of Rete is that it uses a set of memories to retain information about the success or failure of pattern matches during previous cycles.
+
+The Rete algorithm involves building a network of pattern-matching nodes. Jess uses many different kinds of nodes to represent the many different kinds of pattern-matching activities. There are also special nodes to handle some conditional elements like not and test, as well as special behavior in some nodes to handle backward chaining.
+
+This chapter concludes the introduction to Jess. In the next part of this book, and in each subsequent part, you will develop a nontrivial application. Each application is standalone, but each part of the book builds on the knowledge and skills developed during the previous parts.
+

@@ -1,0 +1,18 @@
+8.4. Easy optimizations for Rete
+
+That¡¯s it for the basic Rete algorithm. There are many optimizations, however, which can make it even better. Two easy ones work by introducing node sharing into the network. The first optimization is to share nodes in the pattern network. In figure 8.1, there are five nodes across the top, although only three are distinct. You can modify the network to share these nodes across the two rules. The result is shown in figure 8.2.
+
+Figure 8.2. A Rete network that shares pattern nodes
+
+
+
+
+But that¡¯s not all the redundancy in the original network. Looking at figure 8.2, you can see that one join node is performing exactly the same function (integrating x, y pairs) in both rules; you can share that also, as shown in figure 8.3. Sharing join nodes is an especially fruitful optimization. Because joining involves comparing facts to one another, the tests in join nodes tend to be executed many more times than those in pattern nodes¡ªso much so that the time spent in the join network generally dominates the running time of the system. By sharing this one join node, then, you¡¯ve effectively doubled the performance of your program.
+
+Figure 8.3. A Rete network that shares both pattern and join nodes
+
+
+
+
+The pattern and join networks in figure 8.3 are collectively only half the size they were in the first version. This kind of sharing comes up frequently in real systems and is a significant performance booster.
+

@@ -210,6 +210,18 @@ Given these two rules, asserting (faucet open) will automatically cause (water f
 Writing two rules to express the one idea of logical dependency gets the job done, but there is an easier way. The logical conditional element lets you specify these logical dependencies among facts more concisely. All the facts asserted on the RHS of a rule are logically dependent on any facts that matched a pattern inside a logical CE on that rule¡¯s LHS. If any of the matches later become invalid¡ªfor instance, because one of the facts is deleted¡ªthe dependent facts are retracted automatically. In the simple example in listing 7.3, the (water-flowing) fact is again logically dependent on the (faucet-open) fact, so when the latter is retracted, the former is removed, too.
 
 Listing 7.3. An example of using the logical CE
+(clear)
+(watch all)
+(defrule water-flows-while-faucet-is-open
+	(logical (faucet open))
+	=>
+	(assert (water flowing))
+)
+(assert (faucet open))
+(run)
+(facts);For a total of 2 facts
+(retract 0)
+(facts);For a total of 0 facts
 
 
 

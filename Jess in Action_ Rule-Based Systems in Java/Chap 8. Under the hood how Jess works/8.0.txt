@@ -1,0 +1,17 @@
+8. Under the hood: how Jess works
+In this chapter you¡¯ll...
+
+Learn how Jess compiles rules
+
+Be introduced to the Rete algorithm
+
+Use the view and matches functions
+
+Learn how to make your rules more efficient
+
+You can drive a car without understanding anything about what¡¯s under the hood. But if you¡¯re driving through a desert, miles from a phone, and your engine starts to sputter and cough, a little knowledge and a full toolbox could go a long way.
+
+So it is with much of the software you use as a developer. As long as everything is working well, you can get by without much knowledge of its internal workings. When something starts to go wrong, however, you may need extra knowledge and a few tools to fix it. This chapter gives you both, as far as Jess is concerned. We¡¯ll look at the Rete algorithm, the technique that Jess uses to do fast pattern matching. You¡¯ll also learn about some tools built into Jess that let you kick the tires and look under the hood.
+
+Some of the information in this chapter is generally true of any system based on the Rete algorithm, and a little is specific to one version of Jess. I¡¯ll try to make the distinction as we go along. In general, the version-specific parts of Jess are in nonpublic Java classes, so you¡¯d have to go out of your way to use them. If you do, though, consider yourself warned that they are internal implementation details, and any Java code you write that uses them may well break each time a new version of Jess is released.
+

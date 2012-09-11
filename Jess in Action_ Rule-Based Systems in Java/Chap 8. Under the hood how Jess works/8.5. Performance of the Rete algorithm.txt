@@ -1,0 +1,24 @@
+8.5. Performance of the Rete algorithm
+
+The Rete algorithm¡¯s performance is even harder to analyze precisely than the simple rules finding facts algorithm. In general, the performance on the first cycle is basically the same for the two algorithms; Rete has to do pattern matching for every fact in working memory, because there are no previous results to consult. In the worst case, where every fact changes on every cycle and there is no network sharing between rules, then the performance for later cycles is the same as well. This means Jess won¡¯t be very efficient if you populate the working memory, run the pattern matcher for just one cycle, and then reset working memory and repopulate it again from scratch. But in the typical case of a slowly changing working memory, moderate sharing in the network, and effective indexing, Rete will vastly outperform the naive algorithm for all cycles after the first. The runtime will be proportional to something like R¡äF¡äP¡ä, where R¡ä is a number less than R, the number of rules; F¡ä is the number of facts that change on each iteration; and P¡ä is a number greater than one but less than the average number of patterns per rule.
+
+8.5.1. Node index hash value
+
+Jess uses a fairly sophisticated data structure to represent the two memories in each join node. It is basically a hash table with a fixed number of buckets. The interesting feature here is that the hash function uses the part of each token that is most relevant to the specific tests in each join node. This lets Jess presort the tokens before running the join node tests. In many cases, running some or all of the tests can be avoided altogether, because once the tokens are sorted into the hash buckets, questions involving comparisons of slot data can often be answered categorically for a whole bin.
+
+The node index hash value is a tunable performance-related parameter that can be set globally or on a per-rule basis. It is simply the number of buckets to use in each individual hash table. A small value saves memory, possibly at the expense of performance; a larger value uses more memory but leads (up to a point) to faster pattern matching. The default, used if you don¡¯t declare an explicit value, is chosen for optimal performance.
+
+In general, you might want to declare a large value for a rule that is likely to generate many partial matches. Conventional wisdom has it that prime numbers are the best choices. Experimentation is the only way to determine the best value for a particular rule. If n is the number of item facts, then the following rule will need n3 tokens in the left memory of its third join node; it¡¯s an excellent candidate for a large node index hash value if you expected there to be more than a few item facts:
+
+Jess> (defrule many-matches
+    (declare (node-index-hash 167))
+    (item ?a)
+    (item ?b)
+    (item ?c)
+    (item ?d)
+    =>
+    (printout t ?a " " ?b " " ?c " " ?d crlf))
+TRUE
+
+The set-node-index-hash function sets the default value for this parameter, used for rules without a specific declaration. If you don¡¯t set a value, the default is 101.
+

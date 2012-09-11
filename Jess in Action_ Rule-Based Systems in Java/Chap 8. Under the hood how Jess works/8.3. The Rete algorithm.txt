@@ -1,0 +1,61 @@
+8.3. The Rete algorithm
+
+We can improve on the performance of this simple but inefficient pattern-matching algorithm by thinking about the source of its inefficiency. The typical rule-based system has a more or less fixed set of rules, whereas the working memory changes continuously. However, it is an empirical fact that in most rule-based systems, much of the working memory is also fairly fixed over time. Although new facts arrive and old ones are removed as the system runs, the percentage of facts that change per unit time is generally fairly small.
+
+The rules finding facts algorithm is therefore needlessly inefficient, because most of the tests made on each cycle will have the same results as on the previous iteration. An algorithm that could somehow remember previous pattern-matching results between cycles, only updating matches for facts that actually changed, could do far less work and get the same results.
+
+Jess uses a very efficient version of this idea, known as the Rete algorithm. Charles Forgy¡¯s classic paper describing the Rete algorithm[1] became the basis for several generations of fast rule-based system shells: OPS5, its descendant ART, CLIPS, Jess, and others. Each system has enhanced and refined the algorithm to improve performance or flexibility. This chapter describes the algorithm as implemented in Jess.
+
+[1] Charles L. Forgy, ¡°Rete: A Fast Algorithm for the Many Pattern / Many Object Pattern Match Problem,¡± Artificial Intelligence 19 (1982): 17¨C37.
+
+Briefly, the Rete algorithm eliminates the inefficiency in the simple pattern matcher by remembering past test results across iterations of the rule loop. Only new or deleted working memory elements are tested against the rules at each step. Furthermore, Rete organizes the pattern matcher so that these few facts are only tested against the subset of the rules that may actually match.
+
+8.3.1. How Rete works
+
+Rete is Latin for net (it¡¯s pronounced ¡°ree-tee¡±). The Rete algorithm is implemented by building a network of interconnected nodes. Every node represents one or more tests found on the LHS of a rule. Each node has one or two inputs and any number of outputs. Facts that are being added to or removed from the working memory are processed by this network of nodes. The input nodes are at the top of the network, and the output nodes are at the bottom. Together, these nodes form the Rete network, and this network is how Jess¡¯s working memory is implemented.
+
+At the top of the network, the input nodes separate the facts into categories according to their head¡ªfor example, books go through one path, and borrowers go through another. Inside the network, finer discriminations and associations between facts are made, until the facts get to the bottom. At the bottom of the network are nodes representing individual rules. When a set of facts filters all the way down to the bottom of the network, it has passed all the tests on the LHS of a particular rule; this set, together with the rule itself, becomes either a new activation record or a command to cancel a previously existing activation record (recall that an activation record is an association of a list of facts with a rule that they activate).
+
+Between the inputs and the outputs, the network is composed of two broad categories of nodes: one-input nodes and two-input nodes. One-input nodes perform tests on individual facts, and two-input nodes perform tests across multiple facts. An example would probably be useful at this point. The following rules might be compiled into the network shown in figure 8.1:
+
+Jess> (deftemplate x (slot a))
+TRUE
+Jess> (deftemplate y (slot b))
+TRUE
+Jess> (deftemplate z (slot c))
+TRUE
+Jess> (defrule example-1
+    (x (a ?v1))
+    (y (b ?v1))
+    => )
+TRUE
+Jess> (defrule example-2
+    (x (a ?v2))
+    (y (b ?v2))
+    (z)
+    => )
+TRUE
+
+Figure 8.1. An unoptimized Rete network for the two rules example-1 and example-2
+
+
+
+
+In this diagram, each box represents a node. A node¡¯s inputs are shown on the top, and its outputs are on the bottom. The diamond-shaped nodes marked =q? are one-input or pattern nodes. The pattern nodes in this example test if the head of a fact is q. Facts that pass this test are sent to the node¡¯s output; others are ignored.
+
+The trapezoidal nodes are two-input or join nodes. Each join node joins the results of matching the first n-1 patterns (coming from upper left in the diagram) with the nth pattern (attached at upper right in the diagram). Join nodes remember all facts or groups of facts that arrive on either of their two inputs. The network is built so that the left input can receive groups of one or more facts; the right input receives only single facts. Every join node produces groups of two or more facts as at its output. The arrivals from the two inputs are kept in separate memory areas, traditionally called the alpha and beta memories. We¡¯ll refer to them as the left and right memories instead, because it¡¯s easier to keep these names straight! The notation LEFT.p.q==RIGHT.r? indicates a test comparing the contents of slot q in the pth fact in a group from the left memory to the slot r in a fact from the right memory. Join nodes produce one output for each ordered pairing of a left-memory element and a right-memory element that passes the tests in that node.
+
+The oval nodes at the bottom of the network are the terminal nodes that represent individual rules. They have a single input and no outputs. When they receive an input, they build an activation record from the input item and the rule they represent and place it on the agenda. Note that any facts that reach the top of a join node could potentially contribute to an activation; they have already passed all the tests that can be applied to single facts.
+
+To run the network, you present every new fact to each node at the top of the network. The example pattern network eliminates all facts except the x, y, and z ones. The join network then sends all {x, y} pairs with x.a == y.b to the terminal node for example-1, and all {x, y, z} triples (given the same restriction) to the terminal node for example-2. The terminal nodes thus know what activation records to create.
+
+What happens if, after processing the initial facts, we assert an additional fact (z (c 17))? The fact is presented to the =z? pattern node and sent down to the join node below. The left memory of that join node already contains all the acceptable x, y pairs, so the correct x, y, z triples can be formed without repeating the pattern matching computation done on the first cycle. One new activation will be created for each precomputed x, y pair. You can now see how the Rete architecture lets you avoid repeating computation over time.
+
+8.3.2. Handling retract
+
+So far, you¡¯ve seen how the Rete algorithm can be used to efficiently handle the pattern matching that happens during assert commands; but what about retract? Rete can handle removing activation records as easily as it can handle creating them. The trick to doing so is that you don¡¯t send facts through the network: You send tokens. A token is an association between one or more facts and a tag, or command. The tag tells the individual nodes how to interpret the token. Jess uses four different tags, defined as constants in the jess.RU class: ADD, REMOVE, CLEAR, and UPDATE. ADD is used for asserting facts, as you¡¯ve already seen. The behavior described so far only applies for token with a tag value of ADD.
+
+The REMOVE tag is used for retractions. If a REMOVE token arrives at a join node, the node looks in the appropriate memory to find a matching token. If it finds one, the token is deleted. All allowed pairings between that token and all the tokens in the opposite memory are then composed, also with the REMOVE tag. These tokens are sent to the join node¡¯s output. Finally, if a terminal node receives a REMOVE token, the corresponding activation record is found and deleted.
+
+The remaining two tags are more subtle. UPDATE is used when a new rule has been added to a preexisting Rete network, and the join nodes belonging to that new rule have to be populated with facts. The UPDATE tag lets the nodes that already existed know they can safely ignore a token, because it¡¯s a duplicate of one sent some time in the past; this prevents the preexisting nodes from storing duplicate tokens in their memories. Finally, the CLEAR tag tells the join and terminal nodes to flush their memories; it is used to implement the (reset) command efficiently.
+

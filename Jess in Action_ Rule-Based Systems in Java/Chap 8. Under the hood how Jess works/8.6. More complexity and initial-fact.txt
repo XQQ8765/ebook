@@ -1,0 +1,22 @@
+8.6. More complexity and initial-fact
+
+A number of pattern-matching situations can¡¯t be handled by what we¡¯ve discussed so far. Studying them is enlightening because it explains some otherwise seemingly arbitrary properties of software like Jess that is based on the Rete algorithm.
+
+8.6.1. Implementing the not conditional element
+
+The not conditional element matches the absence of a fact. Its implementation involves a special kind of join node and a special field in every token. The special field is called the negation count. The special NOT join node uses the negation count to keep track of the number of times the node¡¯s conditions are met for each token in the left memory. The count is incremented whenever the node¡¯s tests pass for a given token and decremented whenever they do not. When the count reaches zero for a given left-memory token, a new token is formed from it and a special null fact (which represents the nonexistent right-memory input) and sent to the node¡¯s output.
+
+The important thing to notice about this description is that although the facts matching the pattern in the not conditional element arrive at the NOT node¡¯s right input, only the tokens arriving at the left input form part of the output tokens. A moment¡¯s reflection shows that it has to be this way; the not conditional element is matched when there is no matching fact. If there are no tokens in the right memory, that means the not conditional element will always succeed, so the NOT node will pass every token received on the left input directly to its output.
+
+Now, what should a NOT node do if it doesn¡¯t have a left input? Such a case would arise if a not conditional element was the first pattern on the LHS of a rule or the first pattern in a given branch of an or conditional element. The NOT node clearly can¡¯t function without a left input; it can¡¯t create output tokens without left input tokens as seeds. For this reason, Jess inserts the (initial-fact) pattern into rules that have this problem. Without this pattern, the not conditional element wouldn¡¯t work.
+
+8.6.2. Implementing the test conditional element
+
+The test conditional element doesn¡¯t match a fact; it simply evaluates a function. To implement test, Jess uses another special join node that ignores its right input. For each token arriving on the left input, the TEST join node evaluates its function. If the function doesn¡¯t evaluate to FALSE, the left input token and a null fact are composed to make a new token, which is then sent to the node¡¯s output. The TEST node, just like the NOT node, clearly can¡¯t work properly without a left input. Therefore, test conditional elements can also cause Jess to insert (initial-fact) patterns into rules.
+
+8.6.3. Implementing backward chaining
+
+Jess implements backward chaining on top of the forward-chaining Rete algorithm. The basic problem is detecting when the LHS of a rule has been matched up to, but not including, a pattern that matches a backward-chaining reactive template (see section 7.4). At this point, a signal must be sent describing the fact that would complete the match; as you might guess, having read section 7.4, that signal is a need-X fact. Once this fact is asserted, rules that match it can once again be processed in a forward-chaining fashion.
+
+To implement this functionality, the join nodes that receive facts from a backward-chaining reactive template must act specially. Each time a new left input token is received, the number of successful pairings with right input tokens is counted. If the count is zero, a need-X fact is generated. The left input token represents the facts that match a rule up to, but not including, the pattern for the reactive template. Once again, you see that the left input token is crucial to the correct operation of this special type of join node, and so Jess inserts (initial-fact) patterns as necessary to provide them.
+
