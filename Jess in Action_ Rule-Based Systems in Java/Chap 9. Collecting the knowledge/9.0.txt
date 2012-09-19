@@ -1,0 +1,17 @@
+9. Collecting the knowledge
+In this chapter you¡¯ll...
+
+Learn about knowledge engineering
+
+Learn to interview experts
+
+Collect requirements
+
+Assemble domain knowledge
+
+A journey of a thousand miles begins with the first step.
+
+¡ªLao Tzu
+
+The first step in developing any rule-based system is collecting the knowledge the system will embody. In this chapter, your major concern will be to learn how this can be accomplished. As a practical example, you¡¯ll gather the knowledge you¡¯ll build into your first nontrivial rule-based program.
+

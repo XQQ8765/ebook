@@ -1,0 +1,12 @@
+9.1. The Tax Forms Advisor
+
+For the next three chapters, you¡¯ll be developing a simple rule-based application that recommends United States income tax forms. The application asks the user a series of questions and, based on the answers, tells the user which paper Internal Revenue Service forms she will likely need. You will populate the application with enough data to make it realistic, although you won¡¯t try to make it exhaustive. Your application might be used in an information kiosk at the post office.
+
+You¡¯ll follow a realistic development process as you create this application, starting in this chapter by collecting the actual knowledge. In chapters 10 and 11 you¡¯ll write the application using an iterative methodology, including lots of testing.
+
+The Tax Forms Advisor has a command-line interface. You¡¯ll concentrate on developing the rules themselves, so the entire program will be written in the Jess rule language without using any Java reflection capabilities. In the next part of this book, we¡¯ll examine one way to add a graphical interface to applications like this one.
+
+Disclaimer
+
+The system you¡¯re developing is intended only to provide guidelines about what tax forms a taxpayer might need to file. It is not intended to give authoritative legal advice about tax filing.
+

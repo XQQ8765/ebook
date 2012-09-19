@@ -1,0 +1,74 @@
+9.3. Collecting knowledge about tax forms
+
+The domain for the example program is ¡°distributing income tax forms.¡± The project sponsors might describe it like this:
+
+The system should ask the user a series of questions and then recommend a list of income tax forms the user might need. The list doesn¡¯t need to be exhaustive, but it should be generous¡ªthat is, if in doubt, recommend the form. The series of questions should be as short as possible and should never include irrelevant or redundant questions.
+
+This simple statement is certainly enough to get you started on the knowledge engineering phase of the project.
+
+9.3.1. An interview
+
+If you¡¯ve ever filed your own income taxes, you have a reasonable understanding of the concepts behind this application. So, you probably don¡¯t need to do any advance desk work¡ªin fact, you can probably gather all the necessary information from one or two interviews and from reading the forms themselves. The first step is to talk to an accountant and ask her to list the 10 most-used income tax forms. She gives you this list, in no particular order:
+
+Form 1040¡ª Income tax
+
+Form 1040A¡ª Income tax
+
+Form 1040EZ¡ª Income tax
+
+Form 2441¡ª Child and dependent care expenses
+
+Form 2016EZ¡ª Employee business expenses
+
+Form 3903¡ª Moving expenses
+
+Form 4684¡ª Casualties and thefts
+
+Form 4868¡ª Application for filing extension
+
+Form 8283¡ª Noncash charitable distributions
+
+Form 8829¡ª Home office expenses
+
+With the list in hand, you can begin asking questions about individual forms. The most relevant question for each form is, ¡°Who needs it?¡± The accountant¡¯s answers are reproduced here:
+
+Form 1040 is the standard long form. Everyone needs it.
+
+Form 1040A is the short form. You can use it instead of Form 1040 if your taxable income is less than $50,000. You can¡¯t itemize deductions if you use this form, but you can get a credit for child-care expenses.
+
+Form 1040EZ is the really short form. You can use it instead of Form 1040A if you made less than $50,000, you have no dependents, and you don¡¯t itemize deductions. If you¡¯re married, you and your spouse must file a joint return or you can¡¯t use this form.
+
+Form 2441 lets you claim a credit for daycare expenses.
+
+With Form 2016EZ, you can deduct the unreimbursed part of any expenses you incurred for your employer, primarily travel (except commuting). You can use this short form only if you weren¡¯t reimbursed for any expenses; otherwise you have to use the long form.
+
+Form 3903 gets you a deduction for unreimbursed moving expenses if you moved this year because of your job.
+
+Form 4684 lets you recover some of your losses during the year¡ªthe part that was not covered by insurance. Many people use this form to deduct costs due to car accidents.
+
+You fill out Form 4868 to get an extension for filing your taxes. Note that you still have to pay your taxes on time; you can pay an estimated amount with this form.
+
+You need to file Form 8283 to get credit for donating more than $500 worth of property to charity.
+
+You can file Form 8829 if you have a home office and you want to deduct expenses associated with that office. The rules are fairly restrictive, though¡ªyou have to be careful, or you will trigger an audit. You usually shouldn¡¯t file this form unless you are self-employed or your home is your primary workplace.
+
+The accountant¡¯s expert knowledge is evident in a few of these answers, particularly the descriptions of Forms 2016EZ, 4684, and 8829. Also evident, however, are some of the common problems with interview data. The information is not very precise; for example, it is not true that ¡°everyone needs¡± Form 1040, because there are two alternative forms.
+
+After hearing these interview replies, a few follow-up questions suggest themselves immediately¡ªfor instance, you might want to confirm that the long version of Form 2016EZ is Form 2016 (it is). Otherwise, you should be able to get the rest of the information from the forms themselves; if you have questions about the forms, you can arrange another interview.
+
+9.3.2. Reviewing the forms
+
+You can obtain copies of IRS forms from the IRS web site.[2] Studying the forms turns up a few potentially useful facts that the accountant didn¡¯t specify:
+
+[2] The IRS web site is at http://www.irs.gov. Alternatively, you can get the forms directly at ftp://ftp.fedworld.gov/pub/irs-pdf/.
+
+You can¡¯t file Form 1040EZ if you earned more than $400 in taxable interest. People with more than a certain bank balance (depending on current interest rates) might not be able to use this form.
+
+You can only file Form 3903 if you changed work locations and if your new workplace is more than 50 miles further from your old home than your old workplace.
+
+With Form 2441, you can get credit for care for an elderly parent or other dependent, not just care for children.
+
+9.3.3. Next steps
+
+You¡¯ve now amassed enough knowledge about the problem domain to write the application, which you will begin to do in the next chapter. You first need to organize the data by defining deftemplates and organize the rules by defining defmodules. You also need to write some infrastructure: functions for input and output, for example. In chapter 11, with the infrastructure in place, you will write the rules and deploy the application.
+

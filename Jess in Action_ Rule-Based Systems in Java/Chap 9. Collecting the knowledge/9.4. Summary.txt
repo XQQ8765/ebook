@@ -1,0 +1,6 @@
+9.4. Summary
+
+The application area for a rule-based system is called its problem domain. The process of collecting information about a problem domain is called knowledge engineering. Knowledge engineering can include gathering data from interviews, books and other publications, the Internet, and other sources.
+
+You¡¯ve begun work on an application that advises people about the forms they need to use to file their United States federal income taxes. In this chapter, you did the preliminary knowledge engineering, and the end result is several lists of information chunks in prose form.
+

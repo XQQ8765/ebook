@@ -1,0 +1,117 @@
+9.2. Introduction to knowledge engineering
+
+Every rule-based system is concerned with some subset of all the world¡¯s collected knowledge. This subset is called the domain of the system. The process of collecting information about a domain for use in a rule-based system is called knowledge engineering, and people who do this for a living are called knowledge engineers. On small projects, the programmers themselves might do all the knowledge engineering, whereas very large projects might include a team of dedicated knowledge engineers.
+
+Professional knowledge engineers may have degrees in a range of disciplines: obvious ones like computer science or psychology, and domain-related ones like physics, chemistry, or mathematics. Obviously it helps if the knowledge engineer knows a lot about rule-based systems, although she doesn¡¯t have to be a programmer.
+
+A good knowledge engineer has to be a jack of all trades, because knowledge engineering is really just learning¡ªthe knowledge engineer must learn a lot about the domain in which the proposed system will operate. A knowledge engineer doesn¡¯t need to become an expert, although that sometimes happens. But the knowledge engineer does have to learn something about the topic. In general, this information will include:
+
+The requirements¡ª Looking at the problem the system needs to solve is the first step. However, you might not fully understand the problem until later in the process.
+
+The principles¡ª You need to learn the organizing principles of the field.
+
+The resources¡ª Once you understand the principles, you need to know where to go to learn more.
+
+The frontiers¡ª Every domain has its dark corners and dead ends. You need to find out where the tough bits, ambiguities, and limits of human understanding lie.
+
+The knowledge engineer can use many potential sources of information to research these points. Broadly, though, there are two: interviews and desk research. In the rest of this section, we¡¯ll look at techniques for mining each of these information sources to gather the four categories of information we just listed.
+
+9.2.1. Where do you start?
+
+When you¡¯re starting on a new knowledge engineering endeavor, it can be difficult to decide what to do first. Knowledge engineering is an iterative process. You usually can¡¯t make a road map in advance; instead you feel your way along, adjusting your course as you go. As the saying goes, though, a journey of a thousand miles begins with a single step, and taking that first step can be hard.
+
+With most projects, you should first talk to the customers¡ªthe people who are paying you to write the system. Find out what their needs are and what resources they can make available. This isn¡¯t knowledge engineering per se, but requirements engineering¡ªpart of planning any software project. But the customer might point you to particular sources of technical information and help you plan your approach to knowledge engineering. After talking to the customers, you should have a rough idea of what the system should do and how long development is expected to take.
+
+Next, it¡¯s best to seek out general resources you can use to learn about the fundamentals of the domain and do a bit of self-study. Being at least vaguely familiar with the jargon and fundamental concepts in the domain will let you avoid wasting the time of people you interview later. You should learn enough about the fundamentals to have a rough idea of what kinds of knowledge the system needs to have.
+
+Once you¡¯ve developed an understanding of the basics, you¡¯re ready to begin the iterative process. Based on your initial research, write down a list of questions about the domain which, if answered, would provide knowledge in the areas you previously identified. Seek out a cooperative subject-matter expert, briefly explain the project to him, and ask him the questions (often the customer will provide the expert; otherwise they should pay the expert a consulting fee to work with you). Usually the answers will lead to more questions.
+
+After the initial interview, you can try to organize the information you¡¯ve gathered into some kind of structure¡ªperhaps a written outline or a flowchart. As you do this, you can begin to look for what might turn out to be individual rules. For the Tax Forms Advisor, an individual rule you might encounter early in the process would be (in the Jess language):
+
+(defrule use-ez-form
+    ; If filing status is "single", and...
+    (filing-status single)
+    ; user made less than $50000
+    (income ?i&:(< ?i 50000))
+    =>
+    ; recommend the user file Form 1040EZ
+    (recommend 1040EZ))
+
+Detailed comments like those shown here will help non-technical people read and understand the rules, if necessary. Buy a stack of white index cards and write each potential rule on one side of an individual card. Use pencil so you can make changes easily. The cards are useful because they let you group the rules according to function, required inputs, or other criteria. When you have a stack of 100 cards or more, the utility becomes obvious. You can use the reverse sides of the cards to record issues regarding each rule. This stack of cards might be the final product of knowledge engineering, or the cards¡¯ contents might be turned into a report. The cards themselves are often the most useful format, though.
+
+After organizing the new knowledge on index cards, you may see obvious gaps that require additional information. Develop a new set of interview questions and meet with the expert again. The appropriate number of iterations depends on the complexity of the system.
+
+Knowledge engineering doesn¡¯t necessarily end when development begins. After an initial version of a system is available, the expert should try it out as a user and offer advice to correct its performance. If possible, a prototype of the system should be presented to the expert at every interview¡ªexcept perhaps the first one.
+
+Likewise, development needn¡¯t be deferred until knowledge engineering is complete. For many small projects, the knowledge engineer is one of the developers, and in this case you may be able to dispense with the cards and simply encode the knowledge you collect directly into a prototype system. This is what you¡¯ll do for the Tax Forms Advisor.
+
+More on writing cards
+
+To write down the rule use-ez-form on a card, I had to make up the deftemplate names filing-status and income and also define an imaginary function recommend. In general, you will write rules on these cards in pseudocode; they¡¯re meant to suggest how the real rules might be coded, but they¡¯re just guides. When actual development begins on the system, these early guesses will help the developers figure out what deftemplates and other infrastructure they need to define.
+
+Finally, note that although I wrote use-ez-form in Jess syntax, it would be perfectly OK for a knowledge engineer to use natural language, or pseudocode that looks like some other programming language. If you are a knowledge engineer but not a programmer, writing rules in your native language may be the only option, and that¡¯s fine.
+
+9.2.2. Interviews
+
+People are the best source of information about the requirements for a system. Many projects have requirements documents: written descriptions of how a proposed system should behave. Despite the best intentions, such documents rarely capture the expectations for a system in enough detail to allow the system to be implemented. Often, you can get the missing details only by talking to stakeholders: the customers and potential users of the system.
+
+People can also direct you to books, web sites, and other people who will help you learn about the problem domain. These days it¡¯s common to suffer from information overload when you try to research a topic¡ªthere are so many conflicting resources available that it¡¯s hard to know what information to believe. The stakeholders in the system can tell you which resources they trust and which ones they don¡¯t.
+
+If you find conflicting information among otherwise trustworthy references during your research, or hear conflicting statements during interviews, don¡¯t be afraid to ask for clarification. You¡¯ll need a strategy for resolving conflicts that hinge on matters of opinion. Sometimes you can do this by picking a specific person as the ultimate arbiter. Other times, especially on larger projects, it¡¯s appropriate to hold meetings to get the stakeholders to make decisions in a group setting.
+
+Interviewing strategies
+
+Cultivating a good relationship with the people you interview is important. This sounds so simple, you might not think it needs to be said¡ªbut it does. Computer people have a culture all their own, and it¡¯s different enough from mainstream culture that programmers can be perceived as rude. If you¡¯re a computer programmer working as a knowledge engineer, you may have to alter your accustomed behavior when you¡¯re interviewing nonprogrammers. Here are a few things to watch out for:
+
+Speak their language¡ª It can be difficult for a programmer to remember that stacks, loops, shifts, and pointers are not part of the everyday vocabulary of most nonprogrammers. Don¡¯t use programming terms if you can avoid it. You¡¯ll also want to avoid geek words like grok, kludge, and lossage, which will only distance you from the interviewee. Instead, work hard to learn the technical jargon of the problem domain, and use it properly.
+
+Show respect¡ª No matter how trivial the domain may seem, the interviewee knows more about it than you, so don¡¯t look down on people just because they don¡¯t have the same education you do. Your knowledge of programming is not more important than their knowledge of inventory procedures. Your time is not more valuable than theirs. They¡¯re doing you a favor by talking to you, so be grateful.
+
+Be interested¡ª Make eye contact when you talk to the interviewee. Ask follow-up questions to show that you¡¯re listening. Take notes so you don¡¯t ask the same question twice (unless, of course, you didn¡¯t understand the answer the first time). Generally look as though you¡¯re happy to be talking to the person¡ªor they won¡¯t talk to you again.
+
+Dress for the occasion¡ª Gone are the days when all white-collar workers wore white collars (and ties). But if you¡¯re interviewing someone older than you, she might remember those days quite clearly. If you¡¯re going to interview a client at a bank, don¡¯t show up in sandals and a t-shirt. Dressing appropriately will help your interviewee relate to you.
+
+Be reassuring¡ª Often the interviewee is not the customer. A manager may be asking you to capture knowledge from an employee, and that employee may be afraid of being replaced by the proposed new system. Reassure the employee that he¡¯s smarter than any computer, and explain that although the system may take over routine tasks, it will free the employee¡¯s time to work on more important things. You don¡¯t want anyone to perceive you, or the system you¡¯re building, as an enemy.
+
+Customers
+
+The customers are the people who are paying you to build the system. Sometimes they know a lot about the problem, and other times they just want the problem solved. If the customer is also a domain expert, then your job is easy, because the customer can direct you to all the information you need. If the customer doesn¡¯t know much about the problem domain, then the hardest part of your job may be identifying someone who is.
+
+For the forms advisor application, the customer may be the postal service. No one at the post office will be able to supply much domain knowledge, but they will be able to describe the problem well enough. Luckily, it¡¯s obvious in this case who the domain expert should be: a tax accountant. An accountant knows better than anyone else which tax forms people need under various circumstances. The customer should be willing to pay for some of an accountant¡¯s time, or perhaps provide access to their own accountants.
+
+Users
+
+The users are the people who will interact with the system on a day-to-day basis. Like the customers, the users may or may not know much about the domain in which the system works. A particular category of user, the expert user, knows the domain very well. Expert users are people who will use your system to automate tasks they already know how to do. They are often the best kind of interviewee to work with, because they understand the problem and simultaneously know how they want the system to react.
+
+The users for the forms advisor are not expert users¡ªthey are just people who wander in to the post office to pick up tax forms. This kind of user isn¡¯t particularly useful to interview for knowledge-engineering purposes; however, it can be useful to talk to na?ve users about things like user-interface issues.
+
+Experts
+
+A domain expert is someone who has technical knowledge in the relevant problem area for your system. A good domain expert is worth her weight in gold, so it is important to seek one out and develop a good working relationship. Most of knowledge engineering consists of extracting information from domain experts.
+
+For the forms advisor application, potential experts include accountants and Internal Revenue Service (IRS) workers. An accountant can tell you what forms are required most often by her clients, whereas an IRS employee may have statistics on form usage by the whole U.S. population. Both can help you understand the tax rules.[1]
+
+[1] Or maybe not. The U.S. General Accounting Office released a much-publicized report in 2001 relating its findings that IRS telephone personnel give out incorrect tax information 47% of the time.
+
+9.2.3. Desk research
+
+Not all of your information should come from people. When possible, you should instead collect basic or rote knowledge from written materials, so as not to waste other people¡¯s time. Of course, you can¡¯t believe everything you read¡ªmake sure the experts you talk to would trust the resources you use.
+
+Books and journals
+
+You might use two broad categories of written material: paper publications and electronic ones. With the explosion of the World Wide Web during the last decade, the amount of electronic research material available has mushroomed. Still, scholarly books and periodicals have a significant advantage over most electronic publications: They are usually peer reviewed. In the peer-review process, material destined for publication is read and critiqued by impartial experts. This process improves the accuracy and trustworthiness of the information.
+
+In many scientific and engineering fields, college textbooks are an excellent way to get an overview of a domain. Introductory textbooks are often aimed at a general audience, so you can read them without a specialized background. The best textbooks have gone through several editions, honing their language and presentation. Monographs on specific topics can also be useful; these are used as texts for advanced college and graduate-level courses. They are sometimes less well written and aimed at an audience with specific technical background. University and technical libraries are a good source for textbooks and monographs.
+
+Professional and scholarly journals are published several times each year, and they are an excellent way to keep up with advances in a particular field. They can be very expensive, so you¡¯ll want to find them in a library as well.
+
+Newsletters, circulars, and other publications aren¡¯t usually peer-reviewed, but they can provide useful information. In particular, many government publications are an invaluable way to learn about laws, regulations, and practices; they combine and distill information from various laws, orders, legal decisions, and policies to produce practical guides.
+
+Web sites and electronic media
+
+You can often find hundreds or even thousands of references by typing a few key words describing your domain into an Internet search engine. There are online encyclopedias of every description, guides to technical fields, troves of engineering data, and countless other valuable resources.
+
+Although the Internet is full of information, it is important to realize that not all of it is correct or unbiased. In particular, many search engines either accept payment for highly placed listings or use a ranking system that is easily fooled into placing a particular page at the top of your search results. Before using a general search engine, learn a little about how it is implemented and operated. Select one that, to the extent possible, ranks results only on their relevance to your search topic. You should also scrutinize individual web pages; check for the source of the information, and try to verify it against another reference.
+
+Sometimes, published electronic reference works on CD-ROM are useful, although they are often simply expensive alternatives to (or worse, a repackaging of) material already available on the Web. Again, you can often find and use these references in libraries.
+
