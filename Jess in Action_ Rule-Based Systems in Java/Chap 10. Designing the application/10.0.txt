@@ -1,0 +1,19 @@
+10. Designing the application
+In this chapter you¡¯ll...
+
+Design deftemplates for the Tax Forms Advisor
+
+Partition the application with defmodules
+
+Write code to ask questions of the user
+
+In this chapter, you will begin to develop the Tax Forms Advisor system described in chapter 9. You will decide what the facts should look like and how to divide the rules into modules (when you write them in the next chapter). You¡¯ll also design some I/O functions and other infrastructure the rules in the system need. In chapter 11, you¡¯ll write the actual rules on the foundation you develop here.
+
+The design process you¡¯ll follow in this chapter is idealized: There are no false starts or backtracking. In truth, designing a system like this usually involves experimentation, especially when you¡¯re still gaining experience. Don¡¯t be discouraged; on the contrary, feel free to experiment with different approaches to implementing this application and to the others in this book.
+
+In previous chapters of this book, you¡¯ve entered code directly at the Jess> prompt. This approach is great for experimenting, but when you¡¯re developing an application, you¡¯ll want to save the code in a text file instead. You can then execute your code either by using Jess¡¯s (batch) function (which executes the contents of a file full of Jess code) or by specifying the filename on the command line like this:
+
+C:\> java ¨Cclasspath jess.jar jess.Main taxes.clp
+
+The .clp extension is traditional but not required. Using a specific extension consistently is helpful, because you may be able to train your programmer¡¯s editor to recognize Jess code by the filename.
+

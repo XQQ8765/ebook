@@ -1,0 +1,52 @@
+10.2. Filling in details
+
+Most facts in this system will represent physical or conceptual objects, rather than commands or actions. An object generally has observable properties¡ªcolor, mass, and so on. To represent an object and its properties as a fact, you can use an unordered fact, declaring an explicit deftemplate with multiple slots, one for each property.
+
+The user fact will clearly play a central role. If you look back at the knowledge collected in section 9.3.1, you can see that the user¡¯s income and number of dependents are each fairly important and are each referenced in more than one place. These two items are therefore good candidates to be slots in a user deftemplate, which might look like this:
+
+(deftemplate user
+    (slot income)
+    (slot dependents))
+
+This is a good start, but you need to worry about one detail: default slot values.
+
+10.2.1. Default slot values
+
+Jess¡¯s mathematical functions generally throw an exception to report the error if you pass in a nonnumeric argument:
+
+Jess> (+ 1 2)
+3
+Jess> (+ one two)
+Jess reported an error in routine Value.numericValue
+    while executing (+ one two).
+    Message: Not a number: "one" (type = ATOM).
+    Program text: ( + one two ) at line 2.
+    ......
+
+An empty slot in an unordered fact contains the value nil, which is a symbol, not a number. If you write a rule that matches this empty slot and uses a mathematical function to do it, an exception will be thrown during pattern-matching, like this:
+
+Jess> (deftemplate number (slot value))
+TRUE
+Jess> (defrule print-big-numbers
+    (number (value ?v&:(> ?v 10000)))
+    =>
+    (printout t ?v " is a big number." crlf))
+TRUE
+Jess> (assert (number))
+Jess reported an error in routine Value.numericValue
+    while executing (> ?v 10000)
+    while executing rule LHS (TEQ)
+    while executing rule LHS (TECT)
+    while executing (assert (MAIN::number (value nil))).
+    Message: Not a number: "nil" (type = ATOM).
+    Program text: ( assert ( number ) ) at line 13.
+    ...
+
+If you plan to use mathematical functions on the left-hand side (LHS) of a rule, it makes sense to add numeric defaults to any slots intended to hold numeric values. The income and dependents slots of the user template will hold numbers, so you should modify the template to look like this:
+
+(deftemplate user
+    (slot income (default 0))
+    (slot dependents (default 0)))
+
+Now the income and dependents slots will be created holding numeric values, and you won¡¯t encounter this kind of error.
+

@@ -1,0 +1,28 @@
+10.1. Organizing the data
+
+As you know, Jess rules work by pattern-matching on facts. Therefore, before you can write any rules, you need to have some idea what the facts will look like. Of course, in one of those classic chicken-and-egg problems, you don¡¯t know what the facts should look like until you see the rules. How do you get started?
+
+Generally, the knowledge-engineering effort suggests some possible fact categories. If you record the knowledge as proposed rules or rule-like pseudocode (perhaps using the index-card method described in chapter 9), the possible fact types will be explicitly laid out. Otherwise, you¡¯ll have to read through the collected knowledge to get a feel for the kinds of facts that are required. The whole process is subjective, and there is no ¡°right¡± answer. With practice, you¡¯ll get a feeling for what will work and what will not.
+
+Looking through chapter 9¡¯s collected knowledge for the Tax Forms Advisor, you can see some possible candidates for deftemplate types:
+
+form¡ª A specific tax form
+
+user¡ª The operator of the system
+
+deduction¡ª A way of reducing your taxable income
+
+credit¡ª A way of reducing your tax burden
+
+dependent¡ª A person the user cares for
+
+Thinking about the general organization of the application suggests a few more possibilities:
+
+question¡ª A question the system might ask the user
+
+answer¡ª An answer given by the user
+
+recommendation¡ª A note that the system will recommend a specific form
+
+These eight templates are good candidates for inclusion in the system. Next you need to decide what form they will take¡ªordered or unordered facts? And for the unordered ones, what slots should they have?
+

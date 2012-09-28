@@ -1,0 +1,135 @@
+10.6. Building the infrastructure
+
+Very often, many of the rules in a rule-based system follow a repeating pattern. You know this application needs to ask the user a series of questions and record the answers in the working memory. You can develop code to ask a question and receive an answer as a kind of subroutine, and all the rules that need this capability can call it. Not only does this approach simplify the code for your system, but it also makes it easier to change the interface¡ªif you need to upgrade from a text-based to a graphical kiosk, then you may only need to change this one part of the system.
+
+10.6.1. Simple text-based I/O
+
+Recall (from section 3.1.4) Jess¡¯s printout function, which you can use to print to standard output. This function can accept any number of arguments and can perform rudimentary formatting (you can control where newlines go by using the special symbol crlf as an argument). There is also a function read that reads a single input token from standard input, returning what it reads. This suggests you can put these two functions together into a deffunction that emits a prompt and reads the response, like this:
+
+(deffunction ask-user (?question)
+    "Ask a question, and return the answer"
+    (printout t ?question " ")
+    (return (read)))
+
+You should test this function to make sure it works (assuming you¡¯ve entered the code for ask-user in the file taxes.clp):
+
+Jess> (batch taxes.clp)
+TRUE
+Jess> (ask-user "What is the answer?")
+What is the answer? 42
+42
+
+I entered 42 as the answer, and the function returned 42; it appears to work fine.
+
+So far, ask-user doesn¡¯t do any error checking. You¡¯d like it to only accept answers appropriate to the given question¡ªfor example, only yes or no, or only a number. You need another function¡ªone that can check the form of an answer. Here¡¯s one:
+
+(deffunction is-of-type (?answer ?type)
+    "Check that the answer has the right form"
+    (if (eq ?type yes-no) then
+      (return (or (eq ?answer yes) (eq ?answer no)))
+    else (if (eq ?type number) then
+           (return (numberp ?answer)))
+          else (return (> (str-length ?answer) 0))))
+
+The second parameter ?type to this function can be yes-no, number, or anything else. If it is yes-no, the function returns FALSE unless ?answer is "yes" or "no". If ?type is number, then the function returns true only if ?answer is a number (using the built-in numberp function to test for this condition). If ?type is anything else, is-of-type returns TRUE unless ?answer is the empty string.
+
+Now it is easy to rewrite ask-user to use is-of-type for error checking. While you¡¯re at it, you can use the new ?type parameter to enhance the prompt by adding a hint about the possible answers:
+
+(deffunction ask-user (?question ?type)
+    "Ask a question, and return the answer"
+    (bind ?answer "")
+    (while (not (is-of-type ?answer ?type)) do
+      (printout t ?question " ")
+      (if (eq ?type yes-no) then
+        (printout t "(yes or no) "))
+      (bind ?answer (read)))
+    (return ?answer))
+
+Again, you should test these new functions:
+
+Jess> (is-of-type yes yes-no)
+TRUE
+Jess> (is-of-type no yes-no)
+TRUE
+Jess> (is-of-type maybe yes-no)
+FALSE
+Jess> (is-of-type number abc)
+FALSE
+Jess> (is-of-type number 123)
+TRUE
+Jess> (ask-user "What is the answer?" yes-no)
+What is the answer? (yes or no) 42
+What is the answer? (yes or no) yes
+yes
+
+This time when I entered 42 as the answer, the function rejected it. When I typed yes instead, the function returned yes.
+
+10.6.2. Fetching the question text
+
+The question template has a slot to hold the text of a question and another slot to hold a unique identifier. Similarly, the answer template associates that same identifier with an answer. You¡¯d like to call something from the right-hand side (RHS) of a rule in the interview module using just the identifier, and have that something look up the question text, ask the question, and assert an answer fact.
+
+There are two ways to fetch something in working memory: using a defquery or using a defrule. Of the two, rules are cheaper computationally, because invoking a query always involves clearing part of the Rete network and asserting one or more facts. Therefore, your subroutine could take the form of a single defrule in its own defmodule. If that defrule has the auto-focus property (so that it fires as soon as it¡¯s activated, regardless of what other rules may be on the agenda) and uses return on its RHS to resume the previous module focus as soon as it ran, then the interview module can call it as a subroutine just by asserting a fact to activate it. The trigger fact looks like (ask id), where id is a question identifier. Such a rule can look like this:
+
+(defmodule ask)
+(defrule ask::ask-question-by-id
+    "Ask a question and assert the answer"
+    (declare (auto-focus TRUE))
+    ;; If there is a question with ident ?id...
+    (MAIN::question (ident ?id) (text ?text) (type ?type))
+    ;; ... and there is no answer for it
+    (not (MAIN::answer (ident ?id)))
+    ;; ... and the trigger fact for this question exists
+    ?ask <- (MAIN::ask ?id)
+    =>
+    ;; Ask the question
+    (bind ?answer (ask-user ?text ?type))
+    ;; Assert the answer as a fact
+    (assert (MAIN::answer (ident ?id) (text ?answer)))
+    ;; Remove the trigger
+    (retract ?ask)
+    ;; And finally, exit this module
+    (return))
+
+I¡¯ve explicitly qualified all the fact names with MAIN::. Although doing so may not be strictly necessary, it helps to avoid confusion. All of your templates are defined in the module MAIN, and therefore they can be shared by all the other modules you define.
+
+You can test this rule after defining a deffacts to hold a few sample questions. You should definitely put this test deffacts into a file, rather than just entering it interactively¡ªyou¡¯ll use it again and again to test the rules as you develop them.
+
+Note
+
+You should be thinking about putting together a complete test harness now. The details here will vary depending on your platform. On UNIX, you might write a shell script to execute your test code, and on a Windows operating system, you might use a .BAT file (or run the same UNIX scripts using Cygwin).[1] The important thing is to make it convenient to run your test code, and run it often, ideally after each change you make to the developing system. Watch for changes that lead to test failures; if you catch them right away, it is easy to back them out while they are still fresh in your mind. Appendix C describes one technique for automated testing of Jess language code.
+
+[1] Cygwin is a porting layer that lets UNIX tools run on Windows. The Cygwin home page is at http://www.cygwin.com.
+
+
+Here are some test facts you can use to test ask-question-by-id:
+
+(deffacts MAIN::test-facts
+    (question (ident q1) (type string)
+              (text "What is your name?"))
+    (question (ident q2) (type number)
+              (text "What is your estimated annual income?"))
+    (question (ident q3) (type number)
+              (text "How many dependents do you have?")))
+
+To test the rule, you just need to reset, assert an appropriate ask fact, and run. You can use (watch all) to help see what happens:
+
+Jess> (batch taxes.clp)
+TRUE
+Jess> (reset)
+TRUE
+Jess> (assert (ask q2))
+<Fact-4>
+Jess> (watch all)
+TRUE
+Jess> (run)
+FIRE 1 ask::ask-question-by-id f-2,, f-4
+What is your estimated annual income? 15000
+==> f-5 (MAIN::answer (ident q2) (text 15000))
+<== Focus ask
+<== f-4 (MAIN::ask q2)
+==> Focus MAIN
+<== Focus MAIN
+1
+
+When you enter (run), the rule ask-question-by-id grabs the module focus and fires. It asks the question and asserts a new fact holding the answer. Then the focus returns to the original module (MAIN, in this case). The subroutine, then, consists of one module, one rule, and two functions, and you can call it just by asserting a fact.
+

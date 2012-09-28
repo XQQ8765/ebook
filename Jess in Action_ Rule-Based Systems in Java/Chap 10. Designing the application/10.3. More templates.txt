@@ -1,0 +1,19 @@
+10.3. More templates
+
+A form has a code name like 1040A. It also has a descriptive name, like Federal income tax short form. Therefore, the form template might look like this:
+
+(deftemplate form (slot name) (slot description))
+
+Because the system will ask the user a number of questions, you need a generic way to represent a question and its answer. Although you don¡¯t know yet what the question-asking mechanism will look like, because you haven¡¯t written the code, you can guess that the following two templates might be a good start:
+
+(deftemplate question (slot text) (slot type) (slot ident))
+(deftemplate answer (slot ident) (slot text))
+
+The question template ties a symbolic name for a question (in the slot ident) to the text of the question. You¡¯ll use the working memory as a convenient database in which to look up the question text by identifier, so that if two rules might need to ask the same question, you won¡¯t have to duplicate the text. You¡¯ll use the type slot to hold an indication of the expected category of answer (numeric, yes or no, and so on). The answer template ties the answer to a question. A question and its corresponding answer will have the same symbolic value in their ident slots. Once an answer for a given question exists, you won¡¯t ask it again. (You¡¯ll develop the code that uses these templates in section 10.6.)
+
+Finally, a recommendation needs a slot to hold a form, and perhaps an explanation:
+
+(deftemplate recommendation (slot form) (slot explanation))
+
+You¡¯ve defined templates named user, form, question, answer, and recommendation. It turns out that this collection is sufficient for your needs. Let¡¯s consider why these templates are enough.
+

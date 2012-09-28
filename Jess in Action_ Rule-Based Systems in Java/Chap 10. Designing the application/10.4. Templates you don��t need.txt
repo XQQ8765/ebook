@@ -1,0 +1,8 @@
+10.4. Templates you don¡¯t need
+
+The other possible templates (dependent, credit, and deduction) probably won¡¯t be a part of the application. Looking back at chapter 9, you don¡¯t see anything about the collected knowledge that requires you to store information about individual dependents¡ªonly the total number of dependents, which you¡¯ll store in the user template. As a result, you won¡¯t need a dependent template after all.
+
+The argument for not including credit and deduction is more involved, and it¡¯s related to an important architectural decision. If you stored credits and deductions as facts, you could write a generic set of rules to operate on these facts. The advantage to this architecture is that new forms could be added simply by augmenting the set of credits and deductions¡ªthat is, by asserting new facts. You could do this by extending a set of deffacts that would be read at application startup. In general, adding new facts would be an easier way to add new tax forms than modifying the rules. If you hard-coded the credit and deduction information into the rules, though, then you could only extend the application by modifying the rules.
+
+On the other hand, the generic rules might be hard to understand, and that would itself make the code more difficult to modify. For the small set of forms this application will work with, I think hard-coding the tax information will lead to a cleaner, simpler application. If you needed to work with 100 forms, or 1,000, the other approach would be worth considering. For this system, though, you won¡¯t need credit or deduction facts; all the tax laws will be encoded directly in the rules.
+

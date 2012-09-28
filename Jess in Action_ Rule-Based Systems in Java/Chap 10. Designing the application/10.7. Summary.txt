@@ -1,0 +1,6 @@
+10.7. Summary
+
+In this chapter, you began to turn the knowledge you developed in chapter 9 into a concrete rule-based system. You determined the form the data in working memory will take, you partitioned the system into modules that represent the phases of processing, and you developed some input/output functionality you will use later.
+
+In the next chapter, you will develop the rules that form the actual application. We¡¯ll pay special attention to testing techniques, so that you¡¯ll trust the components of the application to work well individually and as a complete system.
+

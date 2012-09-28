@@ -1,0 +1,18 @@
+10.5. Organizing the rules
+
+You¡¯ve defined five templates to serve as data structures for the application. Now let¡¯s turn our attention from data to actual code. The first order of business is to sketch out a rough structure for how the rules will be organized.
+
+The Tax Forms Advisor needs to do four things:
+
+Initialize the application
+
+Conduct an interview with the user to learn about her tax situation
+
+Figure out what tax forms to recommend
+
+Present the list of forms to the user, removing any duplicate recommendations in the process
+
+These four steps map nicely onto four separate processing phases, each with an independent set of rules. You can put the rules for each phase into a separate defmodule (as described in section 7.6) and take advantage of the support Jess offers for partitioning a problem into steps. The four modules are named startup, interview, recommend, and report, respectively.
+
+Defmodules partition not only the rules of an application, but also the facts. You need to decide which of the templates ought to go into which of the modules. You can do this by looking at which module¡¯s rules need access to the data. Remember that if two or more modules need to share a deftemplate, it should go into the module MAIN. Examination of the list of templates and of the modules listed here shows that every template will be needed by at least two modules. For instance, the question and answer templates need to be shared between the interview and recommend modules, whereas recommendation is needed by both recommend (which asserts recommendation facts) and by report (which displays information derived from them). As a result, all of the deftemplates you define will be in module MAIN. This is not unusual.
+
