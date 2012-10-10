@@ -1,0 +1,110 @@
+11.2. Asking the user questions
+
+The first set of rules you¡¯ll write form the interview module. As defined, the purpose of this module is to ask questions of the user to collect the inputs for the recommend module. The interview module should ask the minimum number of questions, and if a question becomes moot, it shouldn¡¯t be asked at all. For example, looking back at the knowledge collected in chapter 9, you can see that it¡¯s irrelevant how much interest income the user had if his total income is greater than $50,000.
+
+To handle this requirement, you won¡¯t ask questions blindly. The rule that asks each question will often need to match the existence or absence of some other fact, so that a question won¡¯t be asked unless certain conditions are met.
+
+All the questions you¡¯ll ask are represented by facts using the question template defined in chapter 10. A deffacts containing all the potential questions is shown in listing 11.1.
+
+Listing 11.1. deffacts linking questions to corresponding IDs
+
+Code View: Scroll / Show All
+(deffacts question-data
+    "The questions the system can ask."
+    (question (ident income) (type number)
+      (text "What was your annual income?"))
+    (question (ident interest) (type yes-no)
+      (text "Did you earn more than $400 in interest?"))
+    (question (ident dependents) (type number)
+      (text "How many dependents live with you?"))
+    (question (ident childcare) (type yes-no)
+      (text "Did you have dependent care expenses?"))
+    (question (ident moving) (type yes-no)
+      (text "Did you move for job-related reasons?"))
+    (question (ident employee) (type yes-no)
+      (text "Did you have unreimbursed employee expenses?"))
+    (question (ident reimbursed) (type yes-no)
+      (text "Did you have reimbursed employee expenses, too?"))
+    (question (ident casualty) (type yes-no)
+      (text "Did you have losses from a theft or an accident?"))
+    (question (ident on-time) (type yes-no)
+      (text "Will you be able to file on time?"))
+    (question (ident charity) (type yes-no)
+      (text "Did you give more than $500 in property to charity?"))
+    (question (ident home-office) (type yes-no)
+      (text "Did you work in a home office?")))
+
+					  
+
+11.2.1. Income and dependents
+
+The user¡¯s income determines whether she can use either of the short forms, so the system should ask about income first. If the income is below $50,000, the number of dependents and the amount of interest income determine which of the short forms can be used. Although the number of dependents is needed for other purposes, the interest income is relevant only if the user¡¯s income is less than $50,000; therefore, you make asking about interest income conditional on the user¡¯s income being below this limit. To ask a question, you assert an ask fact that indicates the question to be asked; the ask module you developed in section 10.6.2 asks the question and asserts an answer fact. The rules to ask these questions are shown in listing 11.2, along with a rule to construct the user fact once the necessary information is available. The rules request-income and request-num-dependents have no patterns on their left-hand sides (LHS); they are activated unconditionally.
+
+Listing 11.2. Some rules from the interview module
+
+
+
+11.2.2. Dealing with special circumstances
+
+The rest of the interview rules ask the user about special circumstances in her life during the past year. In general, if some of these special circumstances apply, the user may want to fill out the long form and take the corresponding deductions, even if her income qualifies her to use one of the short forms. These special circumstances include moving and unreimbursed employee expenses. Some of the questions about special circumstances are again asked conditionally, based on other answers; for example, the form for deducting child-care expenses won¡¯t be needed if the user has no dependents. The rules that ask about special circumstances are shown in listing 11.3. Many of these rules are fired unconditionally, but a few depend on other answers. The rule request-childcare-expenses won¡¯t be activated if the user doesn¡¯t have dependents, and request-reimbursed-expenses will fire only if the user has unreimbursed expenses.
+
+Listing 11.3. Rules that ask about special circumstances
+
+Code View: Scroll / Show All
+(defrule request-childcare-expenses
+    ;; If the user has dependents
+    (answer (ident dependents) (text ?t&:(> ?t 0)))
+    =>
+    (assert (ask childcare)))
+
+(defrule request-employee-expenses
+    =>
+    (assert (ask employee)))
+
+(defrule request-reimbursed-expenses
+    ;; If there were unreimbursed employee expenses...
+    (answer (ident employee) (text ?t&:(eq ?t yes)))
+    =>
+    (assert (ask reimbursed)))
+
+(defrule request-moving
+    =>
+    (assert (ask moving)))
+
+(defrule request-casualty
+    =>
+    (assert (ask casualty)))
+
+(defrule request-on-time
+    =>
+    (assert (ask on-time)))
+
+(defrule request-charity
+    =>
+    (assert (ask charity)))
+
+(defrule request-home-office
+    =>
+    (assert (ask home-office)))
+
+					  
+
+When the interview module executes, it asks the user a series of questions and leaves behind a user fact and a collection of answer facts. These facts serve as input to the next module, recommend, which decides which forms the user needs.
+
+11.2.3. Testing the interview module
+
+Testing the interview module is easy. You can create a series of test cases, each of which should contain the following:
+
+A hypothetical tax situation
+
+The expected set of relevant questions
+
+The expected set of result facts
+
+Once you¡¯ve developed this set of test data, run the program once (by resetting, setting the focus to interview, and invoking run) for each test case, supplying the appropriate user answers for that hypothetical case. Then check the results. Make sure the system asks you all the questions on your list for that case, and only those questions. Use the facts command (you¡¯ll need to use (facts *) to see the facts in all modules) to make sure all the expected facts are present and correct. If you can capture your whole terminal session in a file (by using the script command on UNIX, for example), then you can save the file and use it as part of an automated test script. The program should produce the same output each time it is run; you can use your automated script to check that changes you make later haven¡¯t broken the behavior of this module.
+
+Note
+
+Many books have been written on the subject of software testing, and although such books are often useful, they can be discouraging to read. They generally concentrate on teaching you to find spanning sets of tests, or lists of tests that cover every possible path through your application. For most real applications, of course, such a spanning set is impossibly large. The testing books often forget to tell you that some tests, although perhaps not as good as all possible tests, are infinitely better than no tests. Don¡¯t be discouraged by the sense that you can¡¯t completely test a rule-based application. Remember that some testing is a lot better than none at all.
+
+

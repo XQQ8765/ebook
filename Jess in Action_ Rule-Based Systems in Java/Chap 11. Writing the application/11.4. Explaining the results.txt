@@ -1,0 +1,48 @@
+11.4. Explaining the results
+
+When the recommend module is finished, the working memory includes a series of recommendation facts representing the application¡¯s suggestions for the user. All the report module needs to do is display the data from these facts in a sensible way. In particular, the forms should be listed in alphabetical order; note that then the main forms (1040, 1040A, 1040EZ) are displayed first.
+
+Each recommendation fact includes a bit of text rationalizing the recommendation in the explanation slot. You¡¯ll display these explanations, too. Because the explanations can span multiple lines, you can¡¯t easily display the program¡¯s output in tabular form¡ªat least, not if you have to stick to plain text. If you could use HTML, the display would be easy. You¡¯ll be developing web-based systems later in the book, so for simplicity¡¯s sake you¡¯ll display each recommended form and its explanation together, one on top of the other.
+
+Sorting data is an old and well-studied topic, and there are many ways to accomplish a sorting task. A simple, if not particularly efficient, technique is the selection sort. To perform a selection sort, you search through a collection for the smallest (or largest) item, and then remove it and make it the first item in a new, sorted collection. Repeat this process to find the second and later items. For small collections, a selection sort is a perfectly reasonable choice, and you¡¯ll use it here. This rule-based implementation of a selection sort compares the names of forms in recommendation facts. The single rule prints information about a fact and then retracts it if and only if there are no other recommendation facts with a form that comes alphabetically earlier. Each time you retract a fact, a different recommendation becomes the new alphabetically first one, until all the recommendation facts are exhausted. You can use the str-compare function, which takes two strings as arguments and returns -1 if the first one is alphabetically first, +1 if the second string should come first, and 0 if the arguments are equal:
+
+(defmodule report)
+
+(defrule sort-and-print
+    ?r1 <- (recommendation (form ?f1) (explanation ?e))
+    (not (recommendation (form ?f2&
+                        :(< (str-compare ?f2 ?f1) 0))))
+    =>
+    (printout t "*** Please take a copy of form " ?f1 crlf)
+    (printout t "Explanation: " ?e crlf crlf)
+    (retract ?r1))
+
+11.4.1. Testing the report module
+
+The report module, like the startup module, contains only one rule. You can test it by asserting some recommendation facts yourself:
+
+Jess> (assert (recommendation (form f3) (explanation ef3))
+    (recommendation (form f1) (explanation ef1))
+    (recommendation (form f2) (explanation ef2))
+    (recommendation (form f4) (explanation ef4)))
+<Fact-3>
+Jess> (focus report)
+MAIN
+Jess> (run)
+*** Please take a copy of form f1
+Explanation: ef1
+
+*** Please take a copy of form f2
+Explanation: ef2
+
+*** Please take a copy of form f3
+Explanation: ef3
+
+*** Please take a copy of form f4
+Explanation: ef4
+
+4
+Jess>
+
+Note that the forms are listed in alphabetical order, and each one is displayed with its explanation. The application is now basically done; you just need to handle a few remaining details.
+

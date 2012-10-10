@@ -1,0 +1,53 @@
+11.6. Testing the full application
+
+Now that the whole application is written, dust off the sample scenarios you developed for testing the interview and recommend modules and run them again. This time you only need to look at the output of the system. A complete run of the application is shown in listing 11.5.
+
+Listing 11.5. A typical session with the Tax Forms Advisor
+
+Code View: Scroll / Show All
+% java jess.Main taxes.clp
+
+Jess, the Java Expert System Shell
+Copyright (C) 2001 E.J. Friedman Hill and the Sandia Corporation
+Jess Version 6.1 4/9/2003
+
+Type your name and press Enter> Bertram
+
+**********************************
+ Hello, Bertram.
+ Welcome to the tax forms advisor
+ Please answer the questions and
+ I will tell you what tax forms
+ you may need to file.
+**********************************
+
+What was your annual income? 14000
+Did you work in a home office? (yes or no) yes
+Did you give more than $500 in property to charity? (yes or no) no
+Will you be able to file on time? (yes or no) yes
+Did you have losses from a theft or an accident? (yes or no) no
+Did you move for job-related reasons? (yes or no) no
+Did you have unreimbursed employee expenses? (yes or no) yes
+Did you have reimbursed employee expenses, too? (yes or no) no
+How many dependents live with you? 7
+Did you have dependent care expenses? (yes or no) yes
+*** Please take a copy of form 1040
+Explanation: Home office expenses
+Unreimbursed employee expenses
+
+*** Please take a copy of form 1040A
+Explanation: Income below threshold, with dependents
+
+*** Please take a copy of form 2016EZ
+Explanation: Unreimbursed employee expenses
+
+*** Please take a copy of form 2441
+Explanation: Child care expenses
+
+*** Please take a copy of form 8829
+Explanation: Home office expenses
+
+					  
+
+Now would be a good time to take the system to the tax expert to let her play with it. She very well may have some important changes or additions you need to integrate¡ªit is the nature of software development that no set of requirements is ever complete. You should also show this system to the customer to get some feedback.
+

@@ -1,0 +1,143 @@
+11.3. Recommending forms
+
+Writing the rules for the recommend module is a bit more challenging, but also more fun. Each of the rules examines the user and answer facts and recommends one or more forms. These rules directly encode the knowledge gleaned from the interview with a tax expert in chapter 9.
+
+The first set of rules in this module determines which variants of Form 1040 the user might need. In keeping with the design description in chapter 9, your strategy will be to recommend all the forms the user might need; if in doubt, you will recommend the form. This means the system may recommend that the user bring home several versions of the same form, and that¡¯s OK.[1]
+
+[1] The U.S. Federal Tax Code is famously complicated. It¡¯s common practice for U.S. residents to try filling out several different combinations of tax forms, because each combination can result in a slightly different calculated tax liability. The taxpayer then files the combination of forms that leads to the smallest tax bill.
+
+Recall that the user can file Form 1040EZ if and only if:
+
+Her income is less than $50,000, and
+
+She has no dependents, and
+
+Her interest income is less than $400
+
+You can directly translate these requirements into a rule as follows:
+
+(defmodule recommend)
+
+(defrule form-1040EZ
+    (user (income ?i&:(< ?i 50000))
+          (dependents ?d&:(eq ?d 0)))
+    (answer (ident interest) (text no))
+    =>
+    (assert (recommendation
+        (form 1040EZ)
+        (explanation "Income below threshold, no dependents"))))
+
+Similarly, Form 1040A can be filed if the user¡¯s income is below the same threshold, but she has either dependents, or excess interest income, or both. You can write this as two rules:
+
+(defrule form-1040A-excess-interest
+    (user (income ?i&:(< ?i 50000)))
+    (answer (ident interest) (text yes))
+    =>
+    (assert (recommendation
+        (form 1040A)
+        (explanation "Excess interest income"))))
+
+(defrule form-1040A
+    (user (income ?i&:(< ?i 50000))
+          (dependents ?d&:(> ?d 0)))
+    =>
+    (assert (recommendation
+        (form 1040A)
+        (explanation "Income below threshold, with dependents"))))
+
+You recommend the long Form 1040 if the user needs to itemize deductions, or if the user¡¯s income is above the threshold. The rule to handle this latter condition is simply
+
+(defrule form-1040-income-above-threshold
+    (user (income ?i&:(>= ?i 50000)))
+    =>
+    (assert (recommendation
+        (form 1040)
+        (explanation "Income above threshold"))))
+
+The rest of the rules in this module handle the various special circumstances. The user can take the credit for dependent-care expenses if she files either Form 1040A or Form 1040 (dependent care is special in this regard; all the other special circumstances can only be claimed on Form 1040). The rule to recommend the dependent care expenses form is therefore as follows:
+
+(defrule form-2441
+    (answer (ident childcare) (text yes))
+    =>
+    (assert (recommendation
+        (form 2441)
+        (explanation "Child care expenses"))))
+
+You know that if the childcare question has been asked and answered, the user must have dependents and therefore isn¡¯t filing Form 1040EZ. See the rule request-childcare-expenses in listing 11.3.
+
+For most of the other special circumstances, you recommend Form 1040 along with the special form. Here¡¯s a representative rule:
+
+(defrule form-4684
+    (answer (ident casualty) (text yes))
+    =>
+    (bind ?ex "Losses due to casualty or theft")
+    (assert
+        (recommendation (form 4684) (explanation ?ex))
+        (recommendation (form 1040) (explanation ?ex))))
+
+You may notice a problem here: Form 1040 may be recommended multiple times. You need a rule to combine multiple recommendations into one. The following rule does the trick. The separate explanations are concatenated with a newline (represented in Jess as a double-quoted string containing a line break) between them:
+
+(defrule combine-recommendations
+    ?r1 <- (recommendation (form ?f) (explanation ?e1))
+    ?r2 <- (recommendation (form ?f) (explanation ?e2&~?e1))
+    =>
+    (retract ?r2)
+    (modify ?r1 (explanation (str-cat ?e1 "
+" ?e2))))
+
+Listing 11.4 shows the remainder of the rules that handle special circumstances. These rules are all in the recommend module.
+
+Listing 11.4. Additional rules for special circumstances
+
+Code View: Scroll / Show All
+(defrule form-2016EZ
+    (answer (ident employee) (text yes))
+    (answer (ident reimbursed) (text no))
+    =>
+    (bind ?ex "Unreimbursed employee expenses")
+    (assert
+        (recommendation (form 2016EZ) (explanation ?ex))
+        (recommendation (form 1040) (explanation ?ex))))
+
+(defrule form-2016
+    (answer (ident employee) (text yes))
+    (answer (ident reimbursed) (text yes))
+    =>
+    (bind ?ex "Reimbursed employee expenses")
+    (assert
+        (recommendation (form 2016) (explanation ?ex))
+        (recommendation (form 1040) (explanation ?ex))))
+
+(defrule form-3903
+    (answer (ident moving) (text yes))
+    =>
+    (bind ?ex "Moving expenses")
+    (assert
+        (recommendation (form 3903) (explanation ?ex))
+        (recommendation (form 1040) (explanation ?ex))))
+
+(defrule form-4868
+    (answer (ident on-time) (text no))
+    =>
+    (assert (recommendation (form 4868)
+        (explanation "Filing extension"))))
+
+(defrule form-8283
+    (answer (ident charity) (text yes))
+    =>
+    (bind ?ex "Excess charitable contributions")
+    (assert
+        (recommendation (form 8283) (explanation ?ex))
+        (recommendation (form 1040) (explanation ?ex))))
+
+(defrule form-8829
+    (answer (ident home-office) (text yes))
+    =>
+    (bind ?ex "Home office expenses")
+    (assert
+        (recommendation (form 8829) (explanation ?ex))
+        (recommendation (form 1040) (explanation ?ex))))
+
+					  
+
+

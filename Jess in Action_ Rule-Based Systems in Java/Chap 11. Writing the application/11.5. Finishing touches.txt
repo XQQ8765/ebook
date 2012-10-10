@@ -1,0 +1,16 @@
+11.5. Finishing touches
+
+Now that all the rules are written, you need a way to start your program. Because the module focus must be shifted several times during each run of the application, it is helpful to define a deffunction to perform the proper sequence of operations:
+
+(deffunction run-system ()
+    (reset)
+    (focus startup interview recommend report)
+    (run))
+
+The single call to focus sets up the focus stack so the four modules become active in the right order. The program can then be executed with a single call to run-system. This application is intended to run continuously in a kiosk at the post office, so you call this function in a loop:
+
+(while TRUE
+    (run-system))
+
+This loop restarts the application each time it terminates.
+

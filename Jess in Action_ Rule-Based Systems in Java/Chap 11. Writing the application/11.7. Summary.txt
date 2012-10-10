@@ -1,0 +1,8 @@
+11.7. Summary
+
+Over the last three chapters, you¡¯ve gone from concept to research to design and finally to execution of a system for recommending tax forms. Although the program you¡¯ve developed is somewhat simplistic, the process you followed was representative of rule-based system development. And although the user interface of the application you developed here is unsuitable for real use, the underlying logic is perfectly respectable and includes features like input validation and a simple explanation facility. The routines you developed for asking questions and validating input will serve as a foundation on which you¡¯ll build more sophisticated tools later in this book.
+
+In this chapter, you saw how a good design and sturdy infrastructure help simplify programming a system. You learned to write a modular application using processing phases implemented using defmodules, and you got some practice writing simple pattern-matching expressions. You even learned how to implement a simple sorting algorithm in a rule-based language. Note, however, that good design decisions don¡¯t happen spontaneously; the Jess programmer will become more proficient over time, just as in any discipline. Experience and experimentation will help you develop good design skills.
+
+In the next part of this book, you¡¯ll research, design, and build another complete system. This one will be considerably more polished and will include a Java-based graphical user interface. You¡¯ll also see how backward chaining lets you easily write programs for problem diagnosis and troubleshooting.
+

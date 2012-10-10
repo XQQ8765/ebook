@@ -1,0 +1,13 @@
+11. Writing the application
+In this chapter you¡¯ll...
+
+Write the rules for the Tax Forms Advisor
+
+Work with multiple modules
+
+Test the completed application
+
+You¡¯ve done the research, laid the groundwork, and sketched out a design, so now it¡¯s time to write the rules that implement the Tax Forms Advisor application. In this chapter, you¡¯ll write the rules, test them, and then test the completed application.
+
+As you¡¯ll recall from chapter 10, the completed application will consist of five modules: ask, startup, interview, recommend, and report. You developed the ask module in chapter 10. In this chapter, you¡¯ll write the rules for the other four modules one module at a time. The code for the complete application is available from this book¡¯s web site (http://www.manning.com/friedman-hill).
+

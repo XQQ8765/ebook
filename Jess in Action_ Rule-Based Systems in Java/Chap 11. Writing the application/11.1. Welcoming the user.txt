@@ -1,0 +1,38 @@
+11.1. Welcoming the user
+
+The startup module for this application is very simple. It doesn¡¯t really have any work to do, other than serving as a launching point. You want to print a welcome banner when the user first sees the application, so you can define a rule in startup to display one:
+
+(defmodule startup)
+
+(defrule print-banner
+    =>
+    (printout t "Type your name and press Enter> ")
+    (bind ?name (read))
+    (printout t crlf "*****************************" crlf)
+    (printout t "Hello, " ?name "." crlf)
+    (printout t "Welcome to the tax forms advisor" crlf)
+    (printout t "Please answer the questions and" crlf)
+    (printout t "I will tell you what tax forms" crlf)
+    (printout t "you may need to file." crlf)
+    (printout t "*****************************" crlf crlf))
+
+11.1.1. Testing the startup module
+
+Whenever you write a rule or cooperating group of rules, you should make sure they work. To test the simple rule print-banner, you can just reset working memory, set the focus, and run (text in bold indicates characters you type in response to a prompt):
+
+Jess> (reset)
+TRUE
+Jess> (focus startup)
+MAIN
+Jess> (run)
+Type your name and press Enter> Fred
+**********************************
+ Hello, Fred.
+ Welcome to the tax forms advisor
+ Please answer the questions and
+ I will tell you what tax forms
+ you may need to file.
+**********************************
+1
+Jess>
+
