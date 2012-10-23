@@ -1,0 +1,26 @@
+13.6. Finishing touches
+The current version of the recommend-action function still prints its recommendations to the command line. Java offers the convenient JOptionPane class as a quick way to post a modal dialog box. You can easily modify recommend-action to use it:
+
+(deffunction recommend-action (?action)
+    "Give final instructions to the user"
+    (call JOptionPane showMessageDialog ?*frame*
+      (str-cat "I recommend that you " ?action)
+      "Recommendation"
+      (get-member JOptionPane INFORMATION_MESSAGE)))
+
+The arguments to the static showMessageDialog method are, in order, the parent window, the message, the window title, and a constant that indicates what kind of icon to display.
+
+Another limitation of the application is that there¡¯s no way to exit. You can tell the JFrame to call System.exit method when it is closed using JFrame¡¯s setDefaultCloseOperation method:
+
+(?*frame* setDefaultCloseOperation
+    (get-member JFrame EXIT_ON_CLOSE))
+
+Finally, during testing I noticed that it¡¯s a bit disorienting to have question text remain in the window after the application has finished. It would be nice to have the old question removed when the program is through. You can¡¯t put code to do this into recommend-action, because sometimes this function is called to make an intermediate recommendation, and more questions will follow. You certainly don¡¯t want to go back and change all the rules to add GUI-specific code. What can you do?
+
+If you look at your rules, you¡¯ll recall that they call halt as appropriate to terminate execution of the system. You can therefore use the defadvice function to modify the behavior of halt (see section 4.5 to learn more about defadvice):
+
+(defadvice before halt
+    (?*qfield* setText "Close window to exit"))
+
+Now, when a rule calls halt to halt execution, the contents of the question field will automatically change.
+

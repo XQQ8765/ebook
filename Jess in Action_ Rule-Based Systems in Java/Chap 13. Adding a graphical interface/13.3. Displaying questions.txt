@@ -1,0 +1,38 @@
+13.3. Displaying questions
+Right now, the application you¡¯re developing displays questions and accepts answers from the command line. As a first step toward producing a real GUI, let¡¯s change the application to display the text of the questions in the window you¡¯ve created (for the moment, you¡¯ll still accept input from the command line). You can use a JTextArea inside a JScrollPane to accomplish this. You need to access the JTextArea from the ask module, so you¡¯ll store a reference to it in a defglobal named qfield. Here¡¯s the code to create a JTextArea and add it to your JFrame:
+
+Jess> (defglobal ?*qfield* = (new JTextArea 5 40))
+TRUE
+Jess> (bind ?scroll (new JScrollPane ?*qfield*))
+<External-Address:javax.swing.JScrollPane>
+Jess> ((?*frame* getContentPane) add ?scroll)
+Jess> (?*qfield* setText "Please wait...")
+Jess> (?*frame* repaint)
+
+You set the text of the new text area to the string "Please wait...". Figure 13.2 shows what the window looks like now
+
+Figure 13.2. Application window with an added JTextArea for displaying questions
+
+
+
+
+As you¡¯ll recall from chapter 12, you used the ask module (as originally defined in chapter 10) to provide the temporary command-line interface to your application. In this chapter, you¡¯ll modify the ask module yet again to connect it to your GUI. In particular, you need to modify the function ask-user. Listing 13.1 is a new version of ask-user that displays the questions in the JTextArea instead of at the command line. If you run the whole application with this modified ask-user, you¡¯ll need to look at the JFrame to see the questions and at the command line to type your answers. You¡¯ll return to this function soon¡ªthe final version will no longer read from the command line:.
+
+Listing 13.1. ask-user function to display questions (changed lines in bold)
+
+(deffunction ask-user (?question ?type ?valid)
+    "Ask a question, and return the answer"
+    (bind ?answer "")
+    (while (not (is-of-type ?answer ?type ?valid)) do
+      (bind ?s ?question " ")
+      (if (eq ?type multi) then
+        (bind ?s (str-cat ?s ?*crlf*
+                  "Valid answers are "))
+         (foreach ?item ?valid
+           (bind ?s (str-cat ?s ?item " "))))
+      (bind ?s (str-cat ?s ":"))
+      (?*qfield* setText ?s)
+      (bind ?answer (read)))
+    (return ?answer))
+
+

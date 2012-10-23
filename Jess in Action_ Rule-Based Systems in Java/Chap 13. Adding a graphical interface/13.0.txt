@@ -1,0 +1,19 @@
+13. Adding a graphical interface
+In this chapter you¡¯ll...
+
+Create a window
+
+Fill it with graphical components
+
+Write event handlers
+
+... all from the Jess language
+
+These days, virtually all computer applications come with a graphical user interface (GUI). Graphical interfaces make many users feel more comfortable than command lines. Furthermore, by providing a bounded set of commands (explicit in menus or implicit in radio buttons, checkboxes, and other controls), GUIs provide guidance that helps users use the application efficiently and correctly. One advantage of a GUI is perhaps less obvious: Because it limits user actions, it can make invalid user inputs impossible, thereby simplifying the application¡¯s internal error-checking code.
+
+Your first real application, the Tax Forms Advisor, had only a command-line interface. The PC Repair Assistant you¡¯re developing now should have a friendlier GUI. You¡¯ll develop such an interface in this chapter using only Jess¡¯s Java reflection capabilities¡ªthat is, you¡¯ll write only Jess scripts, not Java code. In the process, we¡¯ll look at how Jess lets you develop software using the Java libraries in an iterative and interactive way.
+
+The GUI you¡¯ll develop in this chapter will use Java¡¯s Swing library. I¡¯ll assume some basic knowledge of Swing (and Java GUIs in general) on your part. You might want to keep some documentation for the javax.swing package handy for reference.
+
+Note that you¡¯ll be using an iterative approach to develop this GUI; you¡¯ll see the same Jess functions presented several times with various refinements applied each time. The final code for the completed application is available from this book¡¯s web site.
+

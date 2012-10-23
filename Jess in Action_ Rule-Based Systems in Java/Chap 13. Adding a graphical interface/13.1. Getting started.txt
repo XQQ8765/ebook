@@ -1,0 +1,19 @@
+13.1. Getting started
+You¡¯ll be using many of the classes in Java¡¯s javax.swing, java.awt, and java.awt.event packages. Although you could spell out these package names when you need them, it will be easier if you use Jess¡¯s import function to make this unnecessary. Jess¡¯s import function, like the Java keyword, makes it possible for you to refer to all the classes in a given Java package by using their class names, without spelling out the package name each time. Note how after importing javax.swing.*, you can create a javax.swing.JButton using just its class name:
+
+Jess> (import javax.swing.*)
+TRUE
+Jess> (import java.awt.*)
+TRUE
+Jess> (import java.awt.event.*)
+TRUE
+Jess> (new JButton "Example Button")
+<External-address:javax.swing.JButton>
+
+The graphical components of the application will be accessed from different sections of Jess code. In particular, several functions need access to the application¡¯s top-level window component (a JFrame). You¡¯ll therefore store a reference to it in a defglobal. Unfortunately, the reset function by default resets the values of defglobals, and it would complicate the application if you had to worry about the possibility of your only reference to the JFrame disappearing. To deal with this situation, you use the set-reset-globals function to tell Jess to leave defglobals alone when reset is called:
+
+Jess> (set-reset-globals FALSE)
+FALSE
+
+With these details taken care of, you can start coding the GUI.
+

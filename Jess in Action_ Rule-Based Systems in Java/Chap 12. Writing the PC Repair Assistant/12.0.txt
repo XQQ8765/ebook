@@ -1,0 +1,19 @@
+12. Writing the PC Repair Assistant
+In this chapter you¡¯ll...
+
+Collect knowledge using flowcharts
+
+Translate flowcharts into rules
+
+Enhance the ask module from part 3
+
+In this chapter, you¡¯ll write a rule-based system with a command-line interface, just like the Tax Forms Advisor. You¡¯ll obtain the necessary knowledge by interviewing computer repair technicians, develop the rules, and test the system. This application reuses some techniques you developed for the Tax Forms Advisor. For instance, you¡¯ll modify and then reuse the ask module to ask the user for input. You¡¯ll again use modules to represent processing phases: The main knowledge base is in the MAIN module, and we¡¯ll introduce a new control module named trigger.
+
+Of course, this application showcases some new techniques as well. To model the technician¡¯s reasoning when diagnosing computer problems, you¡¯ll use backward chaining, which we first discussed in section 7.4. Based on an initial description of the behavior of a computer, the system will form a hypothesis about what might be wrong with it. Backward chaining rules will then be triggered to either prove or disprove that hypothesis. Along the way, the program will make recommendations for things the user might try to potentially fix the broken computer.
+
+Many of the earliest rule-based systems were backward-chaining diagnostic programs like this one. For example, the MYCIN program[1] discussed in section 2.2.1 diagnosed blood infections based on information about bacterial cultures.
+
+[1] R. Davis, B. G. Buchanan, and E. H. Shortliffe, ¡°Production Systems as a Representation for a Knowledge-Based Consultation Program,¡± Artificial Intelligence 8 (1977): 15¨C45.
+
+In chapter 13, you¡¯ll package the application with a graphical user interface suitable for use by office personnel. You¡¯ll use Jess¡¯s powerful Java scripting capabilities to build a Swing-based graphical interface without writing any Java code. The interface hooks into an enhanced version of the ask module, so in adding the interface you won¡¯t need to modify the knowledge base you develop here.
+

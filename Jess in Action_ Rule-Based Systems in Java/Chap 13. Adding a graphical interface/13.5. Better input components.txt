@@ -1,0 +1,52 @@
+13.5. Better input components
+As it stands, the user of your program has to answer questions by typing a reply into a JTextField. Of course, most GUIs don¡¯t work that way. For example, users aren¡¯t accustomed to typing x86 or Macintosh into a GUI; they¡¯re used to selecting choices from a combo box. This application should work the same way.
+
+Recall that the question fact template has a slot named type, indicating the kind of answer expected for each question. Your interface should display different user-input panels depending on the value of this type field. What panels will you need? Looking back at the questions defined in the previous chapter, you¡¯ll need only two:
+
+Multiple choice¡ª A panel with a pop-up menu (a combo box) containing a list of choices.
+
+Numeric¡ª A text field that accepts numeric input. You¡¯ve essentially already done this one.
+
+Once again, the ask module can be modified to accommodate this latest requirement. You can change the ask-user function so that it sets up the appropriate input component for each question based on the type of question being asked. For questions with numeric answers, you use the existing JTextField, and for multiple-choice questions, you use a new JComboBox.
+
+Setting up the JComboBox and its associated OK button is similar to setting up the JTextField. After the components are created, the JButton needs an event handler to assert the selected item as an answer fact:
+
+(defglobal ?*acombo* = (new JComboBox (create$ "yes" "no")))
+(defglobal ?*acombo-ok* = (new JButton OK))
+
+(deffunction combo-input (?EVENT)
+    "An event handler for the combo box"
+    (assert
+      (ask::user-input (sym-cat (?*acombo* getSelectedItem)))))
+
+(bind ?handler (new jess.awt.ActionListener combo-input (engine)))
+(?*acombo-ok* addActionListener ?handler)
+
+One interesting bit about this code snippet is the call to the JComboBox constructor. The constructor expects an array of Object as an argument. In this code, you pass a Jess list made by create$; Jess automatically converts it to the needed array.
+
+With the JComboBox defined, you can modify ask-user one final time:
+
+(deffunction ask-user (?question ?type ?valid)
+    "Set up the GUI to ask a question"
+    (?*qfield* setText ?question)
+    (?*apanel* removeAll)
+    (if (eq ?type multi) then
+      (?*apanel* add ?*acombo*)
+      (?*apanel* add ?*acombo-ok*)
+      (?*acombo* removeAllItems)
+      (foreach ?item ?valid
+        (?*acombo* addItem ?item))
+    else
+      (?*apanel* add ?*afield*)
+      (?*apanel* add ?*afield-ok*)
+      (?*afield* setText ""))
+    (?*frame* validate)
+    (?*frame* repaint))
+
+This version is somewhat simpler because it doesn¡¯t have to compose a complex prompt string. Instead, based on the question type, it installs one of two possible sets of components in the JPanel at the bottom of the window. Figure 13.6 shows what the application looks like with the combo box panel installed.
+
+Figure 13.6. The multiple choice input panel displays a combo box and a button. The choices in the combo box are changed based on the question being displayed.
+
+
+
+

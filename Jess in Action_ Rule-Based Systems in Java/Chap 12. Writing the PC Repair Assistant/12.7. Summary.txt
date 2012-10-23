@@ -1,0 +1,7 @@
+12.7. Summary
+In this chapter, you saw how backward chaining can be used to do something automatically, on demand; in this case, you used it to schedule questions to be asked using a single, generic rule. The combination of forward-chaining inference rules and backward-chaining infrastructure rules is a powerful and common pattern in Jess systems. Another common application of this idea is fetching needed facts automatically from a database.
+
+Flowcharts are a reasonable way to represent some kinds of knowledge, and you used them to good effect in this chapter. The collection of inference rules in this chapter was more complex than you¡¯ve seen before; most rules that fire can trigger the firing of multiple other rules. The modular and descriptive nature of individual rules makes a program like this easier to modify over time and easier to develop incrementally compared to a monolithic program without rules.
+
+In the next chapter, you¡¯ll again tinker with the ask module. This time, you¡¯ll give it a graphical interface and free the user from the need to type answers like yes and no at the command line.
+

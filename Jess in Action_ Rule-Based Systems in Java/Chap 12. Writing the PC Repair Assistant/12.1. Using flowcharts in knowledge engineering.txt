@@ -1,0 +1,49 @@
+12.1. Using flowcharts in knowledge engineering
+Diagnostic knowledge can be represented fairly well using flowcharts. A lot of information can be compactly represented by a few symbols, as shown in table 12.1. A simple flowchart for dealing with automotive problems is shown in figure 12.1.
+
+Table 12.1. Symbols used in flowcharts
+
+Symbol	Meaning	Example
+Square box	A simple action	Repairing or replacing a component
+Diamond box	A choice or decision	Is the screen dark?
+Oval box	Beginning or end of process	START
+Arrows	Flow between boxes	What to do for each branch of a decision
+
+Figure 12.1. A simple flowchart representing a trivial diagnostic process. The hypothesis ¡°The car won¡¯t run because it has no fuel¡± is implicit in the diagram.
+
+
+
+
+If you¡¯re going to be drawing a lot of flowcharts, a software program like Visio can help. When you¡¯re drawing flowcharts during an interview with a domain expert, software might be too unwieldy, in which case a dime-store plastic drawing template and a sharp pencil might be a better choice.
+
+12.1.1. From flowcharts to rules
+Translating flowcharts into rules is fairly straightforward. In general, there is one rule for every action box, and there are additional rules for some of the oval boxes. A possible set of rules for the flowchart in figure 12.1 is shown in listing 12.1. The listing includes three rules: one each for the action boxes in the flowchart and one for the END oval. Note that each rule corresponds to a specific hypothesis about what might be wrong with the car. In a more complex flowchart, this last correspondence might no longer hold, but the matchup between rules and boxes still would.
+
+Listing 12.1. Three rules that capture the logic from figure 12.1
+
+(defrule no-fuel
+    "This rule corresponds to the 'buy fuel' box"
+    (car-starts no)
+    (car-has-fuel no)
+    =>
+    (assert (buy fuel)))
+
+(defrule faulty-engine
+    "This rule is for the 'take car to mechanic' box"
+    (car-starts no)
+    (car-has-fuel yes)
+    =>
+    (assert (take car to mechanic)))
+
+(defrule car-is-ok
+    "This rule corresponds to the 'END' oval"
+    (car-starts yes)
+    =>
+    (assert (car is ok)))
+
+The program you are building will diagnose problems with computers, so you should be able to represent the knowledge you gather in a series of flowcharts. If you were gathering the knowledge by interviewing a computer repair technician, you could start by asking her to list some of the most common computer problems she deals with. For each of these problems, you¡¯d develop a flowchart around the hypothesis that this particular problem was affecting the broken computer. Each of these flowcharts would show the series of tests the technician would perform to attempt to verify or disprove the hypothesis.
+
+It should be easy to imagine how the interview would be conducted. For each flowchart, you¡¯d ask, ¡°What would you do first to diagnose this problem, and what are the possible outcomes?¡± The most likely follow-up questions would then be of the form, ¡°What would you do if you saw outcome X when you did Y?¡± In between, of course, you¡¯d need to ask for clarification about what various technical terms meant, and these answers would be collected in prose form. Because each step in the flowchart might be fairly complex, you¡¯d probably want to give each box an identifier like F10-3 (meaning the third numbered box on flowchart number 10) and then record the contents of each box in prose form on another piece of paper.
+
+A real diagnostic system might contain dozens or even hundreds of these annotated flowcharts. Due to obvious space limitations, you¡¯ll see only a few simple ones here.
+

@@ -1,0 +1,9 @@
+13.8. Summary
+In part 4 of this book, you¡¯ve built a fairly sophisticated application in about 230 lines of Jess code. You collected knowledge in the form of flowcharts and then translated the flowcharts into rules. The flowcharts are a compact and useful form of documentation for the resulting knowledge base.
+
+The PC Repair Assistant uses backward chaining to automatically form hypotheses about possible problems and ask the appropriate questions, based just on the antecedents of the rules in the knowledge base. This approach scales well to large systems, unlike the more unwieldy approach used by the Tax Forms Advisor in part 3. Because you used backward chaining to let Jess choose the questions automatically, you needed only half as many rules compared to the tax advisor.
+
+Once the application logic was written, tested, and debugged, you wrapped it in a graphical user interface using only Jess code. Adding a GUI required you to make some changes to the ask module used for asking questions, but you didn¡¯t need to touch any of the rules. The final incarnation of the ask module uses Jess¡¯s waitForActivations Java API function to communicate between Java¡¯s event thread and the main thread where rules fire.
+
+In this and the previous part, you developed complete, isolated applications from the ground up using Jess. In the real world, however, Jess usually needs to cooperate with Java code outside of itself. In the next part of this book, you will learn how to put Java objects into Jess¡¯s working memory so that Jess can reason about the outside world. You¡¯ll also learn how to extend the Jess language by writing functions in Java.
+

@@ -1,0 +1,26 @@
+12.3. Asking questions with backward chaining
+In the Tax Forms Advisor application, an entire module named interview was dedicated to picking out questions to ask the user. In general, there was one rule in interview specific to each question the application might ask, and another rule in the recommend module to use the answer. Because that application included only a dozen or so possible questions, this approach wasn¡¯t much of a problem; but it obviously wouldn¡¯t scale well to a system with hundreds of questions. You need something easier for the application you¡¯re writing now. Ideally, you¡¯d like to have just a few generic rules that somehow know how to ask the appropriate questions at the right time. In this application, when a diagnostic rule is partially matched and needs a MAIN::answer fact to match it further, you¡¯d like the appropriate question to be asked and the resulting answer fact to be asserted.
+
+You¡¯ll use backward chaining, so your new program will automatically know when to ask each question. Recall from section 7.4 that in Jess, backward chaining works by creating special trigger facts based on partially matched rules. To make backward chaining work, you first have to turn it on with the do-backward-chaining function; then you write rules to match the trigger facts. The ask module asks questions based on the MAIN::ask facts it sees, so your backward-chaining rule (called supply-answers) can match MAIN::need-answer trigger facts and assert MAIN::ask facts in response; this process is shown in figure 12.3. The rule supply-answers is shown in listing 12.3. supply-answers has the auto-focus property and is in its own module; this is the same trick the ask module uses so that it can fire immediately whenever it is activated.
+
+Figure 12.3. The cycle of rules that fire to get answers from the user in this application. The rule power-supply-broken needs an answer fact before it matches. Jess¡¯s backward-chaining engine detects this requirement and asserts a need-answer fact. The rule supply-answers detects this fact and asserts an ask fact in response. Finally, the ask-question-by-id rule fires in response to the ask fact and supplies the answer fact needed by power-supply-broken.
+
+[View full size image]
+
+
+Listing 12.3. A rule to ask questions via backward chaining
+
+(do-backward-chaining answer)
+
+(defmodule trigger)
+
+(defrule trigger::supply-answers
+    (declare (auto-focus TRUE))
+    (MAIN::need-answer (ident ?id))
+    (not (MAIN::answer (ident ?id)))
+    (not (MAIN::ask ?))
+    =>
+    (assert (MAIN::ask ?id))
+    (return))
+
+

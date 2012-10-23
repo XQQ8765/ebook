@@ -1,0 +1,80 @@
+12.4. Checking the answers
+The ask module developed in section 10.6 was a simple, general-purpose mechanism for asking questions. For this application, you need to extend it a little. In particular, whereas the previous application only asked questions with yes/no and numeric answers, this application needs to be able to validate three different kinds of answers:
+
+Multiple choice (multi)¡ª One of a set of allowed answers. Yes or no questions are a special case of this type.
+
+Numeric¡ª Any integer value.
+
+Text¡ª Any arbitrary text.
+
+Furthermore, looking ahead to chapter 13, this application will have a graphical interface. The original version of the ask module depended on the fact that all answers were read from the console using the Jess (read) function. (read) interprets what it reads, which guarantees that something that looks like an integer is held internally as a jess.Value object of type RU.INTEGER. In the last application, then, the Jess parser figured out if something was a number before the ask module ever saw it. You can¡¯t make that assumption any longer, because you¡¯re going to use a GUI, not (read), to collect answers. Some numbers may arrive as text and need to be parsed.
+
+12.4.1. Modifying the ask module
+In general, then, you need to extend and enhance the ask module for this application. The first extension adds a multislot to the question template to hold the possible values for multiple-choice questions. The ask-question-by-id rule needs to match this multifield and pass it along to an extended version of the ask-user function. ask-user, in turn, needs to pass the multifield to an enhanced is-of-type function, which can validate questions of type multi, numeric, and text. The new template and rule are shown in listing 12.4, and the modified functions appear in listing 12.5.
+
+Listing 12.4. Modifications to the question-asking rules
+
+(deftemplate question
+    "A question the application may ask"
+    (slot text)       ;; The question itself
+    (slot type)       ;; Can be multi, text, or numeric
+    (multislot valid) ;; The allowed answers for type multi
+    (slot ident))     ;; The "name" of the question
+
+(defrule ask::ask-question-by-id
+    "Ask a question and assert the answer"
+    (declare (auto-focus TRUE))
+    (MAIN::question (ident ?id) (text ?text)
+                    (valid $?valid) (type ?type))
+    (not (MAIN::answer (ident ?id)))
+    ?ask <- (MAIN::ask ?id)
+    =>
+    (retract ?ask)
+    (bind ?answer (ask-user ?text ?type ?valid))
+    (assert (answer (ident ?id) (text ?answer)))
+    (return))
+
+Listing 12.5. Modifications to the question-asking functions
+
+Code View: Scroll / Show All
+(deffunction ask-user (?question ?type ?valid)
+    "Ask a question, and return the answer"
+    (bind ?answer "")
+    (while (not (is-of-type ?answer ?type ?valid)) do
+      (printout t ?question " ")
+      (if (eq ?type multi) then
+        (printout t crlf "Valid answers are ")
+        (foreach ?item ?valid
+          (printout t ?item " "))
+        (printout t ":"))
+      (bind ?answer (read)))
+    (return ?answer))
+
+(deffunction is-of-type (?answer ?type ?valid)
+    "Check that the answer has the right form"
+    (if (eq ?type multi) then
+      (foreach ?item ?valid
+        (if (eq (sym-cat ?answer) (sym-cat ?item)) then
+          (return TRUE)))
+      (return FALSE))
+
+    (if (eq ?type number) then
+      (return (is-a-number ?answer)))
+
+    ;; plain text
+    (return (> (str-length ?answer) 0)))
+
+(deffunction is-a-number (?value)
+    "Return TRUE if ?value is a number"
+    (try
+      (integer ?value)
+      (return TRUE)
+    catch
+      (return FALSE)))
+
+					  
+
+This version of the is-of-type function has to do more work than the version in section 10.6, because it needs to check three different kinds of questions and it can¡¯t assume the answers will arrive as Jess numbers and symbols; every answer might be in the form of a string and need to be parsed further. When checking multi answers, is-of-type therefore uses the sym-cat function to convert the answer to a symbol before comparing it to each possible result. When checking numeric answers, is-of-type calls another new function, is-a-number, to do the work.
+
+The new is-a-number utility function uses Jess¡¯s built-in integer function, which either returns an integer version of its argument or throws an exception if the argument can¡¯t be interpreted as a number. The is-a-number function uses the Jess try function to catch that exception and return FALSE. (We looked at try in section 5.4.)
+

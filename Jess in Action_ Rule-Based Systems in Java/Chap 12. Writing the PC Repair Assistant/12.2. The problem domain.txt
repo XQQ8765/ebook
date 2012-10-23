@@ -1,0 +1,52 @@
+12.2. The problem domain
+Of course, ¡°problems with desktop computers¡± is a very broad domain, and you need to narrow it down a lot before you can get started. First, let¡¯s specialize desktop computers to x86-based desktop computers. We won¡¯t consider Macintosh machines or any other architectures¡ªjust those systems that are commonly referred to as PCs. You can formalize this specialization in a rule:
+
+(defrule MAIN::right-architecture
+    (declare (auto-focus TRUE))
+    (answer (ident hardware) (text ~x86))
+    =>
+    (recommend-action "consult a human expert")
+    (halt))
+
+You¡¯ll write the function recommend-action later. Note that this rule, like many others in this system, calls (halt) to terminate execution. Although this isn¡¯t really necessary right now, you¡¯ll see why you need to do this in chapter 13 when you add a graphical interface to this application. The auto-focus declaration ensures that as soon as the system has a recommendation to make, it will be made¡ªeven if some other module has the focus at the time. You¡¯ll use this declaration in all the rules that make recommendations.
+
+To further restrict the domain, the system you¡¯re writing diagnoses only hardware problems, not software issues. Broken power supplies, loose video cards, and faulty memory chips are typical of the class of problems that your program will diagnose. It won¡¯t be able to help with questions like, ¡°Why can¡¯t I connect to the network?¡± and ¡°What is a General Protection Fault?¡±
+
+Finally, let¡¯s restrict the domain to include only computers that won¡¯t boot. This leaves out many hardware problems: You won¡¯t try to diagnose nonfunctional network cards, jammed CD-ROM drives, and other broken components not directly involved in booting the machine.
+
+12.2.1. Writing the first rules
+A simple top-level flowchart for the program is shown in figure 12.2. If the computer makes no sound at all, the presumed hypotheses are The computer isn¡¯t getting any electricity and The power supply is faulty. You can write these two hypotheses as rules in the MAIN module, as shown in listing 12.2. The rule not-plugged-in handles the case where the computer makes no sound and is not plugged in; the rule power-supply-broken handles the case where the silent computer is plugged in. The two versions of the first pattern in the two rules represent the two outcomes from the decision Is there any sound? in the center of figure 12.2.
+
+Figure 12.2. A simple top-level flowchart for diagnosing PC hardware problems. This flowchart can diagnose the problem ¡°The computer isn¡¯t getting any electricity.¡±
+
+
+
+
+Listing 12.2. Rules to diagnose a computer that makes no sound
+
+(deffunction recommend-action (?action)
+    "Give final instructions to the user"
+    (printout t "I recommend that you " ?action crlf))
+
+(defrule MAIN::not-plugged-in
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text no))
+    (answer (ident plugged-in) (text no))
+    =>
+    (recommend-action "plug in the computer")
+    (halt))
+
+(defrule MAIN::power-supply-broken
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text no))
+    (answer (ident plugged-in) (text yes))
+    =>
+    (recommend-action "repair or replace power supply")
+    (halt))
+
+Figure 12.2, and all the flowcharts you¡¯ll use to develop this application, are vastly simplified. The action Check power supply should ideally expand to a whole flowchart of its own, explaining the steps involved in diagnosing power-supply problems. Unfortunately, to present that flowchart and all the rules to support it and the dozens of others you¡¯d need to collect, I¡¯d fill another whole book. Because this is a programming book, not a PC repair manual, I¡¯ll keep things simple.
+
+These rules assume something else is taking care of asking the user questions¡ªthe rules just depend on the answers. Whereas in the Tax Forms Advisor application from part 3 you had to explicitly write rules to ask the questions, in this application, the questions are asked automatically using backward chaining.
+
+Let¡¯s see how this works. After that, we¡¯ll reexamine and extend the ask module from part 3 to meet the needs of the current project.
+

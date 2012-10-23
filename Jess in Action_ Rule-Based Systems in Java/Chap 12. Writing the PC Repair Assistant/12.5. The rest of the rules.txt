@@ -1,0 +1,134 @@
+12.5. The rest of the rules
+Now that the infrastructure is squared away, let¡¯s go back to looking at some rules. If the computer whirrs, beeps, or makes any other sounds when turned on, the top-level flowchart directs you to continue on to the next flowchart, shown in figure 12.4. Let¡¯s translate this into rules one piece at a time.
+
+Figure 12.4. A simple flowchart for diagnosing some hardware problems in computers that make sound but don¡¯t boot. The ERROR state is supposed to be impossible to reach.
+
+
+
+
+12.5.1. Rules about sound
+The trigger to enter this flowchart in the first place occurs when the user answers ¡°no¡± to the sound question; therefore all the rules begin with the pattern (answer (ident sound) (text no)). Any decisions made before this point are irrelevant to these rules. The first decision in the sound flowchart is whether the disk makes ¡°seeking¡± sounds; so, similarly, all the rules in this flowchart include a pattern to match one of the possible answers to the seek question. From this point, the rules diverge; you can look at the path through the flowchart to each action box to see how to define each rule. For example, the Check keyboard and motherboard action is reached by passing through the seek, does-beep, and how-many-beeps decisions, so it looks like this:
+
+(defrule MAIN::motherboard-or-keyboard
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text yes))
+    (answer (ident seek) (text no))
+    (answer (ident does-beep) (text yes))
+    (answer (ident how-many-beeps) (text ?t))
+    (test (>= (integer ?t) 3))
+    =>
+    (recommend-action "check keyboard and motherboard")
+    (halt))
+
+Note that you have to use the integer function to convert the answer to a number before checking if it¡¯s greater than or equal to three. You use a test conditional element instead of putting the test on ?t directly into the last answer pattern due to a limitation imposed by the backward-chaining machinery: Patterns that match backward-chaining reactive patterns can only contain simple tests¡ªfunction calls aren¡¯t allowed.
+
+The check-ram rule is similar, but with a twist. Besides recommending an action, this rule asserts a check fact, and does not call (halt):
+
+(defrule MAIN::check-ram
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text yes))
+    (answer (ident seek) (text no))
+    (answer (ident does-beep) (text yes))
+    (answer (ident how-many-beeps) (text ?t))
+    (test (< (integer ?t) 3))
+    =>
+    (assert (check loose-ram))
+    (recommend-action "check for loose RAM, then continue"))
+
+You¡¯ll use the check fact as the trigger to enter the RAM flowchart, shown later in figure 12.5. This trick lets the system ask further questions based on the results of a recommended action. If you were writing a full diagnostic system with dozens of flowcharts, you¡¯d use this trick many times.
+
+Figure 12.5. The diagnostic flowchart for computers that beep fewer than three times and then don¡¯t boot
+
+
+
+
+12.5.2. Degrading gracefully
+If the computer is making a sound, but the disk doesn¡¯t seek and there is no beeping, then the system has reached the limits of its knowledge, represented by the oval labeled ERROR. The unknown-sound rule expresses this end point:
+
+(defrule MAIN::unknown-sound
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text yes))
+    (answer (ident seek) (text no))
+    (answer (ident does-beep) (text no))
+    =>
+    (recommend-action "consult a human expert")
+    (halt))
+
+12.5.3. To boot, or not to boot
+If the disk does make a seeking sound, then there is one more decision to make: Does the computer begin to boot into the operating system before failing? Two more rules cover the two possible answers:
+
+(defrule MAIN::no-boot-start
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text yes))
+    (answer (ident seek) (text yes))
+    (answer (ident boot-begins) (text no))
+    =>
+    (recommend-action
+        "check keyboard, RAM, motherboard, and power supply")
+    (halt))
+
+(defrule MAIN::boot-start
+    (declare (auto-focus TRUE))
+    (answer (ident sound) (text yes))
+    (answer (ident seek) (text yes))
+    (answer (ident boot-begins) (text yes))
+    =>
+    (recommend-action "consult a software expert")
+    (halt))
+
+12.5.4. RAM problems
+The RAM flowchart shown in figure 12.5 is simple¡ªit includes only two more rules. One handles the case where the RAM memory modules are loose in their sockets, and the other handles the case where they are not. These two rules are slightly different than all the others in that they will be asked after a recommended action has already been taken¡ªthe Check RAM recommendation from rule check-ram:
+
+(defrule MAIN::loose-ram
+    (declare (auto-focus TRUE))
+    (check loose-ram)
+    (answer (ident loose-ram) (text yes))
+    =>
+    (recommend-action "remove and reseat memory modules")
+    (halt))
+
+(defrule MAIN::faulty-ram
+    (declare (auto-focus TRUE))
+    (check loose-ram)
+    (answer (ident loose-ram) (text no))
+    =>
+    (recommend-action
+        "replace memory modules one by one and retest")
+    (halt))
+
+12.5.5. Questioning authority
+Now that you¡¯ve written all the rules, you need the questions! Listing 12.6 shows them collected in a deffacts.
+
+Listing 12.6. Questions the hardware diagnostic system can ask
+
+Code View: Scroll / Show All
+(deffacts MAIN::question-data
+    (question (ident hardware)
+      (type multi) (valid x86 Macintosh other)
+      (text "What kind of hardware is it?"))
+    (question
+      (ident sound) (type multi) (valid yes no)
+      (text "Does the computer make any sound?"))
+    (question
+      (ident plugged-in) (type multi) (valid yes no)
+      (text "Is the computer plugged in?"))
+    (question
+       (ident seek) (type multi) (valid yes no)
+       (text "Does the disk make \"seeking\" sounds?"))
+    (question
+      (ident does-beep) (type multi) (valid yes no)
+      (text "Does the computer beep?"))
+    (question
+      (ident how-many-beeps) (type number) (valid)
+      (text "How many times does it beep?"))
+    (question
+      (ident loose-ram) (type multi) (valid yes no)
+      (text "Are any of the memory modules loose?"))
+    (question
+      (ident boot-begins) (type multi) (valid yes no)
+      (text "Does the computer begin to boot?")))
+
+					  
+
+You can now run the complete application by calling reset and run-until-halt.
+

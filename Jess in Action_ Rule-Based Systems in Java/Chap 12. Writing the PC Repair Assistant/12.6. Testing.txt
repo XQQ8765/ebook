@@ -1,0 +1,18 @@
+12.6. Testing
+I haven¡¯t mentioned testing so far in this chapter, but don¡¯t take this to mean I¡¯ve forgotten about the test-first strategy I talked about in previous parts of this book. The larger and more complex the system, the more important it is to test each part in isolation. When I modified the ask module, for example, I reran all the tests for it that I developed in part 3, and I wrote several more. I confirmed that ask would only accept the allowed answers for multiple-choice questions.
+
+Next I developed and tested the trigger module. trigger can and should be tested first in isolation¡ªthat is, without ask loaded in to complicate matters. To test trigger, I wrote one dummy rule with an initial-fact pattern and one answer pattern. Then I used (watch all) to confirm that executing the (reset) command made the trigger module come into focus, the supply-answers rule fire, and the appropriate MAIN::ask fact appear in working memory.
+
+Then, as I translated each new flowchart into rules, I ran the application and answered questions based on a set of planned diagnostic scenarios, confirming that the diagnosis was correct in every case. As discussed in section 11.2.3, don¡¯t be discouraged by the thought that you should have 100% test coverage. Remember that some testing is infinitely better than none at all.
+
+One issue that came up during this kind of testing was that the hardware question (which you want to be asked first) isn¡¯t asked until the end of the program. Paradoxically, this happens because you define the right-architecture question fact first. The need-answer trigger fact for this rule is generated as soon as the rule is defined, and under Jess¡¯s default depth conflict-resolution strategy, later activations fire before earlier ones. Thus, although the decision to ask the hardware question is made first, it is overridden by the need to ask other questions. You can fix this problem by telling the backward-chaining mechanism not to try to trigger the right-architecture rule, and then asserting the appropriate MAIN::ask fact at the right time. You can modify the right-architecture rule using the explicit conditional element, which cancels backward-chaining requests for a single pattern:
+
+(defrule MAIN::right-architecture
+    (declare (auto-focus TRUE))
+    (explicit (answer (ident hardware) (text ~x86)))
+    =>
+    (recommend-action "consult a human expert")
+    (halt))
+
+Adding a (MAIN::ask hardware) fact at the end of deffacts question-data makes the hardware question come out first. Give the application a try and make sure the conclusions it reaches are the same that you¡¯d arrive at by following the flowcharts.
+

@@ -1,0 +1,146 @@
+13.4. Getting answers
+Now that your application displays questions to the user via its new GUI, it ought to collect answers the same way. Currently, the input routine ask-user reads answers as strings the user types at the command line. As a first step, you¡¯ll modify the ask module to use a simple text field to collect its answers for all question types. This will give you a framework to build on (later you¡¯ll replace this input field with a combo box and other more user-friendly components). First you¡¯ll build a panel containing a JTextField and a JButton labeled OK; then you¡¯ll add it to the bottom of the application window. Listing 13.2 shows the code to do this; the result looks like figure 13.3. I used get-member to obtain the value of the constant SOUTH in the BorderLayout class. The calls to validate and repaint are necessary whenever you modify the contents of a window that¡¯s already visible on the screen.
+
+Figure 13.3. Application window with both an area for displaying questions and a lower panel for collecting answers
+
+
+
+
+Listing 13.2. Adding an input area to the application window
+
+;; Add a JTextField and an OK button to our application window
+(defglobal ?*apanel* = (new JPanel))
+(defglobal ?*afield* = (new JTextField 40))
+(defglobal ?*afield-ok* = (new JButton OK))
+(?*apanel* add ?*afield*)
+(?*apanel* add ?*afield-ok*)
+((?*frame* getContentPane) add ?*apanel*
+    (get-member BorderLayout SOUTH))
+(?*frame* validate)
+(?*frame* repaint)
+
+;; Now attach an event handler
+(deffunction read-input (?EVENT)
+    "An event handler for the user input field"
+    (bind ?text (sym-cat (?*afield* getText)))
+    (assert (ask::user-input ?text)))
+
+(bind ?handler
+    (new jess.awt.ActionListener read-input (engine)))
+(?*afield* addActionListener ?handler)
+(?*afield-ok* addActionListener ?handler)
+
+In Java programming, you add behaviors to components like buttons and text fields by writing event handlers. An event handler is an implementation of a special interface, with a member function that performs the desired behavior. The interface used for button clicks is java.awt.event.ActionListener. You register the event handlers you write by calling an appropriate method on the component; for ActionListener the method is called addActionListener. When some user input occurs, the component creates an event object and passes it as an argument to the appropriate method of all the event handlers that are registered with it. In the case of button clicks, the event object is an instance of the class java.awt.event.ActionEvent, and the method in the ActionListener interface is called actionPerformed.
+
+The function read-input in listing 13.2 is an event handler written in Jess. The class jess.awt.ActionListener is an event adapter that lets you specify that a deffunction should be invoked when a Java ActionEvent occurs. Jess supplies a whole family of these event adapters, one for each event type defined by the Java APIs, and they all are used the same way. You can create one using the name of a deffunction and a jess.Rete object (see the next section) as constructor arguments. Then you use the matching Java method on an AWT or Swing component to register the listener, just as you would in Java. When the component sends an event, the event adapter invokes the deffunction, passing it the event object as the lone argument (the parameter ?EVENT in the listing). This arrangement is shown in figure 13.4.
+
+Figure 13.4. An instance of the class jess.awt.ActionListener that serves as an event adapter and forwards GUI events to the deffunction read-input
+
+
+
+
+Now you have an input field that asserts a Jess fact in response to a button click or the user pressing Enter. Before you can modify the program to use this asserted fact, however, we need to look in a bit more depth at the architecture of a GUI-based application.
+
+13.4.1. The main thread vs. the event thread
+A thread is a single flow of control in a Java program. Individual streams of code can be, and often are, running in multiple separate threads simultaneously. You can create threads explicitly using the java.lang.Thread class, and Java creates some threads on its own¡ªfor example, the main thread from which the main() function is called.
+
+Every Java program is a multithreaded program. Even in a ¡°Hello, World¡± program, where the user¡¯s code clearly runs only in the main thread, the JVM creates a number of other threads to perform background duties like garbage collection.
+
+In graphical programs, user code typically runs in several threads. Some of the code you write runs on the main thread (like the setup code you¡¯ve written so far), while other code runs on the event thread. When a menu item is chosen or a button is clicked, the event handlers that are invoked run on the event thread. Sometimes this is unimportant, but when code on the event thread and code on the main thread need to coordinate their activities, you have to think clearly about what code is running where.
+
+In the program you¡¯re developing, the (run) function will be called on the main thread, and so the code for all the rules that fire will execute on the main thread. On the other hand, you want the user to click the OK button on the GUI. This action will trigger some code to run on the event thread, and you want to have that affect the behavior of the rules. The situation is depicted in figure 13.5.
+
+Figure 13.5. Some of the code in a GUI application runs on the main thread, and other code runs on the event thread. The separate threads can communicate by calling Jess functions. In the diagram, time flows down. Note how calling a Jess function like (run) results in a Java function like Rete.run() being called a short time later.
+
+[View full size image]
+
+
+You¡¯ll adopt the following strategy to get the main thread and the event thread to cooperate:
+
+The main thread sets up the GUI to display the question.
+
+The main thread sleeps until a reply is available.
+
+When the user presses Enter or clicks the OK button, the event thread asserts a fact containing a reply.
+
+The main thread wakes up and processes the reply. If the reply is invalid, go back to step 1. If it is valid, assert the answer fact and return from the module.
+
+Jess contains a mechanism that makes this process simple to implement. There is a function you can call to make the current thread sleep when no activated rules are on the agenda of the current module, and then wake up and continue once a new activation arrives. No Jess language function lets you access this mechanism directly, however¡ªyou have to call it as a Java method.
+
+The class jess.Rete
+
+Jess¡¯s rule engine is embodied in a class named jess.Rete. Many of the most important functions you¡¯ve seen so far in the Jess language¡ªrun, reset, clear, assert¡ªcorrespond to single Java method calls on instances of this class (run(), reset(), clear(), assertFact()). When you start jess.Main from the command line, a single instance of jess.Rete is created, and all of your program¡¯s rules and facts belong to it. You can get a reference to this jess.Rete object using the engine function in Jess. The code
+
+((engine) run)
+
+is therefore more or less equivalent to
+
+(run)
+
+Now let¡¯s return to our discussion of coordinating multiple threads in your application. The function you¡¯re interested in is called waitForActivations. If this method is called when the current module¡¯s agenda is empty, it doesn¡¯t return right away. Rather, it uses the wait() method from the java.lang.Object class to wait for new activations to arrive. Note that the only way waitForActivations can return is for code on some other thread to call a function that modifies working memory. You can call waitForActivations from Jess like this:
+
+((engine) waitForActivations)
+
+Listing 13.3 shows the changed parts of a new version of the ask module that implements this idea. Whereas the old version of ask contained just one rule that asked the question and returned the answer, this new version contains two rules: one that sets up the question (ask-question-by-id) and one that validates the answer and either returns the answer or asks the question again (collect-user-input).
+
+Listing 13.3. ask module that expects GUI input as user-input facts
+
+Code View: Scroll / Show All
+(deffunction ask-user (?question ?type ?valid)
+    "Set up the GUI to ask a question"
+    (bind ?s ?question " ")
+    (if (eq ?type multi) then
+      (bind ?s (str-cat ?s ?*crlf* "Valid answers are "))
+      (foreach ?item ?valid
+        (bind ?s (str-cat ?s ?item " "))))
+    (bind ?s (str-cat ?s ":"))
+    (?*qfield* setText ?s)
+    (?*afield* setText ""))
+
+(defrule ask::ask-question-by-id
+    "Given the identifier of a question, ask it"
+    (declare (auto-focus TRUE))
+    (MAIN::question (ident ?id) (text ?text)
+                    (type ?type) (valid $?valid))
+    (not (MAIN::answer (ident ?id)))
+    (MAIN::ask ?id)
+    =>
+    (ask-user ?text ?type ?valid)
+    ((engine) waitForActivations))
+
+(defrule ask::collect-user-input
+    "Check and optionally return an answer from the GUI"
+    (declare (auto-focus TRUE))
+    (MAIN::question (ident ?id) (text ?text) (type ?type))
+    (not (MAIN::answer (ident ?id)))
+    ?user <- (user-input ?input)
+    ?ask <- (MAIN::ask ?id)
+    =>
+    (if (is-of-type ?input ?type ?valid) then
+      (assert (MAIN::answer (ident ?id) (text ?input)))
+      (retract ?ask ?user)
+      (return)
+    else
+      (retract ?ask ?user)
+      (assert (MAIN::ask ?id))))
+
+					  
+
+Here¡¯s what happens when the new ask module is used:
+
+You assert a MAIN::ask fact giving the identifier for a question.
+
+On the main thread, the rule ask-question-by-id is activated by the MAIN::ask fact and the MAIN::question fact with the given identifier. This rule has the auto-focus property, so the ask module immediately gets the focus.
+
+ask-question-by-id calls the function ask-user and then uses waitFor-Activations to pause until another rule in this module is activated.
+
+ask-user sets up the GUI to display the proper question, and clears the answer area.
+
+Nothing happens until the user enters some text and presses Enter or clicks the OK button.
+
+The event handler read-input, running on the event thread, asserts an ask::user-input fact containing the text entered by the user, as a symbol.
+
+The ask::user-input fact, together with the MAIN::question fact and the MAIN::ask fact, activate the rule collect-user-input. The method waitForActivations finally returns due to this activation, and the right-hand side of ask-question-by-id completes.
+
+Back on the main thread, collect-user-input asserts a MAIN::answer fact, retracts the MAIN::ask and ask::user-input facts, and returns from the ask module.
+
