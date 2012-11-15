@@ -1,0 +1,12 @@
+13.2. Displaying a window
+The first and most fundamental graphical element you need to create is a javax.swing.JFrame¡ªa top-level window. Let¡¯s create one with an appropriate title, size it, make it visible, and keep a reference to it in a defglobal named ?*frame*:
+
+Jess> (defglobal ?*frame* = (new JFrame "Diagnostic Assistant"))
+TRUE
+Jess> (?*frame* setSize 520 140)
+Jess> (?*frame* setVisible TRUE)
+
+I¡¯m cheating a little here: I determined the appropriate size after the whole GUI was designed, and then came back here and typed it in. In your own programs, you will learn the dimensions necessary through experience or experimentation. When you enter the last line of code, an empty window appears on the screen, as shown in figure 13.1.
+
+Figure 13.1. An empty JFrame created via a short Jess script as shown in the text
+
