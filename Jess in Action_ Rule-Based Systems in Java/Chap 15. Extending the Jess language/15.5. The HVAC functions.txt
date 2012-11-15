@@ -1,0 +1,207 @@
+15.5. The HVAC functions
+You¡¯ve learned everything you need to know to develop the Userfunctions for the HVAC system. You need to be able to:
+
+Create a simulator, including a GUI
+
+Get the number of floors and heat pumps
+
+Determine which heat pump goes with which floor
+
+Operate the heat pumps and vents
+
+Let¡¯s tackle these tasks one at a time, in this order.
+
+15.5.1. Creating a simulator
+The first command you will write creates a hardware simulator, attaches a GUI to it, and stores it somewhere where the other functions can access it. If you assume that each individual instance of Jess (each individual jess.Rete object) controls only one building¡¯s systems at a time, then storing a reference to the simulator in the Userfunction object itself will work well. Name the Jess function init-simulator; here is the implementation:
+
+package control;
+import jess.*;
+
+class InitSimulator implements Userfunction {
+    static final String NAME = "init-simulator";
+    private Simulator m_simulator;
+    public static Simulator getSimulator(Context c) {
+        Rete engine = c.getEngine();
+        InitSimulator is =
+            (InitSimulator) engine.findUserfunction(NAME);
+        return is.m_simulator;
+     }
+     public String getName() { return NAME; }
+     public Value call(ValueVector vv, Context c)
+     throws JessException {
+         int nFloors = vv.get(1).intValue(c);
+         m_simulator = new Simulator(nFloors);
+         new SimulatorGUI(m_simulator);
+         return new Value(m_simulator);
+     }
+}
+
+This function is fairly straightforward. It accepts one argument: the number of floors in the simulated building. The Userfunction creates a simulator and returns it as an RU.EXTERNAL_ADDRESS, via the Value constructor that accepts a java.lang.Object argument. Note that this class, like all the Userfunction classes you will write, is not public; it is meant to be loaded only via the Userpackage you will define at the end of this section.
+
+The static getSimulator method is an implementation of a technique mentioned in the previous section: It finds an InitSimulator object registered in a given Rete object and extracts and returns its state (here the m_simulator member variable). Several of the other Userfunctions will use getSimulator to find their associated InitSimulator object and retrieve the Simulator.
+
+15.5.2. Counting devices
+As you have seen, a single Userfunction class can have multiple personalities: It can behave differently depending on the name it was registered with. You¡¯ll use this trick to write one class to implement both a function to return the number of heat pumps and a second function to return the number of floors in the building:
+
+package control;
+import jess.*;
+
+class CountDevices implements Userfunction {
+    static final String N_HEATPUMPS = "n-heatpumps";
+    static final String N_FLOORS = "n-floors";
+    private String m_name;
+    public CountDevices(String name) {
+        m_name = name;
+    }
+    public String getName() { return m_name; }
+    public Value call(ValueVector vv, Context c)
+    throws JessException {
+        Rete engine = c.getEngine();
+
+        Simulator sim = InitSimulator.getSimulator(c);
+        int nHeatPumps = sim.getNumberOfHeatPumps();
+        if (m_name.equals(N_HEATPUMPS))
+            return new Value(nHeatPumps, RU.INTEGER);
+        else
+            return new Value(nHeatPumps/3, RU.INTEGER);
+    }
+}
+
+The CountDevices class retrieves its associated InitSimulator object from Jess to get access to the simulator; once it has that, the rest of the work is trivial. One thing worth noticing about this class and the previous one is that the function names are all defined as static final string variables like InitSimulator.NAME and CountDevices.N_FLOORS. Each of the function names is used several times: in getName; possibly as a constructor argument; and, as here, sometimes in the program logic, for those functions that decide what to do based on their name. It¡¯s important that every use of the name match exactly, so it¡¯s good programming practice to define each name as a constant in one place.
+
+15.5.3. Matching heat pumps and floors
+Given the number of a floor, which heat pump corresponds to it? Heat pump 1 services floors 1, 2, and 3, whereas heat pump 2 services floors 4, 5, and 6. One way to compute this relationship is to subtract 1 from the floor number, perform integer division by 3, and add 1 to the result. This is not a slow calculation, but it¡¯s a bit messy, so you implement it in Java:
+
+package control;
+import jess.*;
+
+class WhichPump implements Userfunction {
+    public String getName() { return "which-pump"; }
+    public Value call(ValueVector vv, Context c)
+    throws JessException {
+        int floor = vv.get(1).intValue(c);
+        int heatPump = (floor-1)/3 + 1;
+        return new Value(heatPump, RU.INTEGER);
+    }
+}
+
+This basic Userfunction should be familiar to you by now.
+
+15.5.4. Operating the hardware
+You need several Userfunctions to read and change the operating mode of each heat pump and to check, open, and close the vents. It would be nice if you could use symbolic names for the heat pump and vent states, something like this:
+
+Jess> (get-hp-state 2)
+cooling
+Jess> (set-vent-state 4 open)
+
+This is easy enough to implement: Because there are so few alternatives, the call methods can contain multiway branches or switch statements to handle each of the possible options. The function to read the heat pump state looks like this:
+
+package control;
+import jess.*;
+
+class ReadHeatPump implements Userfunction {
+    public String getName() { return "get-hp-state"; }
+    public Value call(ValueVector vv, Context c)
+    throws JessException {
+        int heatPump = vv.get(1).intValue(c);
+        Simulator sim = InitSimulator.getSimulator(c);
+        int state = sim.getHeatPumpState(heatPump);
+        try {
+            return new Value(State.heatpump(state), RU.ATOM);
+        } catch (IllegalArgumentException iae) {
+            throw new JessException("get-hp-state",
+                                    "Unexpected state",
+                                     state);
+        }
+    }
+}
+
+This Userfunction returns symbols (values of type RU.ATOM) to represent the heat pump states. It uses the getSimulator method from InitSimulator; the next few classes will use this method, too.
+
+The Userfunction for setting the heat pump state is similar, but it must do the mapping between state names and numeric states in the reverse order:
+
+package control;
+import jess.*;
+
+class WriteHeatPump implements Userfunction {
+    public String getName() { return "set-hp-state"; }
+    public Value call(ValueVector vv, Context c)
+    throws JessException {
+        int heatPump = vv.get(1).intValue(c);
+        Simulator sim = InitSimulator.getSimulator(c);
+        String szState = vv.get(2).stringValue(c);
+        try {
+            int state = State.heatpump(szState);
+            sim.setHeatPumpState(heatPump, state);
+        } catch (IllegalArgumentException iae) {
+            throw new JessException("set-hp-state",
+                                    "Invalid state",
+                                     szState);
+        }
+        return Funcall.TRUE;
+    }
+}
+
+Finally, you need two more Userfunctions to read and write the state of the vents. These are similar to the last two, but because the vent state is a Boolean value, they are a bit simpler; the function to read a vent¡¯s state can dispense with error handling altogether:
+
+Code View: Scroll / Show All
+package control;
+import jess.*;
+
+class ReadVent implements Userfunction {
+    public String getName() { return "get-vent-state"; }
+    public Value call(ValueVector vv, Context c)
+    throws JessException {
+        int vent = vv.get(1).intValue(c);
+        Simulator sim = InitSimulator.getSimulator(c);
+        boolean state = sim.getVentState(vent);
+        return new Value(State.vent(state), RU.ATOM);
+    }
+}
+
+class WriteVent implements Userfunction {
+    public String getName() { return "set-vent-state"; }
+    public Value call(ValueVector vv, Context c)
+    throws JessException {
+        int vent = vv.get(1).intValue(c);
+        Simulator sim = InitSimulator.getSimulator(c);
+        String szState = vv.get(2).stringValue(c);
+        try {
+            boolean state = State.vent(szState);
+            sim.setVentState(vent, state);
+        } catch (IllegalArgumentException iae) {
+            throw new JessException("set-vent-state",
+                                    "Invalid state",
+                                     szState);
+        }
+        return Funcall.TRUE;
+     }
+}
+
+					  
+
+The functions init-simulator, n-heatpumps, n-floors, which-pump, get-hp-state, set-hp-state, get-vent-state, and set-vent-state considerably simplify the rules you¡¯ll write in the next chapter.
+
+15.5.5. Implementing a Userpackage
+Several of the functions you wrote in this section are implemented by classes that require constructor arguments, and most of them depend on the existence of an InitSimulator object. Therefore, it wouldn¡¯t make sense to allow them to be installed into Jess one at a time. Instead, they can all be installed together as a single package using the Userpackage interface. The Userpackage for the hardware functions is straightforward:
+
+package control;
+import jess.*;
+
+public class HardwareFunctions implements Userpackage {
+    public void add(Rete engine) {
+        engine.addUserfunction(new InitSimulator());
+        engine.addUserfunction(
+            new CountDevices(CountDevices.N_HEATPUMPS));
+        engine.addUserfunction(
+            new CountDevices(CountDevices.N_FLOORS));
+        engine.addUserfunction(new WhichPump());
+        engine.addUserfunction(new ReadHeatPump());
+        engine.addUserfunction(new WriteHeatPump());
+        engine.addUserfunction(new ReadVent());
+        engine.addUserfunction(new WriteVent());
+    }
+}
+
+The Jess function call (load-package control.HardwareFunctions) now makes all the Userfunctions you¡¯ve written available from Jess.
+

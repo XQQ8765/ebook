@@ -1,0 +1,130 @@
+15.2. Handling arguments
+The first parameter to call is a jess.ValueVector. The jess.ValueVector class is Jess¡¯s internal representation of a list, and therefore it has a central role in programming with Jess in Java. The ValueVector class is used to represent plain lists, whereas specialized subclasses are used as function calls (jess.Funcall) and facts (jess.Fact). Other classes, like jess.Deftemplate, use ValueVectors internally.
+
+Working with ValueVector is simple. Its API is reminiscent of standard container classes like java.util.Vector. Like that class, it is a self-extending array: When new elements are added, the ValueVector grows in size to accommodate them. Here is a bit of example Java code in which you create the Jess list (a b c):
+
+ValueVector vv = new ValueVector();
+vv.add(new Value("a", RU.ATOM));
+vv.add(new Value("b", RU.ATOM));
+vv.add(new Value("c", RU.ATOM));
+
+The get method retrieves an element from the ValueVector using a zero-based index. Continuing the previous example:
+
+// Prints "b"
+System.out.println(vv.get(1));
+
+When your Userfunction¡¯s call method is invoked, the first element of the ValueVector argument is the name of your function, and the subsequent elements are the arguments that were passed to your function.
+
+15.2.1. How many arguments?
+You can get the total length of the ValueVector using the size() method. It follows that any Userfunction can take a variable number of arguments, unless you take specific action to enforce a certain length for your argument list. If your Userfunction accepts precisely one argument, you might begin your implementation of call like this:
+
+public Value call(ValueVector vv, Context context)
+    throws JessException {
+    if (vv.size() != 2)
+        throw new JessException("kill",
+            "Wrong number of arguments", vv.size()-1);
+    ...
+}
+
+On the other hand, a function that takes an arbitrary list of arguments could use size() as the upper limit of a processing loop.
+
+15.2.2. Using arguments
+Suppose that the one argument to kill is the value that should be passed to System.exit(). You might write the following:
+
+public Value call(ValueVector vv, Context context) {
+    if (vv.size() != 2)
+        throw new JessException("kill",
+            "Wrong number of arguments", vv.size()-1);
+    System.exit(vv.get(1).intValue(context));
+    return null;
+}
+
+The values returned by ValueVector.get() are always jess.Value objects. A jess.Value is a kind of generic wrapper for any Jess data object¡ªsomething like a VARIANT in Microsoft COM programming, or an Any in CORBA programming. Once it is constructed, a Value¡¯s type and contents cannot be changed; it is immutable. (You might know that Java defines many such immutable classes; Integer and String are two well-known examples.) Value has a type() member function you can call to find out what kind of data a Value object contains; it returns one of the constants from the jess.RU class (see table 15.1). Many of these types are discussed in chapter 5.
+
+Table 15.1. Value types defined in the jess.RU class, and the methods used to retrieve each type
+
+Name	Method	Meaning
+ATOM	atomValue()	Jess symbol
+STRING	stringValue()	Jess string
+INTEGER	intValue()	Jess integer
+VARIABLE	variableValue()	Jess variable
+MULTIVARIABLE	variableValue()	Jess multifield
+FACT	factValue()	Jess fact
+FLOAT	floatValue()	Jess float
+FUNCALL	funcallValue()	Jess function call
+LIST	listValue()	Jess list
+EXTERNAL_ADDRESS	externalAddressValue()	Java object
+LONG	longValue()	Java long
+
+For each type, table 15.1 also lists a method that tries to return a value appropriate for that type. You¡¯ve already seen the intValue method, which tries to return a Java int based on the data held in the Value object. In general, a Value tries to automatically convert the data it holds to the type you request; for instance, if you call intValue() on a Value holding "1.0" as an RU.STRING, the string will be parsed and the method will return 1. There are limits to this capability, of course. If some data cannot be converted to the requested type, intValue (and all the other methods in table 14.1) will throw jess.JessException.
+
+15.2.3. Resolving variable arguments
+If kill is called like this:
+
+Jess> (kill ?errorCode)
+%
+
+then the type of the argument Value object is RU.VARIABLE. If you call intValue on such a Value, the variable is automatically resolved, and the return value is the value of the variable. This is why intValue and friends require a jess.Context as an argument. Context objects contain information about the situation in which your function was called, including a pointer to the Rete object and, more relevant here, the current values of all the variables that have been defined.
+
+In many cases, the fact that each argument might be a variable is irrelevant¡ªvariables are resolved automatically. But because looking up the value of a variable is a more expensive operation than just fetching the data from a Value, if you¡¯re going to reference a Value more than once in your Userfunction, it may be more efficient to separate the value resolution from the data access using the resolveValue method. You can call resolveValue on any Value. For Value objects of most types, resolveValue is a very inexpensive operation that returns the Value object itself. But for some types, it returns a new ¡°real¡± Value. For RU.VARIABLE and RU.MULTIVARIABLE types, this is the value of the variable. The following (admittedly contrived) example computes the fractional part of a real number; it uses resolveValue to avoid looking up the value of its argument twice:
+
+public Value call(ValueVector vv, Context context) {
+    Value num = vv.get(1).resolveValue(context);
+    double frac =
+        num.floatValue(context) - num.intValue(context);
+    ...
+}
+
+Note that the variableValue method returns the name of the variable actually passed, and Context has a public method setVariable that you can use to set a variable¡¯s value by name. This suggests that Jess¡¯s built-in bind function could simply be written as follows:
+
+package jess;
+
+class Bind implements Userfunction {
+    public String getName() { return "bind"; }
+
+    public Value call(ValueVector vv, Context c)
+        throws JessException {
+        Value rv = vv.get(2).resolveValue(c);
+        c.setVariable(vv.get(1).variableValue(c), rv);
+        return rv;
+    }
+}
+
+And in fact, it is. Note that because ValueVector.get will throw an exception if there aren¡¯t enough arguments, and variableValue will throw an exception if vv.get(1) isn¡¯t a variable, this function (like many Userfunctions) doesn¡¯t have to do any explicit error checking.
+
+15.2.4. Resolving function call arguments
+What happens if kill is called like this?
+
+Jess> (kill (+ 1 1))
+%
+
+What is the type of the first argument in this case? It is an RU.FUNCALL value¡ªa representation of the function call. In many languages (Java is just one example), all the arguments to a function are fully resolved before the function is invoked. Jess, however, works differently¡ªnone of the arguments is resolved before you see them. Just as for variables, function call arguments are resolved automatically by methods like intValue. But now you should see why using resolveValue is important¡ªnot using it could result in function call arguments being invoked multiple times!
+
+A similar but subtler problem arises if you try to store an argument in a Java data structure, or otherwise arrange to have a Value object live longer than the body of your call method. If you do this with a value of a simple type, there are no problems. But if you store a value of type RU.VARIABLE or RU.FUNCALL, it often won¡¯t be possible to resolve the value later, because you can¡¯t resolve a variable without the relevant jess.Context object. If you look back at the implementation of bind in the previous section, you¡¯ll see that before using the second argument as an argument to setVariable, I was careful to call resolveValue to get the real value of the argument. That way, calling (bind ?x (+ ?y 1)) sets ?x equal to one greater than the current value of ?y. If bind didn¡¯t use resolveValue, ?x would hold the function call (+ ?y 1). Accessing ?x might give a value that changed over time as ?y changed, or it might give an error if ?y isn¡¯t defined when ?x is read.
+
+Just as bind¡¯s implementation takes advantage of Jess¡¯s lazy resolution to allow it to set the value of a variable, control structures use it to allow them to call a function multiple times. You can take advantage of this functionality to write your own control structures. Here¡¯s an implementation of a Userfunction named n-times that evaluates its second argument a number of times specified by its first argument:
+
+import jess.*;
+
+public class NTimes implements Userfunction {
+    public String getName() { return "n-times";}
+    public Value call(ValueVector vv, Context c)
+        throws JessException {
+        int count = vv.get(1).intValue(c);
+        Value expr = vv.get(2);
+        for (int i=0; i<count; ++i)
+            expr.resolveValue(c);
+        return Funcall.TRUE;
+    }
+}
+
+You can compile this class, load the function into Jess, and call it:
+
+Jess> (load-function NTimes)
+TRUE
+Jess> (n-times 10 (printout t "*"))
+**********TRUE
+Jess>
+
+Each time the Java method resolveValue is called, the Jess function in expr is evaluated, and so this line of code prints 10 asterisks. This is how Jess¡¯s built-in control structures like while and foreach are implemented.
+

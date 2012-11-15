@@ -1,0 +1,13 @@
+15. Extending the Jess language
+In this chapter you¡¯ll...
+
+Be introduced to the Userfunction interface
+
+Learn to extend the Jess language
+
+Write Jess functions to interface with HVAC hardware
+
+The HVAC Controller system you¡¯re writing needs to be able to switch the various heat pumps and vents on and off in response to changing temperatures. Although it would be possible to do this just by using the (modify) function on the shadow facts representing the devices, that approach won¡¯t always be convenient. Furthermore, the rules need access to other functions in the Hardware interface that aren¡¯t used by the JavaBeans. It would be best to have a simple and consistent interface to all these capabilities.
+
+To accomplish this, you¡¯ll add some new functions to the Jess language itself. You¡¯ll define these functions in Java, package them together, and provide a simple mechanism for getting them loaded into Jess. Once you¡¯ve done this, the functions will be indistinguishable from any of Jess¡¯s built-in functions. In this chapter, I¡¯ll describe the general mechanism for adding new functions to the Jess language, and you¡¯ll apply it to the specific application.
+

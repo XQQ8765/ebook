@@ -1,0 +1,7 @@
+15.7. Summary
+It is easy to extend the Jess language with functions written in Java. Any class that implements the jess.Userfunction interface can act as a Jess extension function. Extensions can be loaded from Jess using load-function or from Java code using Rete.addUserfunction. Extensions can be grouped into packages and loaded with a single call to load-package.
+
+Every function built into Jess is itself a Userfunction. By implication, anything a Jess built-in function can do, you can do in your own extension functions. By way of example, you saw how you can manipulate variables and write your own Jess control structures in Java. For more useful tools for doing this kind of coding, look at the API for jess.Context class.
+
+In the next chapter, you will write the Jess rules for controlling the Acme HVAC Systems devices. The rules will pattern-match the JavaBeans you developed in chapter 14 and call the functions you wrote in this chapter. Then you¡¯ll assemble and test the complete application.
+

@@ -1,0 +1,9 @@
+15.6. Testing
+Testing these functions by hand using the simulator GUI is easy and actually kind of fun. Load the functions using load-package, and then call (init-simulator 9); the GUI from figure 14.2 appears. When you first see this window, all the heat pumps are in the OFF state, and all the vents are CLOSED. The temperatures in the right-hand column of the GUI are rising, because when the simulator is turned on, the outdoor temperature is a scorching 110 degrees F.
+
+First, check that you can count devices properly using the n-heatpumps (should return 3) and n-floors (should return 9) functions. Make sure that which-pump returns the correct values for each floor of the building (should return 1 for arguments 1¨C3, 2 for 4¨C6, and 3 for 7¨C9). You can (and should) write automated tests for these functions, too (perhaps using the testing framework in Appendix C).
+
+Now, turn on the heat pumps using set-hp-state and open the vents with set-vent-state. You should be able to reduce the temperature of every floor by putting each heat pump in the cooling state. Try closing individual vents to see what happens. Try to keep each floor at 72 degrees by operating the controls yourself; it¡¯s quite difficult.
+
+Change the outdoor temperature to 50 degrees by typing into the GUI¡¯s text field. The temperatures should begin to drop. Switch all the heat pumps into the heating state and try to stabilize the temperatures at 68 degrees. Not only is this exercise a useful way to test the code you¡¯ve written, but it may give you some insights into the system¡¯s behavior that will be helpful when, in the next chapter, you write the rules to control it.
+

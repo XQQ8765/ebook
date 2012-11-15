@@ -1,0 +1,54 @@
+15.1. The Userfunction interface
+In previous chapters, you¡¯ve seen many examples of calling Java functions from the Jess language. In chapter 13, you wrote an entire graphical interface this way. The Jess language is wonderfully expressive when you¡¯re writing logical conditions. For many routine tasks, though, Jess language code is more verbose than the equivalent Java code would be. There are even some things (in particular, manipulating multidimensional arrays) that you can¡¯t do from the Jess language. These tasks should be done in Java (the old proverb about using the right tool for the right job comes to mind).
+
+For these cases where writing Jess code alone isn¡¯t enough, Jess includes the Userfunction interface. If you implement Userfunction in a Java class, Jess can invoke your class like any other Jess function. In fact, all of Jess¡¯s built-in functions are themselves implementations of Userfunction.
+
+The Userfunction interface is quite simple¡ªit contains only two Java method declarations:
+
+package jess;
+
+public interface Userfunction {
+    String getName();
+    Value call(ValueVector vv, Context context)
+        throws JessException;
+}
+
+I¡¯ll discuss each of these methods quickly here, and then explore each of them at greater length in the following sections.
+
+15.1.1. The getName method
+The getName method should return the name Jess will use for the function. Any legal Jess symbol (see section 4.1.2) can be a function name, including weird ones like <= and * (of course, those are already taken). The only important thing to remember about implementing getName is that it should always return the same name for a given object: A Userfunction can¡¯t change its name over time. Jess keeps Userfunction objects in a hash table using the name as the key, so changing the name would corrupt this data structure.
+
+A typical getName implementation looks like this:
+
+public String getName() {
+    return "kill";
+}
+
+Some implementations are more complex (see section 15.4.2). This Userfunction will be callable from Jess using the name kill¡ªthat is, (kill).
+
+15.1.2. The call method
+The most important part of a Userfunction is its call method. Jess invokes the call method when your Userfunction is called from Jess language code. The first argument to the function is a list of the arguments your function was called with, and the second argument is an execution context¡ªbasically, your Userfunction¡¯s handle to Jess itself. You¡¯ll learn about Jess¡¯s ValueVector, Value, and Context classes in the following sections.
+
+A very simple implementation of call for kill might look like this:
+
+public Value call(ValueVector vv, Context context) {
+    System.exit(-1);
+    return null;
+}
+
+The kill function kills the program and returns an error status to the operating system; it¡¯s similar to Jess¡¯s built-in exit function (which calls System.exit(0)). This call method doesn¡¯t really return a value to Jess, because the method never returns¡ªalthough the Java compiler insists you return something, so I used null.
+
+15.1.3. Loading a Userfunction into Jess
+You¡¯ve written a Userfunction of your own containing the two methods described so far, and you¡¯d like to try it out. Let¡¯s say you¡¯ve written a class named org.me.Kill that implements the Userfunction interface using the two methods. You can load it into Jess from the command prompt using the load-function function:
+
+Jess> (load-function org.me.Kill)
+TRUE
+
+Then you can call it like any other Jess function:
+
+Jess> (kill)
+%
+
+(The % symbol is a system prompt: kill exits to the operating system.) From Java, you can create an instance of your Userfunction class and install it using the addUserfunction() method in the jess.Rete class. kill is OK for a first attempt, but it doesn¡¯t let you specify the status code to be passed to System.exit. You¡¯ll fix that in the next section.
+
+

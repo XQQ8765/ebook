@@ -1,0 +1,49 @@
+15.4. Beyond simple examples
+We¡¯ve covered all that you need to know to write many useful Jess extension functions. In this section, we¡¯ll look at some subtle techniques that can make your Userfunctions even more powerful.
+
+15.4.1. Holding state
+A Userfunction is really just an ordinary Java class, and so it can do things that ordinary Java classes do. In particular, it can contain member variables. Many of Jess¡¯s built-in functions contain member variables that hold data for the functions to operate on. For instance, the class that implements the bag function (which lets you create, modify, and maintain collections of objects) includes a Hashtable member variable that is used to store all the collections you create. When you load a Userfunction into Jess, only a single object of your class is created; that single object is used every time the Userfunction is called, so the values of those member variables are preserved.
+
+Note that the Rete class has a method findUserfunction that returns the object that implements a given function. If you know the class name of that function, you can retrieve the object, cast it to the known type, and retrieve any state it holds. This is a convenient way to write a collection of cooperating functions that must share state. Recall that a single Java program might contain multiple instances of the jess.Rete class. If you install a separate instance of your Userfunction into each one, then each one will maintain its own state, separately.
+
+When you write the Userfunctions for the HVAC Controller system, the classes will include a member variable to point to the Hardware object on which they operate. The multiple classes will use findUserfunction to share this state.
+
+15.4.2. Multiple personalities
+Consider this trivial Userfunction class:
+
+include jess.*;
+
+public class AnyString implements Userfunction {
+    private String m_name;
+    public AnyString(String name) { m_name = name;}
+    public String getName() return m_name;
+    public Value call(ValueVector vv, Context c) {
+        return new Value(m_name, RU.STRING);
+    }
+}
+
+It can be constructed using any string; when it is registered with Jess, that string will be its name. It will return the same string as its result. You won¡¯t be able to use load-function to load this class into Jess, because load-function won¡¯t let you specify the constructor argument; instead you can call the addUserfunction method in the Rete class from Java.
+
+Although this function isn¡¯t useful as is, it illustrates an important principle: One Java class can implement multiple Userfunctions. A call method can choose from among several possible actions depending on the name the function is invoked with. If several Userfunction implementations need to share code (as the HVAC functions surely will), packaging them into a single class this way makes sense. Some of Jess¡¯s built-in functions use this technique.
+
+15.4.3. Userfunctions and serialization
+As we discussed in section 14.4, Jess¡¯s bload and bsave functions use Java¡¯s serialization API to preserve and restore Jess¡¯s state from any storage medium: a file, a network pipe, and so forth. More formally, these functions save or restore all the member data of the active jess.Rete object. Therefore, all the Java objects that are part of the Rete object¡¯s state should implement the java.io.Serializable interface. This is a tagging interface, which means it contains no methods, and just serves as a signal to the Java virtual machine that serializing objects of the given class is OK. Because the Userfunctions registered with Jess become part of a Rete object¡¯s state, it is generally important that all your Userfunction classes implement this interface¡ªunless you¡¯re sure you¡¯ll never use bload and bsave when they are registered.
+
+Because the current program will be controlling hardware (which obviously can¡¯t be stored in a file!), it won¡¯t be necessary for the Userfunction classes to implement Serializable, either. It would not be reasonable to expect bload to be able to restore the control program to a consistent state from offline storage.
+
+15.4.4. Grouping functions with Userpackage
+If you¡¯ve written a group of related Userfunctions¡ªeither in a single class or in a group of classes¡ªit would be convenient to provide a way for them to be loaded together into Jess with a single function call. This is especially true if your Userfunction objects need constructor arguments, like the AnyString class earlier. The jess.Userpackage interface takes care of this for you. Userpackage has one method, add; you implement add to initialize and install any number of Userfunction objects. Here¡¯s a simple Userpackage to install a few AnyString functions:
+
+import jess.*;
+
+public class AnyStringPackage implements Userpackage {
+    public void add(Rete engine) {
+        engine.addUserfunction(new AnyString("fred"));
+        engine.addUserfunction(new AnyString("george"));
+        engine.addUserfunction(new AnyString("ron"));
+        engine.addUserfunction(new AnyString("percy"));
+    }
+}
+
+You can install a Userpackage into Jess using the load-package function or the addUserpackage method in the Rete class. In the next section, you will finally write the HVAC functions and collect them in a Userpackage.
+

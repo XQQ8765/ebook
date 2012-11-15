@@ -1,0 +1,34 @@
+15.3. Returning a value
+The call method returns a Value object. You can return one of call¡¯s arguments, return one of a handful of constants in the jess.Funcall class, or create a new Value of your own. You should never return one of call¡¯s arguments directly; rather, evaluate the argument by calling resolveValue on it, and return the result instead. Failing to do this will result in undefined behavior.
+
+The Funcall class contains a few constants you can use as function return values:
+
+TRUE¡ª Boolean true
+
+FALSE¡ª Boolean false
+
+NIL¡ª No value
+
+NILLLIST¡ª An empty list
+
+EOF¡ª End of file
+
+Many functions return TRUE when there is no other sensible return value. Java¡¯s null is not a legal return value for call. Jess¡¯s equivalent of null is the symbol nil; you can always therefore return Funcall.NIL. The function printout is one of the few built-ins that return nil. This value makes sense for printout because nil return values aren¡¯t displayed by the Jess command prompt.
+
+15.3.1. Constructing Value objects
+Value objects are constructed by specifying the data and (usually) the type. The type is one of the constants listed in table 15.1. Each overloaded constructor assures that the given data and the given type are compatible. Note that for each constructor, more than one value of the type parameter may be acceptable. It¡¯s usually obvious which types can be created using each constructor; for example, you can only construct RU.FLOAT objects using the constructor that takes a double argument. The available constructors in jess.Value are as follows:
+
+public Value(Object o) throws JessException
+
+public Value(String s, int type) throws JessException
+
+public Value(Value v)
+
+public Value(ValueVector f, int type) throws JessException
+
+public Value(double d, int type) throws JessException
+
+public Value(int value, int type) throws JessException
+
+Value has a number of subclasses that are used to hold some specialized kinds of data. Variable, FuncallValue, FactIDValue, and LongValue are the four of most interest to us. When you want to create a value to represent a variable, a function call, a fact, or a Java long, you must use the appropriate subclass. Refer to the API documentation for more information about these classes.
+
