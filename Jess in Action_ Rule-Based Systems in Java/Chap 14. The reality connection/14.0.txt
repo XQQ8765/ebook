@@ -1,0 +1,25 @@
+14. The reality connection
+In this chapter you¡¯ll...
+
+Write a simulator in Java
+
+Interface it to Jess using JavaBeans
+
+Begin to write rules about JavaBeans
+
+No man is an island, entire of itself; every man is a piece of the continent, a part of the main.
+
+¡ªJohn Donne
+
+These days, very little software is written to stand alone. Component architectures, application servers, and networking have made it easier than ever to assemble software out of disparate parts. It¡¯s becoming increasingly rare to code a completely self-contained application. After all, with so many high-quality libraries, components, tools, services, and containers available, why reinvent the wheel?
+
+So far in this book, you¡¯ve written two applications using Jess. In each case, you used Jess as a standalone system. You didn¡¯t write or use a single line of Java code except Jess itself. You¡¯ll occasionally write software this way, but for the remainder of the book, we¡¯ll look at more realistic systems that use Jess as a part of a larger whole. Jess was designed to be embedded in other Java software. You¡¯ve already seen how Jess can call Java functions¡ªnow you¡¯ll see that outside Java code can just as easily call on Jess. Each of the remaining applications you build will include a component written in Java.
+
+In the next few chapters, you¡¯ll develop the control software for the HVAC (heating, ventilation, and air conditioning) systems in a large building. Jess will receive real-time temperature data and, based on these readings, will send commands to the multiple heating and cooling units in the building. Although this is a specialized example, the same principles would apply to controlling chemical plants, intelligent traffic-light sequencing, monitoring automated assembly lines, and even implementing manufacturing resource planning (MRP) systems. In every case, Jess has to receive data from the outside world and try to take action to affect the readings.
+
+The Tax Forms Advisor from part 3 of this book and the PC Repair Assistant from part 4 only reasoned about facts in working memory. Facts are jess.Fact objects, and they live entirely inside Jess. When Jess is being used to directly react to events in the real world, it only makes sense that Jess needs to be able to reason about objects outside of itself. Section 6.5 talked about using the definstance function to add JavaBeans to working memory. The application you¡¯re about to build uses this technique to interact with a collection of thermostats, geothermal heat pumps, and automated air vents.
+
+Your first task, and the topic of this chapter, is to learn about the system you¡¯re going to control. You will build a set of JavaBeans to represent and interact with the hardware, and then begin to use them from Jess. You¡¯ll also build a software simulator so that you can test your application.
+
+To complete the control rules cleanly, you need to extend the Jess language by adding some custom functions written in Java; this is the subject of chapter 15. We¡¯ll look at Jess¡¯s external function interface and learn something about how Jess¡¯s function call mechanism works under the hood. Finally, in chapter 16, you¡¯ll write the rules, and the application will come together.
+

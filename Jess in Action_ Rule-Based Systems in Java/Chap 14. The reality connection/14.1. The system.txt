@@ -1,0 +1,11 @@
+14.1. The system
+Imagine a tall building (figure 14.1). The building is heated and cooled by a number of heat pumps. A heat pump is both a heating and cooling device. At any time, it can be in one of three modes: heating, cooling, or off. In this building, each heat pump services three adjacent floors
+
+Figure 14.1. A six-story building heated and cooled by two heat pumps. Each floor has temperature sensors and an automated air vent. This small building contains 14 devices to connect to the control software: six sensors, six vents, and two heat pumps.
+
+
+
+
+Warm or cold air from the heat pumps enters the building through adjustable vents. Each vent can be either open or closed, and although there may be several vents on each floor, they are wired in such a way that they must open and close in concert¡ªthat is, they act like a single vent.
+
+You probably know that warm air rises and cold air sinks¡ªit¡¯s basic physics. This adds a bit of nonlinearity to the system, because each heat pump can affect not only the floors to which it directly sends heated or cooled air, but the floors above and below it as well..

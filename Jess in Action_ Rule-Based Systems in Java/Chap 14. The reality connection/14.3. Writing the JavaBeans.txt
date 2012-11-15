@@ -1,0 +1,193 @@
+14.3. Writing the JavaBeans
+Jess¡¯s working memory can hold not only plain facts, but also shadow facts, which are placeholders for Java objects outside of Jess (see section 6.5 for the details). More specifically, they are placeholders for JavaBeans. From Jess¡¯s perspective, a JavaBean is just an instance of a Java class with one or more properties¡ªspecially named methods that let you read and/or write to a named characteristic of the object. A very simple JavaBean to represent a temperature sensor for the HVAC system could look like this:
+
+package control;
+
+public class Thermometer {
+     private Hardware m_hardware;
+     private int m_floor;
+     public Thermometer(Hardware hw, int floor) {
+         m_hardware = hw;
+         m_floor = floor;
+     }
+
+     public double getReading() {
+         return m_hardware.getTemperature(m_floor);
+     }
+}
+
+This Bean has one read-only property named reading. If you used this as is, Jess could create shadow facts for Thermometer instances, and each Thermometer fact would have a reading slot¡ªbut if the value in that slot changed, Jess wouldn¡¯t know it. The shadow fact¡¯s reading slot would never change.
+
+A more useful Bean includes a mechanism for notifying interested parties that the value of a property has changed. The standard JavaBeans mechanism for doing this is via PropertyChangeEvents. Jess works best with Beans that send one of these events whenever the value of any property changes. It¡¯s fairly easy to implement this behavior in your own Beans using the helper class PropertyChangeSup-port in the java.beans package. Most of the code you need to write is boilerplate. A class that supports PropertyChangeListeners must include the methods addPropertyChangeListener and removePropertyChangeListener; they always look the same, but they still have to be included in every JavaBean you write. Many people create a base class for their Beans that contains a protected Property-ChangeSupport member and implementations of these two methods; you¡¯ll do this here. The helper class looks like this:
+
+package control;
+
+import java.beans.*;
+
+public abstract class BeanSupport {
+    protected PropertyChangeSupport m_pcs =
+        new PropertyChangeSupport(this);
+
+    public void
+    addPropertyChangeListener(PropertyChangeListener p) {
+        m_pcs.addPropertyChangeListener(p);
+    }
+    public void
+    removePropertyChangeListener(PropertyChangeListener p) {
+        m_pcs.removePropertyChangeListener(p);
+    }
+}
+
+Note that PropertyChangeSupport itself includes the addPropertyChangeListener and removePropertyChangeListener methods. It would be nice if you could use PropertyChangeSupport as a base class for your JavaBean¡ªbut you can¡¯t: PropertyChangeSupport's only constructor accepts the source object (the JavaBean) as an argument, and super(this) is invalid Java. A default constructor that assumed the current object was the source would have been useful!
+
+You can now add a run method to Thermometer that polls the temperature on a given floor, sending out PropertyChangeEvents to notify Jess when the temperature changes. You¡¯ll also add a read-only floor property to identify the individual Thermometer. The result is shown in listing 14.3.
+
+Listing 14.3. The Thermometer class, including automated notification
+
+Code View: Scroll / Show All
+package control;
+
+public class Thermometer extends BeanSupport
+    implements Runnable {
+    private Hardware m_hardware;
+    private int m_floor;
+    private double m_oldReading;
+
+    public Thermometer(Hardware hw, int floor) {
+        m_hardware = hw;
+        m_floor = floor;
+        new Thread(this).start();
+    }
+
+    public int getFloor() {
+        return m_floor;
+    }
+
+    public double getReading() {
+       return m_hardware.getTemperature(m_floor);
+    }
+
+    public void run() {
+       while (true) {
+           double reading = getReading();
+           m_pcs.firePropertyChange("reading",
+               new Double(m_oldReading),
+               new Double(reading));
+           m_oldReading = reading;
+           try { Thread.sleep(1000); }
+           catch (InterruptedException ie) { return; }
+       }
+    }
+}
+
+					  
+
+The PropertyChangeSupport class needs the name of the property along with the old and new values to create the appropriate event. Note that PropertyChangeSupport is smart enough to send an event only if the old and new values are different, so you don¡¯t need to bother with that test yourself. There are a few overloaded versions of the firePropertyChange method to handle different properties of different types. For some types, though, like the double value here, you need to use wrapper objects to pass the old and new values.
+
+14.3.1. Rules about Thermometers
+Given this improved version of Thermometer, it¡¯s possible to write rules that react to temperatures. If this class and the Simulator class have been compiled and are available on the CLASSPATH, the following code will print a warning message after a short interval. Remember that all the code for the HVAC Controller is available from this book¡¯s web site:
+
+;; Create a simulator
+(bind ?hardware (new control.Simulator 3))
+
+;; Monitor the temperature on the first floor
+(defclass Thermometer control.Thermometer)
+(definstance Thermometer
+    (new control.Thermometer ?hardware 1))
+
+;; Report when the temperature gets to be over 72
+(defrule report-high-temperature
+    (Thermometer (reading ?r&:(> ?r 72)))
+    =>
+    (printout t "It's getting warm on the first floor" crlf)
+    (halt))
+
+(run-until-halt)
+(exit)
+
+The defclass function (first discussed in section 6.5) tells Jess that you¡¯re going to define shadow facts for objects of a certain class (here control.Thermometer). The definstance function installs an object of that class into Jess. Finally, the rule here matches only Thermometers that are reading over 72 degrees. The temperatures in the simulator start at 70 and drift up quickly, so this rule fires after a short interval. Notice how once a JavaBean is installed into Jess, it looks just like an ordinary fact, and the Thermometer pattern that matches the Bean here is just an ordinary pattern. You use (run-until-halt) instead of (run) because you want Jess to wait for the rule to be activated¡ªthe agenda will be empty when you call (run-until-halt), but when the temperature becomes high enough, the rule will activate and fire.
+
+14.3.2. Writing the other Beans
+The Hardware interface, like the C library it wraps, represents the state of a vent as a Boolean value and the state of a heat pump as an integer. Because symbols like open and closed would be easier to work with than the corresponding Boolean values true or false, it would be a good idea to write the Vent and HeatPump JavaBeans to use meaningful strings as property values. You need to convert both ways between these symbols and the underlying integer and Boolean values, and you¡¯ll need to do so in the code you write in the next chapter, too, so let¡¯s isolate the code to do these conversions in a single class named State. Part of the straightforward State class is shown in listing 14.4.
+
+Listing 14.4. Converting between the Hardware states and convenient symbolic names
+
+package control;
+
+public class State {
+    public static final String
+        OPEN="open",
+        CLOSED="closed",
+        OFF="off",
+        HEATING="heating",
+        COOLING="cooling";
+
+    public static String vent(boolean val) {
+        return val ? OPEN : CLOSED;
+    }
+
+    public static boolean vent(String val) {
+        if (val.equals(OPEN))
+            return true;
+        else if (val.equals(CLOSED))
+            return false;
+        else
+            throw new IllegalArgumentException(val);
+    }
+
+    // Analagous heatpump() methods not shown
+}
+
+By collecting these conversions together in a single class and defining the symbols as constants in one place, you may avoid a lot of debugging.
+
+The Vent bean
+
+The other JavaBeans you need to write are a little different from the Thermometer class. Whereas the Hardware interface only has a method for reading the temperature, there are methods for both getting and setting the heat-pump and vent states. The corresponding HeatPump and Vent Beans therefore need both setting and getting methods. Calling Vent.setState (for example) should fire a PropertyChangeEvent. Of course, there should also be a background thread watching for changes from the outside. You can reuse the BeanSupport base class to help implement the event support. The Vent class is shown in listing 14.5. Note how it uses State to convert between Boolean values and the symbolic constants open and closed. The HeatPump class (not shown) is very similar.
+
+Listing 14.5. A JavaBean to represent an automated vent
+
+Code View: Scroll / Show All
+package control;
+
+public class Vent extends BeanSupport
+    implements Runnable {
+    private Hardware m_hardware;
+    private int m_floor;
+    private boolean m_oldState;
+
+    public Vent(Hardware hw, int floor) {
+        m_hardware = hw;
+        m_floor = floor;
+        new Thread(this).start();
+    }
+
+    public int getFloor() {
+        return m_floor;
+    }
+
+    public String getState() {
+        return State.vent(m_hardware.getVentState(m_floor));
+    }
+
+    public void setState(String szState) {
+        boolean state = State.vent(szState);
+        m_hardware.setVentState(m_floor, state);
+        m_pcs.firePropertyChange("state",
+            new Boolean(m_oldState),
+            new Boolean(state));
+        m_oldState = state;
+    }
+
+    public void run() {
+        while (true) {
+            boolean state = m_hardware.getVentState(m_floor);
+            m_pcs.firePropertyChange("state",
+                new Boolean(m_oldState),
+                new Boolean(state));
+            m_oldState = state;
+            try { Thread.sleep(1000); }
+            catch (InterruptedException ie) { return; }
+        }
+    }
+}
+

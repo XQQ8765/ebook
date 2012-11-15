@@ -1,0 +1,178 @@
+14.2. Defining the hardware interface
+This system includes hardware and software components. This is a book about software, so perhaps we should get the hardware considerations out of the way first. Assume that the building¡¯s control systems, purchased from Acme HVAC Systems, Inc., include all the sensors and actuators you need. In fact, they¡¯re already connected to one master computer on which the control software will run. Acme HVAC Systems has provided a library of functions you can call from C language code to turn the heat pumps on and off, read the temperatures, and operate the vents. To make this concrete, imagine that this is a complete list of the available library functions:
+
+int getHeatPumpState(int heatPump);
+void setHeatPumpState(int heatPump, int state);
+
+double getTemperature(int sensor);
+
+int getVentState(int vent);
+void setVentState(int vent, int state);
+
+Note that these are C functions, so on and off values like the state of each vent must be represented as type int, because classic C doesn¡¯t have a boolean type like Java. The first argument to every function is an index; for example, you would pass the value 3 to getTemperature to get the temperature reading from sensor number 3. By convention, all these index numbers start at 1, not 0.
+
+14.2.1. Native methods
+Of course, you¡¯re writing the software in Java, so you need to make the connection between your Java code and the C library. This is easy enough to do using the Java Native Interface (JNI). A native method is a method of a Java class that happens to be written in some system-level language like C. Native methods use a special JNI library to bridge the gap between the Java virtual machine and the real machine outside. The knowledge that your program will be dealing with external hardware can be encapsulated inside a single Java class; that class will have one native method for each of the C library functions.
+
+Writing native methods is outside the scope of this book. The best reference for writing them is probably Sun¡¯s web-based Java tutorial (http://java.sun.com/docs/books/tutorial/native1.1/index.html). For our purposes, all you need to know is that from the Java side, you declare a native method like this:
+
+public native void myMethod(String myArgument);
+
+A native method has no body (just like an abstract method) and includes the keyword native in its declaration; otherwise, there¡¯s nothing special about it. Java expects to find the definition of this method in an external library you must provide.
+
+The important thing to realize here is that any Java code can call myMethod without knowing that it¡¯s a native method. From the caller¡¯s perspective, a native method looks like any other Java method. A subclass can override a normal parent method using a native method, and an implementation of an interface can provide a native method to satisfy the interface.
+
+You can use this last fact to your advantage. You¡¯ll define a Java interface to represent the functions in the C library. Then you can write multiple implementations of the interface: one that uses native methods to access the real hardware, and one that implements a simulation of the hardware. You can then use the simulator to develop and test the software. When the software is ready, you could swap in the hardware implementation and try it out on the real system. For the purposes of this book, you¡¯ll only write the simulator.
+
+The interface has one method for each of the C library functions, so it looks like this:
+
+package control;
+public interface Hardware {
+    public final int OFF=0, HEATING=1, COOLING=2;
+
+    int getHeatPumpState(int heatPump);
+    void setHeatPumpState(int heatPump, int state);
+    int getNumberOfHeatPumps();
+
+    double getTemperature(int sensor);
+
+    boolean getVentState(int vent);
+    void setVentState(int vent, boolean state);
+}
+
+Note that you¡¯ll put all the Java code you write for this application into a package named control.
+
+The methods in this interface look a lot like the C functions, with a few exceptions. Some of the int types are now boolean, because in Java, boolean is the best type to represent an on or off value. The heat pump state is still represented as an integer, though, and three constants represent the legal values (which presumably came from the C library manual).
+
+14.2.2. Writing a simulator
+The hardware simulator is fairly simple. The implementations of methods like getVentState and setVentState are trivial. The simulator object contains an array of boolean to record the state of each vent, and these two methods simply set and get the appropriate elements of that array. The only complicated method is getTemperature, because it must return a realistic temperature based on the complete state of the system. The simple part of the simulator is shown in listing 14.1; you¡¯ll work on getTemperature next. Note that the implementation shown here, like most published code, skimps on error handling. All the getter and setter methods should check that their first arguments are greater than zero and less than or equal to the number of devices, but we¡¯ve omitted this code here to keep things short. This version of Simulator is an abstract class because we haven¡¯t implemented getTemperature yet.
+
+Listing 14.1. The basic parts of the hardware simulator
+
+Code View: Scroll / Show All
+package control;
+public abstract class Simulator implements Hardware {
+    private int[] m_heatpumps;
+    private boolean[] m_vents, m_sensors;
+
+    public Simulator(int numberOfFloors) {
+        if (numberOfFloors % 3 != 0)
+          throw new RuntimeException("Illegal value");
+
+        m_heatpumps = new int[numberOfFloors/3];
+        m_vents = new boolean[numberOfFloors];
+        m_sensors = new boolean[numberOfFloors];
+    }
+
+    public int getHeatPumpState(int heatPump) {
+         return m_heatpumps[heatPump-1];
+    }
+
+    public void setHeatPumpState(int heatPump, int state) {
+        switch (state) {
+        case OFF: case HEATING: case COOLING:
+            m_heatpumps[heatPump-1] = state; break;
+        default:
+            throw new RuntimeException("Illegal value");
+        }
+    }
+
+    public int getNumberOfHeatPumps() {
+        return m_heatpumps.length;
+    }
+
+    public boolean getVentState(int vent) {
+        return m_vents[vent-1];
+    }
+
+    public void setVentState(int vent, boolean state) {
+        m_vents[vent-1] = state;
+    }
+
+}
+
+					  
+
+14.2.3. Simulating getTemperature
+The meat of the HVAC simulator is the getTemperature method, which returns a value based on the complete state of the system. Each time you call getTemperature with a given argument, you can get a different answer back, because the temperatures will constantly change based on many factors. At least four things go into the calculation of the temperature on each floor of the building:
+
+The current temperature on that floor
+
+Whether the floor is actively being heated or cooled
+
+Heat leakage from outside, through the walls
+
+Heat leakage from other floors
+
+The simulator should take each of these factors into account. The current temperature on each floor can be held in an array of double, so that¡¯s easy. Whether a given floor is being heated or cooled depends on what the corresponding heat pump is doing and whether that floor¡¯s vent is open or closed. To account for heat leakage from outside, you need a variable to hold the outside temperature. Finally, the same array of current temperatures is all you need to compute the heat leakage from other floors.
+
+The simplest way to write the simulator is so that it works in real time¡ªit includes a loop that continuously recomputes the temperature. This loop runs in a separate thread, so the temperatures continue to update even if no calls to getTemperature are made. Therefore, all you need to do is to figure out an equation to calculate the current temperature from the temperature at the last time step and the changes due to the factors just listed.
+
+A law of physics called Newton¡¯s Law of Cooling, simply put, states that the larger the temperature difference between two bodies, the faster heat flows between them. Therefore, a reasonable way to calculate the temperature change per second on a given floor is to calculate the difference between that floor¡¯s current temperature and some other body (such as the outside air or the hot air coming from the heat pump) and multiply this difference by some constant value giving the actual heat transfer rate. The constant varies depending on the materials involved; we¡¯ll arbitrarily choose the value 0.01. If you do this for each source of heat, for each floor, for each time step, you¡¯ll have a reasonable simulation of the temperatures in an office building. The code to do this is shown in listing 14.2. HOT and COLD represent the temperatures of the hot and cold air coming from the heat pump, and m_outdoor is the (variable) temperature of the outside air. The big while loop looks at each floor in turn, calculating the contribution of each of the factors listed earlier to the new temperature for that floor. Simulator¡¯s constructor starts a background thread that periodically updates the temperature for each floor.
+
+Listing 14.2. An implementation of getTemperature
+
+Code View: Scroll / Show All
+package control;
+import java.util.Arrays;
+
+public class Simulator implements Hardware {
+     private final double RATE = 0.01;
+     private final double HOT = 100, COLD=50;
+     private double[] m_temperature;
+     double m_outdoor = 90;
+
+     public Simulator(int numberOfFloors) {
+         //...
+         m_temperature = new double[numberOfFloors];
+         Arrays.fill(m_temperature, 70);
+         new Thread(this).start();
+     }
+     //...
+     public double getTemperature(int sensor) {
+         return m_temperature[sensor-1];
+     }
+
+     public void run() {
+         while (true) {
+             for (int i=0; i<m_temperature.length; ++i) {
+                 double temp = m_temperature[i];
+
+                 // Heating and cooling, and heat rising
+                 switch (state(i)) {
+                 case HEATING:
+                     temp += (HOT-temp)*RATE; break;
+                 case COOLING:
+                     temp += (COLD-temp)*RATE; break;
+                 case OFF:
+                     temp += (i+1)*0.005; break;
+                 }
+
+                 // Outdoor leakage
+                 temp += (m_outdoor-temp)*RATE/2;
+
+                 m_temperature[i] = temp;
+             }
+             try {Thread.sleep(1000);}
+             catch (InterruptedException ie) { return;}
+         }
+     }
+     private int state(int floor) {
+         if (getVentState(floor + 1))
+             return getHeatPumpState(floor/3 + 1);
+         else
+             return OFF;
+    }
+}
+
+					  
+
+14.2.4. Adding a graphical interface
+Now the simulator runs, but currently there¡¯s no way to see what it¡¯s doing. A graphical display that shows the full state of the building at a glance would be very helpful. A simple GUI could display a row of labels for each floor: one label each for heat pump state, vent state, and temperature. If you add a text field that lets you set the outdoor temperature, the simulator will be ready to test the HVAC Controller system. Figure 14.2 is a screen shot of this simple interface. I won¡¯t show the code here, but it¡¯s included in the sample code for this chapter. The SimulatorGUI class has a constructor that accepts a Simulator as a constructor argument and then uses a thread to poll the Simulator to determine its state over time.
+
+Figure 14.2. A GUI for the HVAC simulator. The three columns of labels represent the heat pump state, vent state, and temperature for each floor. The text field on the bottom shows the current outdoor temperature.
+
+
+
+
+The simulator is now a reasonable stand-in for a real HVAC system. Next you need a way to connect the simulator¡ªor, in its place, the HVAC system itself¡ªto Jess. You¡¯ll do this by wrapping the simulator¡¯s interface in a set of JavaBeans.

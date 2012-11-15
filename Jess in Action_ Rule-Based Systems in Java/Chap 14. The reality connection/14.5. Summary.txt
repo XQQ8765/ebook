@@ -1,0 +1,7 @@
+14.5. Summary
+In this chapter, you began the work of using Jess to control the HVAC systems of an office building. You defined a Java interface to represent Acme HVAC Systems¡¯ C language library. You wrote a simulator in Java to test your control algorithms against that interface. You then wrote some JavaBeans, which you can inject into Jess¡¯s working memory so that Jess can monitor the state of the HVAC system in real time. The sample rule in section 14.3.1 suggests how these JavaBeans will be used.
+
+In the next chapter, you will write additional Java functions to help control the HVAC systems. You will then use these Java functions to extend the Jess language by adding new commands. While we¡¯re at it, we¡¯ll look at Jess¡¯s extension facilities in general, and the jess.Userfunction interface in particular, and you¡¯ll learn how to write a range of different Jess extensions.
+
+Armed with all the Java code developed in this and the next chapter, writing the rules to control the HVAC system will be straightforward. That will be the task of chapter 16.
+
