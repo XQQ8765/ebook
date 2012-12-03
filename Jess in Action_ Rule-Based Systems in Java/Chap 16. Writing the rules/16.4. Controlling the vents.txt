@@ -1,0 +1,41 @@
+16.4. Controlling the vents
+Although this may seem obvious, it¡¯s worth stating for the record; the vents have two purposes:
+
+To let the hot or cold air in, when needed
+
+To keep it out when it¡¯s not
+
+Therefore, you need two different sets of rules to control the vents: rules that open the vent when a floor needs service, and rules that close it when the floor¡¯s temperature is acceptable. The only thing you need to decide is where the important temperatures are. Because you want the vents to help moderate the system, you¡¯ll switch them based on the set point temperature. Note that because a vent doesn¡¯t accomplish anything unless the heat pump is on, you need to include the state of the heat pump in each rule. Table 16.3 is a truth table for what to do when the heat pump for a floor is in cooling mode.
+
+Table 16.3. The truth table for vent operation when the heat pump for a floor is in cooling mode. The rows correspond to the current vent state.
+
+ 	Too Cold	Lower Guard	Just Right	Upper Guard	Too Hot
+Open	Close Vent	Close Vent	Do Nothing	Do Nothing	Do Nothing
+Closed	Do Nothing	Do Nothing	Do Nothing	Open Vent	Open Vent
+
+This truth table could lead to oscillations of the vents. If the temperature were hovering right at the set point, the vents might open and close rapidly. If this oscillation became a problem (and in a real system, it would, because the vents would be noisy), then you could establish a second set of guard lines, closer together than the ones you¡¯re using for the heat pump. The vents could then be opened or closed only when the temperature passed these guard lines. We won¡¯t complicate the HVAC Controller system with this detail, but you should keep an eye out for the problem during testing.
+
+16.4.1. The vent rules
+Now you¡¯re ready to write the vent rules. The following rule says that if the heat pump for a floor is in cooling mode, the vent is closed, and the temperature is above the set point, then the vent should be opened:
+
+(defrule floor-too-hot-vent-closed
+    (HeatPump (state "cooling") (number ?p))
+
+    (Vent (state "closed") (floor ?f&:(eq ?p (which-pump ?f))))
+    (Thermometer (floor ?f)
+    (reading ?t&:(> ?t ?*set-point*)))
+    =>
+    (set-vent-state ?f open))
+
+Similarly, if the heat pump for a floor is cooling, the floor is too cold, and the vent is open, then the vent should be closed:
+
+(defrule floor-too-cold-vent-open
+    (HeatPump (state "cooling") (number ?p))
+    (Vent (state "open") (floor ?f&:(eq ?p (which-pump ?f))))
+    (Thermometer (floor ?f)
+    (reading ?t&:(< ?t ?*set-point*)))
+    =>
+    (set-vent-state ?f closed))
+
+You need analogous rules floor-too-cold-vent-closed and floor-too-hot-vent-open, dictating what to do when the heat pump is in heating mode; these aren¡¯t shown here, but they¡¯re very similar to the other pair. The four rules correspond to the four cells in table 16.3 that have an entry other than Do Nothing.
+

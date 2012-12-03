@@ -1,0 +1,35 @@
+16.1. The control algorithm
+You can get an advanced degree in the engineering of control systems. It¡¯s a vast and complex discipline, and we can¡¯t hope to cover it all here. Instead, I¡¯ll state some commonsense principles to which your system should adhere, and then we¡¯ll come up with a simple, ad hoc control algorithm to satisfy these requirements.
+
+16.1.1. Knowledge engineering with truth tables
+The best expert to interview for this project would be a control systems engineer. Ideally, he¡¯d already be familiar with heat pumps and have experience building control systems for them. A certified Acme HVAC Systems engineer would of course be perfect! The world is rarely perfect, however, and most likely you¡¯d talk to an engineer whose specialty wasn¡¯t HVAC control. In that case, you¡¯d combine knowledge from the expert with information gleaned from the Acme HVAC Systems Installation Guide, the Acme User¡¯s Manual, and any other documentation you could get your hands on.
+
+Flowcharts are ideal for describing diagnostic systems, but they would not be the best way to capture the collected knowledge here. A better alternative is to use truth tables. A truth table is a chart with rows and columns that correspond to some combination of inputs to the system. The individual entries in the table describe the desired output of the system given those inputs. A vastly simplified truth table for the HVAC Controller system might look like table 16.1. In the following sections, you¡¯ll fill in the details.
+
+Table 16.1. Oversimplified truth table for the HVAC Controller system. Each row represents one possible current heat-pump setting; each column represents one possible temperature reading.
+
+ 	Too Cold	Just Right	Too Hot
+Off	Start Heating	Do Nothing	Start Cooling
+Heating	Do Nothing	Turn Off	Turn Off
+Cooling	Turn Off	Turn Off	Do Nothing
+
+16.1.2. How heat pumps work
+You may know how an air conditioner works. A working fluid (historically, often the gas Freon) is compressed by a pump outside your house. Compressing a fluid creates heat, so a fan dissipates this heat outside. The compressed, somewhat cooled fluid is then circulated inside the house, where it is allowed to expand quickly. Just as compressing a fluid creates heat, an expanding gas absorbs heat. This process cools a radiator inside the house, and a fan blows through the radiator to create a nice cool breeze. The expanded fluid is pumped back outside to be compressed again.
+
+A heat pump is basically an air conditioner that can run in either direction. It can either cool the inside of a building and expel hot air outside, or cool the outside air and expel the waste heat inside, heating the building.
+
+16.1.3. Using guard lines
+The number one rule of operating a heat pump is that you can¡¯t quickly or repeatedly switch it between heating and cooling. If you do, the heat pump may be damaged, if condensation forms and then freezes inside the pump. Industrial-grade heat pumps can cost thousands of dollars, so this can be an expensive mistake.
+
+Your control system must respect this rule. One easy way to do this is to use guard lines. There will always be some target temperature¡ªfor example, 70 degrees. If you defined your rules to heat or cool the building whenever the temperature was different from precisely 70 degrees, then your system would be constantly switching between heating and cooling mode, trying to get the temperature exactly right. Instead, you¡¯ll define a range of acceptable temperatures delimited by upper and lower guard lines (which may move up or down depending on conditions). As long as the temperature is within the valid range, the system will be turned off. The guard lines therefore serve as a kind of buffer, so the system can¡¯t be rapidly cycled between operating modes. Table 16.2 is an update truth table that includes guard lines.
+
+Table 16.2. Truth table for the HVAC Controller system, including guard lines. The two added columns represent the regions between the set point and each guard line.
+
+ 	Too Cold	Lower Guard	Just Right	Upper Guard	Too Hot
+Off	Start Heating	Do Nothing	Do Nothing	Do Nothing	Start Cooling
+Heating	Do Nothing	Do Nothing	Do Nothing	Turn Off	Turn Off
+Cooling	Turn Off	Turn Off	Do Nothing	Do Nothing	Do Nothing
+
+16.1.4. Saving energy
+There are two ways to shut off the air to a given floor: You can close the vent for that floor or shut off the heat pump that services it. If any floor serviced by a heat pump needs to be heated or cooled, then of course that heat pump needs to be turned on. If a heat pump is on, and none of its floors needs service, then you must be sure to shut off the heat pump, rather than simply closing all the vents.
+

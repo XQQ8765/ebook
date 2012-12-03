@@ -1,0 +1,50 @@
+16.3. Controlling the heat pumps
+The heat pumps are controlled by a small cluster of rules. You control the vents from a separate set of rules, for clarity¡¯s sake. First, if a floor is outside the acceptable temperature range and its heat pump is off, its corresponding heat pump needs to be turned on and put in the correct mode. This corresponds to the behavior in truth table 16.2. The rule floor-too-cold-pump-off handles the case where a floor is too cold; a separate floor-too-hot-pump-off rule (not shown) is also needed:
+
+;; Temperature set point
+(defglobal ?*set-point* = 70)
+
+;; Deffunctions
+(deffunction too-cold (?t)
+    (return (< ?t (- ?*set-point* 2))))
+
+;; Rules
+(defrule floor-too-cold-pump-off
+    (Thermometer (floor ?f) (reading ?t&:(too-cold ?t)))
+    (HeatPump (state "off") (number ?p&=(which-pump ?f)))
+    =>
+    (set-hp-state ?p heating))
+
+There are a few things to notice about this rule. We used several of the Userfunctions defined in the last chapter to keep this rule simple. The test (number ?p&=(which-pump ?f)) means ¡°if this heat pump is the one that services floor ?f.¡± You define a deffunction named too-cold that deals with the guard line concept; here, the lower guard line is defined as 2 degrees below the temperature set point (in the defglobal ?*set-point*). Finally, you¡¯re able to use symbolic names for the state of the heat pump. Words like off and heating make the rule easier to understand. Note that in the test (state "off") you have to enclose the name of the state in quotes, so that it¡¯s a string rather than a symbol. Doing so is necessary because you¡¯re matching a JavaBean property, and JavaBeans can¡¯t have symbols as property values¡ªonly strings.
+
+16.3.1. Enough is enough
+If all the floors serviced by a heat pump are within the acceptable temperature range, the heat pump should be shut off. Exactly what should be the criteria for shutting off the pumps? If the heat pump is in cooling mode, there are three possible criteria:
+
+You run the heat pump until too-hot is not true for any floor.
+
+You run the heat pump until the temperature on each floor is below the set point.
+
+You run the heat pump until too-cold is true for each floor.
+
+The first case would lead to rapid cycling of the heat pump, because when the temperatures went below the upper guard line, the pump would be turned off, and when they went above the upper guard line, the pump would be turned on. As I¡¯ve said, rapid mode switching is bad for heat pumps, so you don¡¯t want to do this. In addition, the average temperature would be the temperature at the guard line, not near the actual set point.
+
+The third case would lead to nice, slow switching between the cooling and off states and an average temperature (the midpoint between the lowest and highest operating temperatures) equal to the set point. The temperature would cycle between the upper and lower guard lines. Unfortunately, this means that at the moment the heat pump was switched off, all the floors connected to it might be too cold. As soon as the pump was switched off, the state of the system would be indistinguishable from the case where the building needed to be heated, so the heating rules would switch the heat pump into heating mode. Switching back and forth between heating and cooling mode is bad for a heat pump, so this alternative is also unacceptable.
+
+The second case, running until the temperature dips below the set point, leads to gradual switching, because a range of temperatures is allowed. The average temperature is then above the set point¡ªmost of the time, the room is warmer than the set temperature, but not by much. Most importantly, though, the heat pump cycles between cooling mode and off mode without any danger of being switched into heating mode, which is exactly what you want. Therefore, your rule will use the actual set point as the shut-off criterion. If the heat pump is in cooling mode and the temperature of all connected floors is below the set point, then the heat pump will be shut off. This behavior corresponds to what is shown in the Cooling row in table 16.2. A similar argument would let you substitute heating and above for cooling and below.
+
+Again, you¡¯ll write this as two rules, and I¡¯ll just show the cooling version here:
+
+(defrule floors-cool-enough
+    (HeatPump (state "cooling") (number ?p))
+    (not (Thermometer (floor ?f&:(= ?p (which-pump ?f)))
+    (reading ?t&:(> ?t ?*set-point*))))
+    =>
+    (set-hp-state ?p off))
+
+This rule could be rendered in English as ¡°if there is a heat pump in the cooling state, and there are no floors serviced by this pump with temperature above the set point, then turn the heat pump off.¡±
+
+16.3.2. The moment of truth
+These four rules are enough to regulate the temperatures of the HVAC simulator. Adding the vent control rules will refine the behavior, but the basic heating and cooling control is already in place. To make the program work, you need to add calls to set-vent-state to open all the vents manually, of course.
+
+Testing the system at this stage shows that the rules defined so far suffice to turn the heat pumps on and off. Without the vent-control rules, however, the temperature differential between floors has a tendency to force the system to overshoot. When the system is in cooling mode, some floors are cooled below the lower guard line, while others are still in the comfort zone. Unfortunately, this set of rules turns the heat pump off and then immediately puts it into heating mode under these conditions. You need to add rules to equalize the temperature between floors so this won¡¯t happen.
+

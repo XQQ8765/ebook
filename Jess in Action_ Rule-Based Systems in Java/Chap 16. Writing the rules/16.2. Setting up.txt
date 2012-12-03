@@ -1,0 +1,35 @@
+16.2. Setting up
+It¡¯s time to begin writing the Jess code for the HVAC Controller. Before you do anything else, load the Userfunctions you wrote in chapter 15:
+
+(load-package control.HardwareFunctions)
+
+Next you need to create a Simulator object and make it available to Jess. You can store a reference to it in a defglobal using code like this:
+
+(defglobal ?*hw* = (init-simulator 9))
+(set-reset-globals FALSE)
+
+The graphical monitor for the simulator will appear as soon as the first line is executed. The call to set-reset-globals tells Jess not to reinitialize ?*hw* when reset is called. If you didn¡¯t call set-reset-globals, you could end up with multiple simulator GUIs on the screen, and the connections between the JavaBeans and the simulator would be broken.
+
+Next you need to use defclass to tell Jess about your JavaBean classes, and then create all the necessary JavaBeans and use definstance to connect the hardware to Jess. You need control.Vent and control.Thermometer objects for each floor and a control.HeatPump for every three floors. Because Jess doesn¡¯t have a built-in function that works like Java¡¯s for loop, you use Jess¡¯s while instead:
+
+;; Tell Jess about the JavaBean classes
+(defclass Thermometer control.Thermometer)
+(defclass Vent control.Vent)
+(defclass HeatPump control.HeatPump)
+
+;; Create the Vent and Thermometer Beans
+(bind ?n (n-floors))
+(while (> ?n 0) do
+    (definstance Thermometer
+        (new control.Thermometer ?*hw* ?n))
+    (definstance Vent (new control.Vent ?*hw* ?n))
+    (bind ?n (- ?n 1)))
+
+;; Create the HeatPump Beans
+(bind ?n (n-heatpumps))
+(while (> ?n 0) do
+    (definstance HeatPump (new control.HeatPump ?*hw* ?n))
+    (bind ?n (- ?n 1)))
+
+If you use the batch command to execute what you¡¯ve written so far, you can then use the facts command to check that all the shadow facts exist. If you check them repeatedly, you¡¯ll see that the temperature data changes over time and stays in sync with the readings in the simulator GUI. If you¡¯re using the JessWin IDE (http://herzberg.ca.sandia.gov/jess/user.shtml), you can watch the facts change in real time.
+

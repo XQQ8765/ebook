@@ -1,0 +1,7 @@
+16.7. What¡¯s next?
+Now that you have built the HVAC Control system, you may have decided that it¡¯s overkill. After all, mechanical thermostats do a perfectly good job of controlling the temperature of most houses, and many larger buildings, too. The beauty of the rule-based controller is that it is easily extensible to cover many complicated situations. Do you want the set point to be lower on winter weekends and higher on summer weekends? Should the temperature be lower (or higher) at night to save energy, or should the system simply be turned off in the temperate spring and autumn? It would be easy to add a fancy rule-based timer to the program; a Date JavaBean that broadcasts regular time and date updates would be all the infrastructure you would need. Rules to change the set point based on the date and time would then be trivial.
+
+Would you like the occupants of the building to be able to set the temperature of their own floor? Again, the modifications would be simple. You might use (set-point) facts instead of a single defglobal to track the separate set points, and modify the rules to match these facts instead of referencing ?*set-point*.
+
+Although a rule-based solution to this control problem may seem more complex than traditional alternatives, the complexity is accompanied by greatly increased features and flexibility.
+

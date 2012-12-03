@@ -1,0 +1,302 @@
+16.6. Controlling with fuzzy rules
+This section was written with Bob Orchard
+
+The first HVAC Controller system was based on traditional Boolean logic. In Boolean logic, the state of a system is crisp, meaning it has distinct, well-defined values. For example, in the system you¡¯ve developed, the temperature of a floor is always in one of three distinct states: too hot, too cold, or just right. The decisions a Boolean system can make are equally sharp: a heat pump should be turned on or off, and a vent should be open or closed.
+
+Many modern control systems are based on fuzzy logic. In fuzzy logic, the same set of states can be used, but the transitions between them are not sharp. For example, although temperatures above 72 degrees will still be considered too hot, a fuzzy control system will consider 72.5 degrees to be ¡°slightly too hot¡± and 80 degrees to be ¡°very too hot.¡± A fuzzy control system can then make somewhat more subjective decisions. Whereas the system you¡¯ve developed here only knows how to open or close the vent at each floor, a fuzzy control system can continuously vary the vent openings. A fuzzy system will be able to control the temperature much more closely. As an added benefit, there will be less abrupt cycling of the heat pumps, so they will have a longer useful life.
+
+More generally, fuzzy systems are subtler than Boolean systems. This makes fuzzy rules a good choice whenever you need to make distinctions that aren¡¯t clearly drawn¡ªfor example, in systems that have to classify items into indistinct categories.
+
+FuzzyJess, written by Bob Orchard at the National Research Council of Canada¡®s Institute for Information Technology, is a set of Jess extensions that gives you the ability to write fuzzy rules in Jess.[1] FuzzyJess is part of the FuzzyJ Toolkit, a powerful set of fuzzy logic tools written in Java. In the remainder of this chapter, we¡¯ll show how to use FuzzyJ and FuzzyJess to write a fuzzy-logic version of the HVAC Controller system.[2]
+
+[1] You can get FuzzyJess and the FuzzyJ Toolkit from http://www.iit.nrc.ca/IR_public/fuzzy/fuzzyJToolkit.html.
+
+[2] There isn¡¯t space here to provide a full tutorial on the topic of fuzzy logic or FuzzyJess and the FuzzyJ Toolkit. For that, you need to refer to other sources of information, such as Bart Kosko, Fuzzy Engineering(Upper Saddle River, NJ: Prentice Hall, 1997); Leferi Tsoukalas and Robert Uhrig, Fuzzy and Neural Approaches in Engineering (New York: John Wiley & Sons, 1997); or the documentation provided with the FuzzyJ Toolkit.
+
+16.6.1. Fuzzy logic, briefly
+In the real world, there exists much fuzzy knowledge¡ªknowledge that is vague, imprecise, uncertain, ambiguous, inexact, or probabilistic in nature. Human thinking and reasoning frequently involve fuzzy information, possibly originating from inherently inexact human concepts and matching of similar rather then identical experiences. In systems based on a classical set theory and two-valued logic, it is very difficult to answer some questions because they do not have completely true or false answers. Humans, however, can often give satisfactory answers to these questions.
+
+Fuzziness
+
+Fuzziness occurs when the boundary of a piece of information is not clear-cut. For example, words such as young, tall, good, and high are fuzzy. No single quantitative value defines the term young when describing a fuzzy concept (or fuzzy variable) such as age. For some people, age 25 is young; for others, age 35 is young. The concept young has no clean boundary. In most situations, you could say that age 1 is definitely young and age 100 is definitely not young. However, age 35 has some possibility of being young; its status usually depends on the context in which it is being considered. In fact, an age can have some possibility of being young and also some possibility of being old. It belongs to more than one set at the same time with different degrees of membership in the sets. The representation of this kind of information is handled by fuzzy set theory.
+
+Unlike classical set theory, which deals with objects whose membership to a set can be clearly described, in fuzzy set theory, membership of an element in a set can be partial¡ªthat is, an element belongs to a set with a certain grade (or degree, or possibility) of membership. This grade of membership in the fuzzy set is usually represented by values from 0 to 1 (with 0 meaning definitely not a member of the set and 1 meaning definitely is a member of the set). For example, the fuzzy term young might be defined and shown graphically as in figure 16.1. There you can see that between 0 and 25 years of age, the membership value is 1 (definitely young), above 50 it is 0 (definitely not young), and between 25 and 50 the membership value decreases (partial membership in the set).
+
+Figure 16.1. Possibility distribution of young
+
+
+
+
+Representing fuzziness in FuzzyJ: FuzzyVariable, FuzzySet, and FuzzyValue
+
+Fuzzy concepts are represented using fuzzy variables, fuzzy sets, and fuzzy values in the FuzzyJ Toolkit. A FuzzyVariable defines the basic components used to describe a fuzzy concept. It consists of a name for the variable (for example, air temperature), the units of the variable if required (for example, degrees C), a range of valid values (from 0 to 100), and a set of fuzzy terms that can be used to describe the particular fuzzy concepts for this variable. The fuzzy terms are described using a term name, such as cold, along with a FuzzySet representing that term.
+
+A FuzzyValue is normally created by specifying a FuzzyVariable and a fuzzy expression. The following example shows how this is done in Java code using classes from the FuzzyJ Toolkit:
+
+//definition of fuzzy variable 'Temperature'
+//with terms 'cold', 'OK' and 'hot'
+FuzzyVariable temperature =
+  new FuzzyVariable("Temperature", 0, 100, "degrees C");
+temperature.addTerm("cold", new ZFuzzySet(8, 15));
+temperature.addTerm("OK", new triangleFuzzySet(8, 15,
+  25));temperature.addTerm("hot", new SFuzzySet(15, 25));
+
+// definition of FuzzyValue for concept 'temperature is hot'
+FuzzyValue tempHotFVal = new FuzzyValue(temperature, "hot");
+
+// 'fuzzifying' the current 'crisp' temperature
+// (various ways to do this; here we represent an imprecison
+// in the temperature sensor of +/- 0.1 degree)
+FuzzyValue currentTempFVal =
+  FuzzyValue(temperature, new PIFuzzySet(35.0, 0.1));
+
+Without getting into too much detail, this code creates a FuzzyVariable, temperature, that provides the basis for building fuzzy concepts about temperature. The domain for the variable is from 0 to 100 degrees C, and the code defines three terms¡ªcold, OK, and hot¡ª that you can now use to represent specific temperature concepts. The terms are defined using FuzzySets. In this case, cold is represented by a subclass of FuzzySet, ZFuzzySet, which defines a Z-shaped fuzzy set like the one shown in figure 16.1.
+
+Once the FuzzyVariable and the terms that are to be used to describe concepts about that variable are ready, you can create FuzzyValues. The example creates an object, tempHot. Ultimately the FuzzyValue is just a FuzzySet (or at least it contains a FuzzySet), but it also has a context: the FuzzyVariable it is associated with. You can perform operations on FuzzyValues. For example, the union and intersection of two FuzzyValues are defined, but only between FuzzyValues that share the same FuzzyVariable. This is reasonable because doing the intersection of ¡°hot temperature¡± and ¡°low pressure¡± makes no sense¡ªit¡¯s like adding 5 apples to 6 oranges.
+
+FuzzyRules
+
+Let¡¯s continue the example and add two simple FuzzyRules, which can be expressed in pseudo-English as follows:
+
+IF the temperature is warm
+THEN set the vent position to mostly open
+
+IF the temperature is hot
+THEN set the vent position to fully open
+
+The rules in FuzzyJess might appear like this:
+
+(defrule temp-warm-set-vent-mostly-open
+    (temperature ?t&:(fuzzy-match ?t "warm"))
+  =>
+    (assert (vent (new FuzzyValue ?*ventFVar* "mostlyOpen"))))
+
+(defrule temp-hot-set-vent-fully-open
+    (temperature ?t&:(fuzzy-match ?t "hot"))
+  =>
+    (assert (vent (new FuzzyValue ?*ventFVar* "fullyOpen")))
+
+The FuzzyJess function fuzzy-match compares two FuzzyValues to see how well they match. In this case, the temperature fact has a FuzzyValue that is a fuzzified version of the current crisp temperature; it is compared to the warm FuzzyValue. If there is some degree of matching (this level can be set by the user), then the temp-warm-set-vent-mostly-open rule will fire, and a vent fact will be asserted with a mostlyOpen FuzzyValue (scaled by the degree of matching of the temperature FuzzyValue).
+
+In a complete system, you normally have a number of rules that cover the range of decisions to be made. Here, for example, the temperature might also match the FuzzyValue hot to some degree, which would produce a vent fact with the FuzzyValue fullyOpen as an output (again, suitably scaled to represent the degree of matching). These output facts would be combined into a single fuzzy output fact to represent the global decision of the system.
+
+You can leave this combined output as a FuzzyValue; but, in general, you¡¯ll go through a process of defuzzification of the output, transforming the FuzzyValue to get a crisp value. Doing so allows the system to take some real-world action, such as moving a vent by some real-valued amount. There are a number of ways to defuzzify a FuzzySet. One of the more common is to look at the area under the graph of the FuzzySet and find the center of gravity (or center of mass). Details of this and other types of defuzzification are found in the FuzzyJ documentation.
+
+To wrap up and review, here are the steps normally taken in a fuzzy control application:
+
+1.
+Collect the system inputs.
+
+2.
+Fuzzify the inputs (make them appropriate fuzzy values, usually representing the imprecision in the input value).
+
+3.
+Apply the fuzzy inputs to all the rules in the system, executing the rules one at a time and performing a global accumulation of the outputs. (FuzzyJess does this for you.)
+
+4.
+Defuzzify the outputs (create crisp numbers from the output fuzzy values).
+
+5.
+Apply the crisp outputs to the system.
+
+6.
+Repeat all the steps until the system is in a controlled state.
+
+16.6.2. The Fuzzy HVAC Controller
+With this brief introduction to fuzzy logic and FuzzyJ/FuzzyJess we can now return to the HVAC Controller example. Recall that the decisions and actions (in the rules) used to control the heat pumps and vents are all binary (set the vent to the open state) or crisp (if the thermometer reading is less than the desired set point ...). In the two versions of the fuzzy controller described next, you will define fuzzy terms for the temperature and for setting the vent positions. This indicates that you are going to extend the functionality of the system a little and not restrict the vents to a fully open or fully closed position; you will allow them to be partially open as well. The code for both versions of the fuzzy HVAC Controller (along with all the other code from this book) is available from the book¡¯s web site.
+
+Version 1: absolute vent positions
+
+In your first attempt at controlling the temperature in the building, you will define fuzzy terms for describing the temperature and some terms for controlling the vent opening. You¡¯ll first modify the Thermometer bean class to make it work with fuzzy temperatures. You must import the nrc.fuzzy package; store the fuzzy reading of the temperature; define a fuzzy variable for the thermometer so you can add the terms cold, cool, OK, warm, and hot; and notify Jess whenever the FuzzyValue for the temperature reading changes. The code for this functionality is shown in listing 16.1 with the major changes highlighted in bold. Because not every Thermometer object needs to define the FuzzyVariable, you make it static. Figure 16.2 shows the fuzzy sets that represent the terms for describing temperature.
+
+Figure 16.2. The fuzzy terms cold, cool, OK, warm, and hot and the possibility graphs of temperatures they represent
+
+
+
+
+Listing 16.1. Thermometer class with a new fuzzy reading property
+
+[View full size image]
+
+	This part of the code creates a FuzzyVariable to represent the temperature and loads it with appropriate fuzzy terms like cool, warm, and so on.
+	The fuzzy reading is the value you match in your new set of rules, so it needs to be available as a JavaBeans property.
+	This block of code sends out a property change notification for the fuzzy temperature reading whenever a change is detected in the crisp temperature reading.
+
+Next you augment the Vent bean in a similar fashion to define the terms for controlling the vent openings (fullyClosed, slightlyOpen, halfOpen, mostlyOpen, and fullyOpen) and also to notify Jess when the FuzzyValues change. Again, the modified code (see listing 16.2) is highlighted in bold; figure 16.3 shows the fuzzy sets for the new terms.]
+
+Figure 16.3. Probability chart for the fuzzy terms corresponding to the five discrete settings used for the vents
+
+
+
+
+Listing 16.2. Vent class modifed to support a fuzzy vent position description
+
+[View full size image]
+
+	This part of the code creates a new FuzzyVariable to represent the vent position and loads the linguistic terms into the variable. Note that you no longer define the Vent Bean to implement Runnable, because you do not need to provide Jess with updated values of the vent state (manual vent adjustments will no longer be allowed).[3]
+	Some other minor changes were required in the Java code to deal with the fact that you are no longer representing the vent state as open or closed.
+
+[3] If you already have some knowledge of FuzzyJ and fuzzy rules in general, you might notice that the FuzzyValues for the vent terms are created with singleton FuzzySets. These specialized FuzzySets have a value of 1.0 at the single point specified and a value of 0.0 everywhere else. Using this type of set in your fuzzy conclusions together with a defuzzification method that takes the weighted average of these singleton outputs, you are implementing zero-order Takagi-Sugeno-Kang (TSK) rules. Zero-order TSK rules have fuzzy inputs, but they have crisp, constant outputs. See the FuzzyJ Toolkit User¡¯s Guide for more information about TSK rules.
+
+With these changes made, you can now consider the new set of rules needed to control the vents. Because you are not changing the way you determine when the heat pump should be cooling, heating, or off, you will essentially leave the rules that determine the heat pump state as they are. However, to allow the temperature to fluctuate close to the set point without turning off the heat pump, you need to make a minor change to the rules floor-hot-enough and floor-cool-enough. In these two rules, rather than turn off the heat pump as soon as all the floors have passed the set point, you allow a 0.25-degree overshoot or undershoot of the set point before making the decision to turn off the heat pump. Why do this, and why 0.25 degrees? Consider the following situation. If the heat pump is cooling, then the situation is normally that the outside temperature is above the set point temperature. If the temperature cools to the set point and you shut the heat pump down as soon as this happens, then the heat pump cannot be turned on again until it reaches the guard limit (in this situation, the set point temperature + 2.0 degrees). In the non-fuzzy case where you can only have the cooling either fully on or fully off, this makes some sense. But now that you can change the amount of cooling by controlling the vents, you want to give the system an opportunity to adjust the amount of cooling. Allowing an overshoot (or undershoot) of the set point gives the system an opportunity to find a vent opening that provides just enough cooling to match the heat that is warming the system. The 0.25 value was an initial guess, and it turned out to provide quite good behavior. A bit of experimentation might allow you to reduce it, thus keeping the guard temperature far enough away to avoid too rapid cycling from cooling to heating (you could also consider adjusting the guard temperatures or implementing a timer to make sure the heat pump does not cycle in less than some certain time).
+
+The vent control rules used in this first fuzzy version are simple. You have two basic situations to consider: when the heat pump is cooling and when it is heating. If it is off, then it won¡¯t matter where the vents are set. So, when the heat pump is heating, you define five rules that are related to the temperature and the terms defined for the temperature. These rules should make some sense to you. This is one of the useful features of fuzzy systems; with a suitable set of concepts defined, you can often express decisions in a simple and understandable way. In pseudo-English, they look like this:
+
+IF we are heating and the floor temperature is hot
+THEN set the vent to fullyClosed
+
+IF we are heating and the floor temperature is warm
+Then set the vent to slightlyOpen
+
+IF we are heating and the floor temperature is OK
+THEN set the vent to halfOpen
+
+IF we are heating and the floor temperature is cool
+THEN set the vent to mostlyOpen
+
+IF we are heating and the floor temperature is cold
+THEN set the vent to fullyOpen
+
+A similar set of five additional rules, not shown here, is defined for the situation where the heat pump is in a cooling state. In FuzzyJess, the code for one of the previous rules is written as follows:
+
+(defrule heating-and-temp-cool
+   (HeatPump (state "heating") (number ?p))
+   (Thermometer (floor ?f&:(eq ?p (which-pump ?f)))
+                (fuzzyReading ?t&:(fuzzy-match ?t "cool")))
+   =>
+   (assert
+     (fuzzy-vent (floor ?f)
+     (fuzzy-state (new FuzzyValue ?*ventFVar* "mostlyOpen"))))
+)
+
+There is just one thing left to do. In order to set the vent position, you need to define a rule that takes the combined output of all the rules and defuzzifies the result, giving the required new setting for the vent. Because the rule must wait until all the other fuzzy rules have fired, to allow Jess to combine the outputs, it is set at a lower priority (salience) than these rules. The FuzzyValue method weightedAverageDefuzzify transforms the FuzzyValue into a crisp value; this value is sent to the simulator to make the adjustment. This final rule is coded as follows:
+
+(defrule set-vent-state
+   (declare (salience -100))
+   ?fv <- (fuzzy-vent (floor ?f) (fuzzy-state ?fs))
+  =>
+   (bind ?vent-state (?fs weightedAverageDefuzzify))
+   (set-vent-state ?f ?vent-state)
+   (retract ?fv))
+
+When you run this example (a sample batch file is provided to help, and you will need the FuzzyJ Toolkit version 1.3 or later with FuzzyJess and Jess version 6.1 or later), it will do a very good job of controlling the system. With an outside temperature of 90 and a set point temperature of 70, the system quickly settles close to 70 degrees with each vent close to 0.5 open. If the outside temperature is set to 100, then the system again settles at a temperature close to 70.8 with the vents opened at about 0.7. With an outside temperature of 110, the system settles at a temperature near 71.3. This is quite good, in that the temperature does not fluctuate much and stays within the guard temperatures. However, the application only works extremely well (getting to 70 degrees and staying there) for a small set of conditions.
+
+The rules do not handle a widely varying set of initial conditions, and the shape of the fuzzy sets should probably be changed to suit these situations. In particular, the definitions of hot, cold, and so on for temperature need to be adjusted for the current set point. One option would be to modify the sets according to the new set point; another would be to define the sets as a temperature difference from the set point. This option is addressed in the next example. It results in far less movement of the valves and less fluctuation of the temperature than the non-fuzzy approach.
+
+Version 2: relative vent positions
+
+Often, control systems use not only the difference in the value from its set point but also the rate at which the change is taking place to determine how to adjust the control parameters. In this case, this behavior means monitoring not only the temperature but also the rate of change of the temperature over time. In the first version of the fuzzy controller, you defined the terms to describe the temperature based on a fixed temperature (70 degrees). This definition causes some difficulty if you change the set point from 70 degrees. So, in this new version you¡¯ll provide a method in the Thermometer class to allow the definitions of cold, cool, OK, warm, and hot to be redefined when the set point value changes. You¡¯ll also prepare the Thermometer class to determine the rate of change of the temperature and define three fuzzy terms to describe the rate of change: decreasing, zero, and increasing. The new Thermometer class is defined in listing 16.3.
+
+Listing 16.3. Final version of the Thermometer class
+
+[View full size image]
+
+	The code sets up a FuzzyVariable to represent the rate of change of temperature readings, with the three values decreasing, increasing, and zero.
+	You make the temperature change-rate variable available as a JavaBeans property.
+	This new method lets you move the temperature set point and redefine the temperature FuzzySet.
+	Each time through the loop, you update the variable that represents the rate of temperature change.
+
+You also need to change the way in which you set the vent position. Instead of trying to set an absolute value for the valve position, you¡¯ll determine how much to change the valve position from its current position. To do so, you define the seven terms NB, NM, NS, Z, PS, PM, and PB, representing a Negative Big change, a Negative Medium change, a Negative Small change, a Zero change, a Positive Small change, and so on. The final changes to the Vent class are shown in listing 16.4; the new fuzzy variable represents the magnitude of the desired change to the vent position.
+
+Listing 16.4. Final modifications to the Vent class
+
+Code View: Scroll / Show All
+package fuzzy;
+import nrc.fuzzy.*;
+
+public class Vent extends BeanSupport {
+  private Hardware m_hardware;
+  private int m_floor;
+  private static FuzzyVariable m_ventChangeFV = null;
+
+  static {
+    try {
+       m_ventChangeFV = new FuzzyVariable("ventChange", -1, 1);
+    } catch (InvalidFuzzyVariableNameException nameEx) {
+      /* NOTHING */
+    } catch (InvalidUODRangeException rangeEx) {
+      /* NOTHING */
+    }
+
+    try {
+       m_ventChangeFV.addTerm("NB", new SingletonFuzzySet(-0.3));
+       m_ventChangeFV.addTerm("NM", new SingletonFuzzySet(-0.15));
+       m_ventChangeFV.addTerm("NS", new SingletonFuzzySet(-0.06));
+       m_ventChangeFV.addTerm("Z",  new SingletonFuzzySet(0.0));
+       m_ventChangeFV.addTerm("PS", new SingletonFuzzySet(0.06));
+       m_ventChangeFV.addTerm("PM", new SingletonFuzzySet(0.15));
+       m_ventChangeFV.addTerm("PB", new SingletonFuzzySet(0.3));
+    } catch (XValuesOutOfOrderException outOfOrderEx) {
+      /* NOTHING */
+    } catch (XValueOutsideUODException outsideOUD) {
+      /* NOTHING */
+    }
+  }
+
+  public Vent(Hardware hw, int floor) {
+    m_hardware = hw;
+    m_floor = floor;
+  }
+
+  ...
+}
+
+					  
+
+The rules for controlling the heat pump are the same as in the first fuzzy control example. The rules to change the state of the vents now depend on the state of the heat pump, the temperature on the floor, and the rate of change of the temperature. You can build a pair of truth tables to show the correct vent changes for a temperature and rate of change. Table 16.4 shows for the situation when the heat pump is cooling; the table for the heating situation is similar.
+
+Table 16.4. The recommended change to a vent for a given temperature and rate of temperature change
+
+ 	Cold	Cool	OK	Warm	Hot
+Decreasing	NB	NM	NS	Z	PS
+Zero	NM	NS	Z	PS	PM
+Increasing	NS	Z	PS	PM	PB
+
+The highlighted value NS in the middle row of the second column of table 16.4 represents this pseudo-English rule:
+
+If the heat pump is cooling
+and the temperature is cool
+and the rate of change of temperature is zero
+Then adjust the vent position by a negative small amount
+
+In Jess, you can write this rule like so:
+
+(defrule cooling-and-temp-cool-rate-zero
+   (HeatPump (state "cooling") (number ?p))
+   (Thermometer
+       (floor ?f&:(eq ?p (which-pump ?f)))
+       (fuzzyReading ?t&:(fuzzy-match ?t "cool"))
+       (fuzzyReadingRateOfChange ?tr&:(fuzzy-match ?tr "zero")))
+   =>
+   (assert (fuzzy-vent (floor ?f)
+           (fuzzy-change-state (new FuzzyValue ?*ventFVar* "NS")))))
+
+There will be one rule like this for each cell in table 16.4. Now you have 30 rules that determine how the vent should be changed. You might need to think about these rules to see if they make sense to you; but with a bit of analysis of the various situations, the rules should be similar to what your intuition would lead you to. As in the last example, a single rule is defined with a lower priority so that it may take the combined output of all the rules and defuzzify the result, giving the required change for the vent. This rule in this second fuzzy controller is as follows:
+
+(defrule perform-vent-change
+    (declare (salience -100))
+    ?fv <- (fuzzy-vent (floor ?f) (fuzzy-change-state ?fs))
+   =>
+    (bind ?vent-change-amount (?fs weightedAverageDefuzzify))
+    (change-vent-state ?f ?vent-change-amount)
+    (retract ?fv))
+
+The only other major change is to the WriteVent class and the Simulator class to support the ability to change the vent state by the specified amount. The function change-vent-state is a Userfunction defined in WriteVent.java; it in turn calls the simulator to calculate the new position for the vent and set it to that value. You also modify the init-simulator function to allow you to specify the initial temperature set-point value.
+
+This fuzzy controller behaves very well at all realistic outside temperatures and keeps the temperature extremely close to the set point. As you can guess, getting the right fuzzy values and the right rules can be complicated. Should you have defined more fuzzy values for the rate of change? Should the shape and position of the fuzzy set be adjusted to get the best performance (moves quickly to the set point, reduces overshoot of the set point, and so forth)? A large body of work is devoted to determining these fuzzy control parameters and how they should change as the system changes dynamically. Yet, with a little common sense and the tools to describe your thoughts in an English-like manner, you have been able to construct a system that is robust to changes in outside temperature and set point and does an adequate job of keeping the temperature in a comfortable zone.
+
+16.6.3. Exploring the fuzzy controller
+You might want to modify the second fuzzy controller to allow the set point as well as the outside temperature to be changed in the user interface. Doing so should be relatively simple, because the required hooks are already included in the code (the method SetThermometerFVTerms in the Thermometer class).
+
+You could make a number of other explorations:
+
+Would defining more terms for the temperature¡¯s rate of change improve the control? What would the new set of rules look like?
+
+How do the shape and position of the fuzzy sets you have used affect the control? Change them and explore. Perhaps you can devise some techniques to determine the ¡°best¡± definitions for these fuzzy sets. You did not use the outside temperature in any of your reasoning¡ªperhaps it would be useful in dynamically modifying the sets to get better control.
+
+When the system reaches a controlled state, the valve positions are still being modified at each cycle (perhaps by small amounts). Can you think of some techniques to stop moving the valves when you are ¡°close enough¡± to the set point?
+
+Could you make the simulation itself more realistic? For example, when the heat pump is heating and all valves are fully open, x units of heat are delivered to each floor. When one of the valves is closed, the others still get x units of heat. A real system would not work this way; closing off one floor would increase the heat flow to the others. How could the system be modified to better implement what might actually happen? Would the control logic have to be altered to accommodate this change?
+
+This has been a brief introduction to fuzzy systems, and the simulation is much simplified from the real world. However, I hope it has piqued your interest in the topic and that you will want to learn more and apply the techniques to your own applications.
+

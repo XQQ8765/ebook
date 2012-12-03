@@ -1,0 +1,17 @@
+16. Writing the rules
+In this chapter you¡¯ll...
+
+Write real-time control rules
+
+Learn about fuzzy logic
+
+Write a fuzzy version of the HVAC Controller
+
+You¡¯ve spent the last two chapters programming in Java, developing the infrastructure for an HVAC Controller application. In this chapter, you¡¯ll assemble all the pieces and write the Jess rules to regulate the system. In fact, you¡¯ll write the rules twice.
+
+First, you¡¯ll write a set of rules that use simple logic and the Boolean vent states you programmed in chapter 15 (they¡¯re ¡°Boolean¡± because they¡¯re either open or closed). If a given floor of the building gets too cold, its heat pump will be turned on; when it gets too warm, its heat will be turned off. This system will work much like a network of traditional mechanical thermostats, and it will keep the temperature stable to within plus or minus one or two degrees.
+
+Next, you¡¯ll improve the control program using fuzzy logic and continuously variable vent controls. The fuzzy rules will be able to adjust the vents to provide optimal air flow for each floor; as a result, this second system will control the temperature to within a small fraction of a degree.
+
+Let¡¯s get started by developing a simple control algorithm for the HVAC system.
+

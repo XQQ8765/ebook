@@ -1,0 +1,11 @@
+16.8. Summary
+In part 5 of this book, you¡¯ve written a powerful system capable of controlling the heating, ventilation, and air-conditioning systems in a large office building. For the first time, you wrote an application that integrates code written in Java with code written in the Jess language.
+
+You wrote a simulator to model the hardware your application is intended to control. The simulator runs in its own thread. You wrote JavaBeans and used them as working memory elements, and each Bean also includes its own thread for polling the state of the hardware device it stands in for. You saw how Jess works well in this multithreaded environment.
+
+You learned how to extend the Jess language by writing Userfunctions and Userpackages. Many people have written Jess extensions and then made them publicly available. Examples include extensions for working with databases, with XML, and with fuzzy logic. See the Jess web site for details on obtaining these and other Jess extensions.
+
+You developed several different sets of control rules: one conventional set, and one using fuzzy rules. The fuzzy rules, although more complex, controlled the temperature more tightly.
+
+Although much of the HVAC Controller system application was written in Java, the main application code is written as a Jess script and runs with jess.Main. In the next part of this book, you¡¯ll integrate rules into a web-based application where Jess will run as part of a Java servlet. You won¡¯t use the jess.Main class, and so you¡¯ll need to learn how to embed the Jess rule engine into another application.
+

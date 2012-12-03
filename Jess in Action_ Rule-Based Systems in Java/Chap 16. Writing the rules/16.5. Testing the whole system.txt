@@ -1,0 +1,17 @@
+16.5. Testing the whole system
+The first version of the HVAC Controller system is now essentially complete. All that remains is to clean things up a bit and test it in operation. You can delete any top-level function calls to set-vent-state that were used for testing the last time around.
+
+You should find that this set of rules controls the temperature of every floor to within 2 degrees of the set point. While testing, keep an eye out for heat pumps that are turned on and off quickly, or that rapidly move between the heating and cooling state. This set of rules should avoid both of these problems.
+
+If you¡¯re using the version of the code downloaded from this book¡¯s web site, then when the simulator starts, the outdoor temperature is 90 degrees F and the set point is 70, so the heat pumps are in cooling mode. Notice how the heat pump for the highest floors turns on first and runs the most; this is a consequence of the ¡°heat rises¡± property you built into the simulator. The vents open and close frequently to keep the temperatures of the three floors connected to each heat pump as close together as possible. Once the system reaches equilibrium, each heat pump spends some of its time turned off. Watch the temperatures and make sure they all stay in the range between the set point and the upper guard line (between 70 and 72 degrees).
+
+Now set the outdoor temperature to 50 degrees. As the temperature of each floor drifts down, most of the heat pumps will shut off. Eventually the lower floors will need to be heated, and those heat pumps should move into heating mode. The upper floors will still be hotter than the rest and will need cooling instead. Make sure the floors that need heating stay between 68 and 70 degrees, while the upper floors stay between 70 and 72.
+
+Next try an outdoor temperature of 20 degrees. The upper floors will lose enough heat to the outside that they too will require heating.
+
+Finally, try outdoor temperatures very close to the set point. Try several temperatures from 67 to 73, watching carefully for illegal transitions from heating to cooling.
+
+You can experiment with different numbers of floors by specifying larger or smaller numbers in the call to init-simulator (the number of floors should be divisible by 3). You should find that the HVAC Controller system has no problem handling a building with 99 floors or more. Remember that 99 floors corresponds to 99 Thermometers, 99 Vents, and 33 HeatPumps, for a total of 231 constantly changing inputs¡ªa reasonably complex system! Each Bean runs in its own Java thread, demonstrating Jess¡¯s ability to run well in a multithreaded environment; with 99 floors, Jess is receiving asynchronous property change events from 231 different threads.
+
+The system you¡¯ve built works fairly well, although because the vents can only be completely open or completely closed, the temperature at each floor fluctuates by as much as +/¨Cone or two degrees. If the vents were continuously variable, the temperature could be controlled more closely. In the next section, we¡¯ll look at one way to incorporate this new feature using fuzzy logic.
+
