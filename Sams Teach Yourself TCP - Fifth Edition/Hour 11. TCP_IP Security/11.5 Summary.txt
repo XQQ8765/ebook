@@ -1,0 +1,3 @@
+Summary
+The Internet has millions of users, and a significant number of them are devoted to making mischief. If you want to preserve your privacy and protect your resources, you need to take an active role in protecting your network. This chapter examined some important security concepts. You learned about firewalls and studied some intrusion techniques. This chapter also examined encryption and some security features that depend on encryption, such as digital certificates, TLS, IPsec, and VPNs.
+
