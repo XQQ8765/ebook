@@ -1,0 +1,94 @@
+What Is a Firewall?
+The term firewall has taken on many meanings through the years, and the device we know now as a firewall is the result of a long evolution (keeping in mind that 28 years is a long time in cyberspace).
+
+A firewall is a device that is placed in the network pathway in such a way that it can examine, accept, or reject inbound packets headed for the network. This might sound like a router; in fact, a firewall doesn¡¯t have to be a router, but firewall functionality is often built in to routers. The important distinction is that a conventional router forwards packets when it can¡ªa firewall forwards packets when it wants to. Forwarding decisions are not based solely on addressing but are instead based on rules configured by the network owner regarding what type of traffic is permissible on the network.
+
+The value of a firewall is evident when you look at even a simple sketch of a firewall environment (see Figure 11.1). As you can see, the firewall is in a position to stop any or all outside traffic from reaching the network, but the firewall doesn¡¯t interfere at all with communication on the internal network.
+
+Figure 11.1. A firewall can stop any or all inbound traffic from reaching the local network.
+
+
+
+
+The earliest firewalls were packet filters. They examined packets for clues about the intended purpose. As you learned in Hour 6, ¡°The Transport Layer,¡± many packet filtering firewalls watch the well-known Transport Control Protocol (TCP) and User Datagram Protocol (UDP) port numbers encoded in the Transport layer header. Because most Internet services are associated with a port number, you can determine the purpose of a packet by examining the port number to which it is addressed. This form of packet filtering allowed admins to say, ¡°Outside clients cannot access Telnet services on the internal network¡±¡ªat least as long as the Telnet service is using the well-known port assigned to Telnet.
+
+This type of control was a big advance over what had come before, and to this day it does manage to ward off many kinds of attacks; however, packet filtering is still not a complete solution. For one thing, an intruder who gets inside can secretly reconfigure the port numbers used by network services. For instance, if the firewall is configured to look for Telnet sessions on TCP port 23, and the intruder sets up a secret Telnet service running on a different port number, the simple act of watching well-known ports won¡¯t catch the problem.
+
+Another development in the evolution of the firewall was the arrival of so-called stateful firewalls. A stateful firewall does not simply examine each packet in isolation but is aware of where the packet fits within the sequence of a communication session. This sensitivity to state helps the stateful firewall watch for tricks such as invalid packets, session hijacking attempts, and certain denial-of-service attacks.
+
+The latest generation of Application layer firewalls is designed to operate at TCP/IP¡¯s Application layer, where it can obtain a much more complete understanding of the protocols and services associated with the packet.
+
+Modern firewalls often perform a combination of packet filtering, state watching, and Application layer filtering. Some firewalls also work as DHCP servers and network address translation tools. Firewalls can be hardware or software tools¡ªsimple or sophisticated¡ªbut whether you administer a thousand-node network or just hack around on a single PC you¡¯ll do better with a basic understanding of firewalls if you plan to go anywhere near the Internet.
+
+Firewall Options
+Although firewalls were once tools for IT professionals, the rising hobby of network intrusion and the appearance of automated port scanners randomly searching for open ports on the Internet have necessitated the development of personal firewalls for single-user systems. Many contemporary Windows, Mac OS, and Linux systems have personal desktop firewall applications designed to prevent access to specific ports and services on the system. Of course, an end-user client system typically doesn¡¯t have the need to run a lot of network services, which makes the firewall seem redundant. (Why close off ports to services that aren¡¯t running in the first place?) But the fact is, modern computer systems are so complex that the owner of the system sometimes isn¡¯t even sure what is running and what isn¡¯t. Even ordinary file and print sharing theoretically opens up a conduit for attack. Also computer exploits are sometimes subtle, and it often isn¡¯t easy to be certain that your system is truly safe. Personal firewalls are therefore a good idea, especially for systems that won¡¯t be operating behind some other form of firewall system.
+
+At the next level of sophistication are the firewall/router devices available for small office/home office (SOHO) networks. These tools typically provide Dynamic Host Configuration Protocol (DHCP) service and Network Address Translation. They are designed to operate much like the classic firewall scenario depicted in Figure 11.1, allowing internal clients to access services on the internal network but preventing outside access attempts.
+
+One problem with SOHO firewalls (as well as personal firewalls) is that they are designed to be operated by nonspecialists, so they offer few configuration options, and often it isn¡¯t clear what techniques they are using to filter protocol traffic. Security experts don¡¯t consider these devices totally safe, although they are certainly better than having no firewall at all.
+
+Another option is to configure a network firewall using a computer as a firewall/router device. UNIX/Linux systems come with sophisticated firewall capabilities. Firewalls are also available for certain versions of Windows systems. Note that a computer acting as a network firewall is not the same as the personal firewall discussed earlier in this section. In this case, the computer isn¡¯t just filtering traffic addressed to itself; it is actually acting as a firewall for the network. For this to work, the system must be fitted with two or more network cards and actually configured for port forwarding¡ªthe system is actually functioning as a router. If you have a spare computer, this solution provides a much more sophisticated range of firewall functions than a typical SOHO firewall. Of course, you have to know what you are doing.
+
+If you are administering a firewall in any kind of professional capacity, you are probably using some form of commercial firewall device. Professional-grade firewall/routers are considerably more advanced than the SOHO models. Internally, these devices are actually much more like the computer-based firewall, although they look different on the outside. Most industrial firewall devices are embedded computer systems. As you learn later in this hour, commercial firewalls and firewall-computers let you configure a custom set of filtering rules defining the traffic you want to allow or deny. These tools are much more powerful and versatile than the check box style configuration of your SOHO or personal firewall tool, although they require deeper knowledge and much more attention to configure correctly.
+
+The DMZ
+The firewall provides a protected space for the internal network that is difficult to access from the outside. This concept works well for workgroups of web clients with a few scattered file servers filling internal requests. In many cases, however, an organization might not want to protect all its resources from outside access. A public web server, for instance, needs to be accessible from the outside. Many organizations also maintain File Transfer Protocol (FTP) servers, email servers, and other systems that need to be accessible from the Internet. Although it is theoretically possible to open a port on the firewall to allow outside clients to access a specific service on a specific system, thus allowing the server to operate from inside the firewall, inviting traffic onto the internal network poses a series of traffic and security concerns that many network administrators would prefer to avoid.
+
+One easy solution is to place Internet-accessible services outside the firewall (see Figure 11.2). The idea is that the server (for instance, a web server) undergoes some additional scrutiny to ensure that it truly is secure, and then it is simply placed on the open Internet¡ªin front of the firewall¡ªto isolate it from internal clients and enable it to receive Internet requests. In theory, a properly configured server should be capable of defending itself from Internet attack. Only essential ports are opened, and only essential services are running. The security system is ideally configured so that, even if an attacker gains access to the system, the attacker¡¯s privileges are limited. Of course, such precautions are no guarantee the system won¡¯t get hacked, but the idea is, even if the system is hacked, an intruder who gains access to the web server still has to get through the firewall before reaching the internal network.
+
+Figure 11.2. Web servers and other Internet-facing computers are often placed outside of the firewall.
+
+
+
+
+This technique of placing local resources behind the firewall and Internet-accessible resources in front is a common practice on many small networks; however, larger networks with professional-level IT management and security often prefer a more refined approach. Another alternative to the option shown in Figure 11.2 is to use two firewalls¡ªone in front of the Internet servers and one behind them. The front firewall provides a first tier of security that is, obviously, porous enough to permit the connections to the servers, and the back-end firewall provides the usual tight protection for resources on the local net. The space between the firewalls is commonly known as the DMZ (for a Vietnam-era military term demilitarized zone). The DMZ provides an intermediate level of security that is safer than the open Internet but not as secure as the internal network.
+
+It might occur to you that the scenario depicted in Figure 11.3 can also be approximated using a single firewall with connections to multiple network segments. As shown in Figure 11.4, if the firewall/router has three or more interfaces, it can connect to both the internal network and the DMZ through separate interfaces, with a different set of filtering rules for each interface.
+
+Figure 11.3. A DMZ sitting between two firewalls.
+
+
+
+
+Figure 11.4. A single firewall with at least three interfaces can provide the equivalent of a DMZ if you configure different firewall rules for each internal segment.
+
+
+
+
+Firewall Rules
+Personal firewalls and other small-scale, GUI-based firewall tools usually let you define the firewall¡¯s filtering characteristics by checking boxes (Figure 11.5). But full, industrial-strength firewall tools let you create a configuration file with the firewall configuration expressed in a series of commands or rules defining the firewall¡¯s behavior. These commands or rules are known as firewall rules. Different tools use different commands and syntax, but firewall rules typically let the network administrator create associations consisting of
+
+A source address or address range
+
+A destination address range
+
+A service
+
+An action
+
+Figure 11.5. Most SOHO firewalls let you block services by name or port number.
+
+[View full size image]
+
+
+These parameters provide a vast range of options. You can shut off all traffic from or to specific address ranges. You can shut out a specific service, such as Telnet or FTP, coming from a specific address. You can shut out that service coming from all addresses. The action could be ¡°accept, ¡°deny,¡± or any number of other options. Sometimes the rule can even refer to a specific extension or script, or it might be an alert that pages or emails the firewall administrator in case of trouble.
+
+The combination of these parameters allows much more flexibility than simply turning on or off services by port number.
+
+Proxy Service
+A firewall is at the center of a whole collection of technologies designed to protect and simplify the internal network and confine the unpredictable and potentially unsecure Internet activity to the perimeter. Another related technology is known as proxy service. A proxy server intercepts requests for Internet resources and forwards the requests on behalf of the client, acting as an intermediary between the client and the server that is the target of the request (see Figure 11.6). Although a proxy server is not necessarily sufficient to protect the network by itself, it is often used in conjunction with a firewall (particularly in the context of a Network Address Translation environment, which you learn about in Hour 12, ¡°Configuration¡±).
+
+Figure 11.6. A proxy server requests services on behalf of the client.
+
+
+
+
+By placing and receiving Internet requests on behalf of the client, the proxy server protects the client from direct contact with possibly malicious web resources. Some proxies perform a kind of content filtering to watch for blacklisted servers or potentially dangerous content. Proxy servers are also used to limit the range of browsing options for clients on the internal network. For instance, a school network might use a proxy server to prevent students from surfing to exhilarating sites that are intended for the category of adult education.
+
+In many situations, the primary purpose of a proxy server is performance rather than security. Proxy servers often perform a service known as content caching. A content-caching proxy server stores a copy of the web pages it accesses. Future requests for the page can thus be served locally with a much faster response than if the request were served from the Internet. This might seem like a lot of trouble just to help a user visit the same site twice, but if you consider the browsing habits of a typical user, it is quite common to click around several times at a website and visit a page more than once¡ªor to leave the page and come back after only a short interval. The proxy server is usually configured to hold the page only for a specific time interval before releasing the cache and requesting a new version of the page.
+
+Reverse Proxy
+The conventional proxy server (described in the preceding section) acts as a proxy for outgoing Internet requests. Another form of proxy server known as a reverse proxy receives requests from external sources and forwards them to the internal network. A reverse proxy offers the same caching and content filtering features provided by a conventional proxy server. Because reverse proxies are primarily used with computers offering services on the Internet, the security concerns are particularly important.
+
+A reverse proxy system hides the details of the computer that is actually fulfilling the client¡¯s request. The reverse proxy can also improve performance by caching large files or frequently accessed pages. Reverse proxies are also sometimes used as a form of load balancing. For instance, a reverse proxy could receive requests under a single web address and then distribute the workload to servers upstream.
+
