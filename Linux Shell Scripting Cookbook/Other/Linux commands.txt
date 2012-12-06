@@ -1,0 +1,306 @@
+###################################################
+--vgremove
+
+(Has been used in "archivervm.xml")
+http://book.51cto.com/art/201012/240932.htm
+11.30  vgremove指令：删除卷组
+
+【语    法】vgremove [选项] [参数]
+
+【功能介绍】vgremove指令用户删除LVM卷组。
+
+【选项说明】
+
+选    项
+ 功    能
+ 
+-f
+ 强制删除
+ 
+
+【参数说明】
+
+参    数
+ 功    能
+ 
+卷组
+ 指定要删除的卷组名称
+ 
+
+【经验技巧】当要删除的卷组上已经创建了逻辑卷时，vgremove指令需要进行确认删除，防止误删除数据。
+
+【示例364】删除LVM卷组。具体步骤如下：
+
+使用vgremove指令删除LVM卷组"vg1000"。在命令行中输入下面的命令：
+
+[root@hn ~]# vgremove vg1000#删除卷组"vg1000" 输出信息如下：
+
+Volume group "vg1000" successfully removed 
+###################################################
+--vgchange
+
+http://book.51cto.com/art/201012/240929.htm
+11.29  vgchange指令：修改卷组属性
+
+【语    法】vgchange [选项] [参数]
+
+【功能介绍】vgchange指令用于修改卷组的属性，经常被用来设置卷组是处于活动状态或者非活动状态。
+
+【选项说明】
+
+选    项
+ 功    能
+ 
+-a
+ 设置卷组的活动状态
+ 
+
+【参数说明】
+
+参    数
+ 功    能
+ 
+卷组
+ 指定要设置属性的卷组
+ 
+
+【经验技巧】处于活动状态的卷组无法被删除，必须使用vgchange指令将卷组设置为非活动状态后才能删除。
+
+【示例363】设置卷组的活动状态。具体步骤如下：
+
+使用vgchange指令将卷组状态改为活动的。在命令行中输入下面的命令：
+
+[root@hn ~]# vgchange -ay vg1000  #将卷组"vg1000"设置为活动状态 输出信息如下：
+
+1 logical volume(s) in volume group "vg1000" now active 
+
+###################################################
+--lvremove
+
+http://book.51cto.com/art/201012/240941.htm
+11.37  lvremove指令：删除逻辑卷
+
+【语    法】lvremove [选项] [参数]
+
+【功能介绍】lvremove指令用于删除指定LVM逻辑卷。
+
+【选项说明】
+
+选    项
+ 功    能
+ 
+-f
+ 强制删除
+ 
+
+【参数说明】
+
+参    数
+ 功    能
+ 
+逻辑卷
+ 指定要删除的逻辑卷
+ 
+
+【经验技巧】如果逻辑卷已经使用mount指令加载，则不能使用lvremove指令删除。必须使用umount指令卸载后，逻辑卷方可被删除。
+
+【示例371】删除指定的逻辑卷。具体步骤如下：
+
+使用lvremove指令删除指定的逻辑卷。在命令行中输入下面的命令：
+
+[root@hn ~]# lvremove /dev/vg1000/lvol0 #删除逻辑卷"lvol0" 输出信息如下：
+
+Do you really want to remove active logical volume "lvol0"? [y/n]: y    #确认删除    Logical volume "lvol0" successfully removed 
+
+###################################################
+--mkfs
+
+http://www.linuxso.com/command/mkfs.html
+ 指令：mkfs linux格式化文件系统命令
+　　使用权限 : 超级使用者
+　　使用方式 : mkfs [-V] [-t fstype] [fs-options] filesys [blocks] [-L Lable]
+　　说明 ： 建立 linux 档案系统在特定的 partition 上
+　　参数 ：
+　　device ： 预备检查的硬盘 partition，例如：/dev/sda1
+　　-V : 详细显示模式
+　　-t : 给定档案系统的型式，Linux 的预设值为 ext2
+　　-c : 在制做档案系统前，检查该partition 是否有坏轨
+　　-l bad_blocks_file : 将有坏轨的block资料加到 bad_blocks_file 里面
+　　block : 给定 block 的大小
+　　-L:建立lable
+ 
+        补充说明:
+         mkfs本身并不执行建立文件系统的工作,而是去调用相关的程序来执行。例如，若在"-t" 参数中指定ext2,则
+         mkfs会调用mke2fs来建立文件系统.使用时如省略指定【块数】参数，mkfs会自动设置    适当的块数.
+ 
+　　例子 :
+　　在 /dev/hda5 上建一个 msdos 的档案系统，同时检查是否有坏轨存在，并且将过程详细列出来 :
+　　mkfs -V -t msdos -c /dev/hda5
+ 
+         mfks -t ext3 /dev/sda6   //将sda6分区格式化为ext3格式
+   
+        mkfs -t ext2 /dev/sda7     //将sda7分区格式化为ext2格式
+ 
+ 
+   扩展知识:mkfs的使用示例
+ 
+  [root@localhost beinan]# mkfs -t 文件系统  存储设备
+ 
+注：
+这里的文件系统是要指定的，比如 ext3 ；reiserfs ；ext2 ；fat32 ；msdos 等... ...
+设备比如是一个硬盘的分区，软盘，光驱等.. ... 在格式化分区之前，您得懂得如何查看硬盘分区情况，并有针对性的格式化；比如用 fdisk -l 来查看； 请参考：《Linux 查看磁盘分区、文件系统、使用情况的命令和相关工具介绍》 比如我想格式化一个移动U盘中的一个分区；全景应该是：
+[root@localhost beinan]# fdisk -l
+ 
+Disk /dev/hda: 80.0 GB, 80026361856 bytes
+255 heads, 63 sectors/track, 9729 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+ 
+Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1         765     6144831    7  HPFS/NTFS
+/dev/hda2             766        2805    16386300    c  W95 FAT32 (LBA)
+/dev/hda3            2806        9729    55617030    5  Extended
+/dev/hda5            2806        3825     8193118+  83  Linux
+/dev/hda6            3826        5100    10241406   83  Linux
+/dev/hda7            5101        5198      787153+  82  Linux swap / Solaris
+/dev/hda8            5199        6657    11719386   83  Linux
+/dev/hda9            6658        7751     8787523+  83  Linux
+/dev/hda10           7752        9729    15888253+  83  Linux
+ 
+Disk /dev/sda: 1035 MB, 1035730944 bytes
+256 heads, 63 sectors/track, 125 cylinders
+Units = cylinders of 16128 * 512 = 8257536 bytes
+ 
+Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1          25      201568+  83  Linux
+/dev/sda2              26         125      806400    5  Extended
+/dev/sda5              26          50      201568+  83  Linux
+/dev/sda6              51          76      200781     83  Linux
+我们可以看到有sda这个设备，所以可以用 fdisk -l /dev/sda专门来显示他的分区情况；比如我想格式化 /dev/sda6 分区为 ext3文件系统，则为：
+[root@localhost beinan]# mkfs -t ext3  /dev/sda6
+mke2fs 1.37 (21-Mar-2005)
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+50200 inodes, 200780 blocks
+10039 blocks (5.00%) reserved for the super user
+First data block=1
+Maximum filesystem blocks=67371008
+25 block groups
+8192 blocks per group, 8192 fragments per group
+2008 inodes per group
+Superblock backups stored on blocks:
+8193, 24577, 40961, 57345, 73729
+ 
+Writing inode tables: done
+Creating journal (4096 blocks): done
+Writing superblocks and filesystem accounting information:  注：在这里直接回车；
+done
+ 
+This filesystem will be automatically checked every 26 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+这样就格式化好了，sda6现在就是ext3文件系统了；我们就可以用mount 加载这个分区，然后使用这个文件系统；
+[root@localhost beinan]# mkdir /mnt/sda6 
+[root@localhost beinan]# chmod 777 /mnt/sda6 
+[root@localhost beinan]# mount /dev/sda6   /mnt/sda6
+当然您也可以把分区格式化成其它的文件系统；比如我们把 /dev/sda6格式化为ext3 、ext2、reiserfs、fat32、msdos 文件系统，命令格式如下；
+[root@localhost beinan]# mkfs -t ext3  /dev/sda6 
+[root@localhost beinan]# mkfs -t ext2  /dev/sda6
+[root@localhost beinan]# mkfs -t reiserfs  /dev/sda6
+[root@localhost beinan]# mkfs -t fat32   /dev/sda6
+[root@localhost beinan]# mkfs -t msdos   /dev/sda6
+... ...
+ 
+2）mkfs.ext3 mkfs.reiserfs mkfs.ext2 mkfs.msdos mkfs.vfat mke2fs 的介绍；
+我们先说了一个mkfs 工具后，我们再来介绍 mkfs.ext3 mkfs.reiserfs mkfs.ext2 mkdosfs mkfs.msdos mkfs.vfat ，其实mkfs 在执行的命令的时候，也是调用的这个工具，这也是我先把mkfs介绍的主要原因； 通过文件名，我们就知道这些工具是支持什么文件系统；这些命令为我们提供了更多的方便；
+ 
+ 
+[root@localhost beinan]# mkfs.ext3    /dev/sda6     注：把该设备格式化成ext3文件系统
+[root@localhost beinan]# mke2fs -j   /dev/sda6       注：把该设备格式化成ext3文件系统
+[root@localhost beinan]# mkfs.ext2  /dev/sda6       注：把该设备格式化成ext2文件系统
+root@localhost beinan]# mke2fs    /dev/sda6          注：把该设备格式化成ext2文件系统 
+[root@localhost beinan]# mkfs.reiserfs  /dev/sda6   注：把该设备格式化成reiserfs文件系统
+[root@localhost beinan]# mkfs.vfat   /dev/sda6        注：把该设备格式化成fat32文件系统
+[root@localhost beinan]# mkfs.msdos   /dev/sda6   注：把该设备格式化成fat16文件系统,msdos文件系统就是fat16；
+[root@localhost beinan]# mkdosfs   /dev/sda6         注：把该设备格式化成fat16文件系统，同mkfs.msdos 
+... ...
+ 
+ 
+ 
+2）mkswap 把一个分区格式化成为swap交换区；
+ 
+[root@localhost beinan]# mkswap /dev/sda6  注：创建此分区为swap 交换分区 
+[root@localhost beinan]# swapon  /dev/sda6  注：加载交换分区；
+[root@localhost beinan]# swapoff  /dev/sda6  注：关闭交换分区；
+我们查看系统已经加载的swap交换分区；
+[root@localhost beinan]# swapon  /dev/sda6  注：加载交换分区；
+[root@localhost beinan]# swapon -s                
+Filename                                Type            Size    Used    Priority
+/dev/hda7                               partition       787144  0       -1
+/dev/sda6                               partition       225144  0       -3
+<code>
+ 
+为什么我的系统有两个交换分区？因为我用移动U盘做的实验，主要是为写教程之用；sda6是我在U盘上建的swap分区；
+ 
+如果让swap开机就加载，应该改 /etc/fstab文件，加类似如下一行；
+<code>
+/dev/sda6         swap                    swap    defaults        0 0  注：把此行中的/dev/hda7 改为您的交换分区就行；
+或者把命令行直接写入 /etc/rc.d/rc.local中也行；
+swapon  /dev/sda6 
+如果您的硬盘不能再分区，您可以创建一个swap文件
+[root@localhost beinan]# dd if=/dev/zero of=/tmp/swap bs=1024 count=524288 注：创建一个大小为512M 的swap 文件，在/tmp目录中；您可以根据自己的需要的大小来创建swap 文件；
+ 
+读入了 524288+0 个块
+输出了 524288+0 个块
+[root@localhost beinan]# mkswap /tmp/swap 注：把/tmp/swap 文件，创建成swap 交换区 
+Setting up swapspace version 1, size = 536866 kB
+no label, UUID=d9d8645d-92cb-4d33-b36e-075bb0a2e278
+[root@localhost beinan]# swapon /tmp/swap   注：挂载swap 
+ 
+[root@localhost beinan]# swapon -s
+Filename Type Size Used Priority
+/dev/hda7 partition 787144 888 -1
+/tmp/swap file 524280 0 -2
+注意：其实我们在安装系统的时候，就已经划分了交换分区；查看/etc/fstab，应该swap的行；如果您在安装系统时没有添加swap，可以通过这种办法来添加；
+
+###################################################
+--linux下/etc/fstab文件详解
+
+http://blog.sina.com.cn/s/blog_5d2da8d60100cu9a.html
+linux下/etc/fstab文件详解(2009-02-10 12:59:06)转载▼标签： 杂谈  
+The fstab (/etc/fstab) (or file systems table) file is commonly found on Unix systems as part of the system configuration. The fstab file typically lists all available disks and disk partitions, and indicates how they are to be initialized or otherwise integrated into the overall system's file system.
+
+The fstab file is most commonly used by the mount command, which reads the fstab file to determine which options should be used when mounting the specified device.
+
+Traditionally, the fstab was only read by programs, and not written. However, some administration tools can automatically build and edit fstab, or act as graphical editors for it, such as the Kfstab graphical configuration utility available for KDE. Modern systems use udev to handle hot swapping devices instead of rewriting fstab file on the fly. It is the duty of the system administrator to properly create and maintain this file.
+
+The file may have other names on a given Unix variant; for example, it is /etc/vfstab on Solaris.
+
+我们在linux中常常用mount命令把硬盘分区或者光盘挂载到文件系统中。
+/etc/fstab就是在开机引导的时候自动挂载到linux的文件系统。
+
+在linux中/etc/fstab的数据项如下所示：
+/dev/device mountpoint type rules 0 order
+例如这是一个普通的/etc/fstab:
+/dev/hda2 / ext3 defaults 0 1
+/dev/hda3 swap swap defaults 0 0
+/dev/hda5 /usr ext3 defaults 0 0
+/dev/fdo /mnt/flopy ext3 noauto 0 0
+/dev/cdrom /mnt/cdrom iso9660 noauto,ro 0 0
+/dev/device就是需要挂载的设备，/hda2就是第一个IDE插槽上的主硬盘的第二个分区。如果是第二个IDE插槽主硬盘的第三个分区，那就是/dev/hdc3，具体可以在linux下使用fdisk -l 查看。
+mountpoint 就是挂载点。/、 /usr、 swap 都是系统安装时分区的默认挂载点。
+如果你要挂载一个新设备，你就要好好想想了，因为这个新设备将作为文件系统永久的一部分，需要根据FSSTND（文件系统标准），以及它的作用，用户需求来决定。比如你想把它做为一个共享资源，放在/home下面就是一个不错选择。
+
+
+fstab中存放了与分区有关的重要信息，其中每一行为一个分区记录，每一行又可分为六个部份，下面以/dev/hda7 / ext2 defaults 1 1为例逐个说明：
+　　1. 第一项是您想要mount的储存装置的实体位置，如hdb或如上例的/dev/hda7。
+　　2. 第二项就是您想要将其加入至哪个目录位置，如/home或如上例的/,这其实就是在安装时提示的挂入点。
+　　3. 第三项就是所谓的local filesystem，其包含了以下格式：如ext、ext2、msdos、iso9660、nfs、swap等，或如上例的ext2，可以参见/prco/filesystems说明。
+　　4. 第四项就是您mount时，所要设定的状态，如ro（只读）或如上例的defaults（包括了其它参数如rw、suid、exec、auto、nouser、async），可以参见「mount nfs」。
+　　5. 第五项是提供DUMP功能，在系统DUMP时是否需要BACKUP的标志位，其内定值是0。
+　　6. 第六项是设定此filesystem是否要在开机时做check的动作，除了root的filesystem其必要的check为1之外，其它皆可视需要设定，内定值是0。
+
+
+当你修改了/etc/fstab后，一定要重新引导系统才会有效。
+###################################################
+--vgremove
