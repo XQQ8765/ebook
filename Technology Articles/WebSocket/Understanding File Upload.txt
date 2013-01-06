@@ -1,0 +1,167 @@
+Understanding File UploadPosted by Quin Street on January 10th, 2008 
+0.250.500.751.001.251.501.752.002.252.502.753.003.253.503.754.004.254.504.755.00                    Vote!  Tweet inShare.0
+By Tiago Halm
+
+
+As you probably know, Microsoft has one free DLL, namely CPSHOST.DLL, with which you can upload files. It requires a folder with write permissions since it is there where the file(s) will be posted (saved) when they arrive to the Web server (IIS). Another drawback is that you are focusing only on file uploading and not on other uploading possibilities. Remember, when you upload a file, you can also upload (post) any other inputs, such as the input file, input checkbox, input password, and input image, etc. And you can check their value just as if you were posting an ordinary form. 
+
+So when you upload a file you are really posting a form's content to the browser by using a different encoding type (enctype) in your form. That encoding is specified as enctype="multipart/form-data" as an attribute of your form. 
+
+The specification in RFC 1867 "Form-based File Upload in HTML" describes the mechanism by which a file may be uploaded from a Web browser to the server. 
+
+
+The Strange and Fun Stuff
+
+
+Imagine you have a form just like the one in the zip file below for the upload.asp file): 
+
+
+
+
+<form method="post" enctype="multipart/form-data"
+action="upload.asp">
+<table cellpadding="5" cellspacing="0" border="0">
+<tr>
+
+        <td>Input Checkbox:</td>
+        <td><input type="checkbox" checked
+name="input_check"></td>
+</tr>
+<tr>
+        <td>Input Password:</td>
+
+        <td><input type="password" name="input_password"
+value="mypassword"></td>
+</tr>
+<tr>
+        <td>Input Text:</td>
+        <td><input type="text" name="input_text"
+value="mytext"></td>
+
+</tr>
+<tr>
+        <td>Input Image:</td>
+        <td><input type="image" src="pic.gif" width="200"
+height="100" border="0"></td>
+</tr>
+<tr>
+
+        <td>Input Hidden</td>
+        <td>I promise it's there :)<input type="hidden"
+name="input_hidden" value="myhiddenvalue"></td>
+</tr>
+<tr>
+        <td>Input File</td>
+
+        <td><input type="file" accept="*.gif"
+name="FileItem"></td>
+</tr>
+<tr>
+        <td>Input File</td>
+        <td><input type="file"
+name="fileaaa"></td>
+
+</tr>
+<tr>
+        <td>Input Submit</td>
+        <td><input type="submit"></td>
+</tr>
+</table>
+
+</form>
+
+After filling those 2 input files, what happens when you submit your form? Well, all of this content will become the body of your HTML message. But, the contents will be posted in such a way that you'll be able to parse all of it. 
+
+First things first. Let's see what's been posted: 
+
+
+
+
+
+-----------------------------7d01ecf406a6
+Content-Disposition: form-data; name="input_check"
+
+on
+-----------------------------7d01ecf406a6
+Content-Disposition: form-data; name="input_password"
+
+mypassword
+-----------------------------7d01ecf406a6
+Content-Disposition: form-data; name="input_text"
+
+mytext
+-----------------------------7d01ecf406a6
+Content-Disposition: form-data; name="input_hidden"
+
+myhiddenvalue
+-----------------------------7d01ecf406a6
+
+Content-Disposition: form-data; name="FileItem";
+filename="C:\Inetpub\wwwroot\Upload\file1.txt"
+Content-Type: text/plain
+
+This file has some text in it.
+It also has more than one line.
+
+-----------------------------7d01ecf406a6
+Content-Disposition: form-data; name="fileaaa";
+filename="C:\Inetpub\wwwroot\Upload\pic.gif"
+Content-Type: image/gif
+
+(binary content)
+-----------------------------7d01ecf406a6--
+
+
+Notice all the inputs have been posted to the server. You can also see this just by having your upload.asp file like this: 
+
+
+
+
+Response.BinaryWrite Request.BinaryRead(Request.TotalBytes)
+
+Where you see (binary content) there should be a lot of strange characters, which I've omitted because they take a lot of space. 
+
+
+Separating Inputs
+
+
+All the text in bold like -----------------------------7d01ecf406a6 is what separates each input. Note also that in the end of the post we also have the text -----------------------------7d01ecf406a6-- but it signals the end of our post, since it ends with 2 minus signs (--). Anyway, don't forget that this strange hexadecimal number is different every time you post content this way to your IIS. 
+
+Every input appears to have the same pattern: 
+
+
+
+
+
+<hex value>CRLFContent-Disposition: form-data; name="<input
+name>"CRLFCRLF<input value>CRLF
+
+But this pattern is only valid for normal inputs, those that are not of type file. Inputs of type file have the following pattern: 
+
+
+
+
+<hex value>CRLFContent-Disposition: form-data; name="<input
+name>"; filename="<file
+path>"CRLFContent-Type: <mime-type>CRLFCRLF<input
+value>CRLF
+
+
+Using some parsing techniques, it is quite easy to get each input name and respective value. Although I've done some parsing, available to you in the article code, I cannot say they are effective at all, since I've only used them to understand the potential of file uploading. 
+
+
+Conclusion
+
+
+If you want to have file uploading available in your Web site, whether intranet or Internet (although I prefer to use only in Intranet servers), you can build it all by yourself. 
+
+You can build your own ISAPI DLL; You can build your own COM/MTS DLL; 
+You can have your file upload transactional; 
+You don't need to have a directory with write permissions; 
+You can even deal with all your upload content only in ASP code (example appears in the article code). 
+
+About the Author
+
+
+Tiago Halm is from Portugal. He is a project manager and team leader in a financial institution called BPI (http://www.bancobpi.pt). He has also been a program/product manager at an Internet/Multimedia company called Neuronio (http://www.neuronio.pt), handling projects for Telecel, Compaq, and Expresso. He can be reached at thalm@hotmail.pt and at thalm@londonoffice.com. 
+

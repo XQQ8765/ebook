@@ -1,0 +1,67 @@
+WebSockets in Tomcat 7
+
+site: http://www.tomcatexpert.com/blog/2012/04/24/websockets-tomcat-7
+ posted by fhanik on April 23, 2012 10:22 PM
+
+With the 7.0.27 release the Apache Tomcat team introduced a WebSocket implementation. WebSocket has received a lot of hype, and has been much anticipated by Tomcat users. Let¡¯s take a quick look at what web sockets are, what benefits and limitations they have and how they are implemented in Apache Tomcat 7.
+
+What is a WebSocket?
+WebSocket is considered the next step in evolution of web communication. Over time, communication has evolved in steps to reduce the time and data throughput for the application to update a user¡¯s browser. The evolution has looked a little like this:
+
+Entire page reloads
+Component reloads using AJAX Processing
+Comet communication
+Long poll¨C similar to AJAX, but not holding a thread on the server
+Bi directional- two way communication over the same TCP
+Each of these steps had their benefits and challenges. Apache Tomcat 6 implements bi-directional communication over HTTP using its Comet Processor. This implementation allowed for asynchronous event driven request processing as well as bi-directional communication. This implementation had a few limitations.
+
+Given that HTTP was intended to be request/response protocol rather than a bi directional protocol, proxies and other intermediaries may not work properly, and only forward packets in one direction at any given time.
+The programming model becomes more difficult as this introduces multi threading to the servlet developer
+Non-standard APIs made adoption difficult
+Comet proved that the proverb ¡°build it and they will come¡± is not necessarily true. Each major servlet container had its own implementation and non-standard APIs. Adoption was fairly sporadic.
+
+The Servlet 3.0 release introduced a new feature called Asynchronous Servlets. This implementation standardized and simplified most Comet implementations by removing the bi-directional requirement of the protocol but retaining the ability to disassociate a container thread from the HTTP request. We can compare this feature to the server version of client AJAX calls. It lets a request hang until a response is ready to be delivered without using worker thread on the container. This feature offers little new over Apache Tomcat¡¯s Comet Processor in terms of functionality. The fact that it is a standard Servlet API, gives frameworks an easier way to build on top of it.
+
+Asynchronous servlets address some of the need in web communication, but not all, and the lack of bi-directional communication made its use still limited. If you take standard API aside, it may have been considered step back from most Comet implementations.
+
+WebSockets is another attempt to standardize an idea of having asynchronous, event driven and bi-directional communication over HTTP. The standardization comes in form of a JavaScript API as well as a communication protocol. While this highlights the lack of a standard server-side API the Servlet 3.1 expert group are already discussing including some basic level of support for this and discussions are active as we are writing this article. Whether that will evolve into a full WebSocket API remains to be seen. In the meantime major servlet container are publishing non- standard APIs, Tomcat being no different.
+
+So let¡¯s summarize what a WebSocket implementation gives us:
+
+Bi-directional communication over a HTTP port by upgrading/switching protocols. Initiated by a HTTP request.
+Message/Frame based communication
+Intended to work with proxies and intermediaries
+What does it look Like?
+On the protocol level there is one major difference from what has been done previously, and that is that the WebSocket switches the protocol away from HTTP. This is where a proxy can change its behavior and support this type of messaging as well. Whether this is in theory only still remains to be seen. If we look at a WebSocket client initiating a request we can see that the intermediary has to, at a minimum,
+
+GET /chat HTTP/1.1
+Host: server.example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Origin: http://example.com
+Sec-WebSocket-Protocol: chat, superchat
+Sec-WebSocket-Version: 13
+
+understand the ¡°Connection:upgrade¡± headers. The response contains the critical status code of 101
+
+HTTP/1.1 101
+Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+
+indicating that a protocol switch has been confirmed and is now expected. After this handshake is complete the client and server move away from request/response communication and can send messages independently of each other.
+
+Does the WebSocket protocol address all the limitations of previous Comet implementations?
+In short: not completely. First, proxies and intermediaries may still not work ¨C so deployments using Wide Area Networks (WANs) are questionable. Secondly, there are still no standard Java APIs. However, given the buzz around WebSocket, this may be addressed soon.
+
+Another thing to be careful for is that every HTTP/TCP connection requires the initial handshake and introduces a message roundtrip before you even send or receive data over the WebSocket protocol. If you¡¯re not careful, and have very short interactions, WebSocket may be too much overhead. WebSocket are ideal for longer running conversations between client and server.
+
+The good news is that WebSocket has benefited from a lot more attention, especially client side and cross language than any other previous attempt at enhancing web communication. It has also received a competitor for bi-directional communication, and that is SPDY, an implementation also underway within the Apache Tomcat project.
+
+Summary
+WebSocket is a straightforward implementation of bi-directional communication over HTTP. The API is part of the HTML 5 specification and so far many different server side implementations are available. It is not without risks, since the Java APIs are yet to be standardized so implementations can vary. Additionally, working with proxies and intermediaries may still not work, however it is important to note that WebSocket utilizes the Upgrade feature of HTTP to switch protocols after the initial request/response handshake has been completed. This gives future proxies an option to reject or support the WebSocket protocol over WAN.
+
+The first released version of WebSocket in Apache Tomcat was released with Apache Tomcat 7.0.27.
+
