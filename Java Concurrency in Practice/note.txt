@@ -1,0 +1,33 @@
+--------------------------------------------------------------------
+###Chap 1###
+#1.1 Benefits of Threads
+* Multithreaded programs can improve throughput by utilizing available multiple processor resources more effectively.
+* Using multiple threads can help achieve better throuput on single processor systems. For example, allowing the applications to still make progress during the blocking I/O.
+* Simplify of developing and modeling. A complicated, asynchronous workflow can be decomposed into a number of simpler, synchronous workflows each running in a separate thread. A request can be processed synchronously as if it were a single-threaded program.
+* More responsive user interface. Replace the main event loop with an event dispatch thread(EDT), the event thread remains free to process UI events, making the UI more responsive.
+
+#1.2 Risks of Threads
+* Safety Hazards. Allowing multiple threads to access and modify the same variables introduces an element of nonsequentiality into an otherwise sequential programming model, which can be confusing and difficult to reason about.
+* Liveness Hazards. 
+Bugs that cause liveness failures can be elusive because they depend on the relative timing of events in different threads.
+* Performance Hazards
+Context switches between threads have significant costs.
+Must Use synchronization mechanisms on the shared memory bus.
+
+#1.3 Various forms of liveness failures
+* deadlock
+* starvation
+* livelock
+
+--------------------------------------------------------------------
+###Chap 2###
+#2.1 Which are best friends when designing thread-safe classes?
+When designing thread-safe classes, good object-oriented techniques- encapsulation, immutability, and clear specification of invariants are your best friends.
+
+#2.2 The three ways to fix the same mutable state variable is accessd by multiple threads without appropriate synchronization.
+* Don't share the state variable across threads
+* Make the state variable immutable
+* Use synchronization whenever accessing the state variable
+
+#2.3 Points of thread safety
+* Stateless objects are always thread-safe.

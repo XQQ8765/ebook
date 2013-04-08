@@ -1,0 +1,48 @@
+##这样的面试题你懂多少
+
+1 ,了解hbase么，为什么存储速度快？ 
+
+2理解spring么，它的AOP实现是基于什么原理，bean的初始化过程是那些（涉及具体的源代码）,在bean factory初始化前 ，运行中，初始化后想做些事情。该怎么做？ 
+3 struts1和strus2的区别，strust2关于 ThredLocal是什么，strus2初始化部分的原理是什么？ 
+
+4多线程用过么？ 
+
+5关于jvm，它是什么样的结构？，他的Gc算法是什么，什么情况下会 out of memory? 
+
+6设计模式了解多少，工厂模式中的抽象工厂和简单工厂模式用于那些场景，你怎么理解策略模式，怎样应用的？ 策略模式和状态模式的本质区别，状态模式和命令模式的区别？ 
+
+7 连接池原理，连接池commit 后连接是否关闭？
+
+-------------------------------------------------
+##主题：关于volatile 关键字的使用
+http://www.iteye.com/topic/1129237
+
+Java代码  
+public class IncreaseTest {    
+    private int value = 0;    
+        
+    public synchronized int increment() {    
+        return value++;    
+    }    
+}    
+
+上面代码中，方法increment()是线程安全的吗？是否必须要加上关键字：volatile 才是线程安全的呢？ 
+Java代码  
+private volatile int value = 0;    
+
+-------
+java中， ++ 操作并非原子操作，需要锁机制。
+-------
+increment是线程安全的，因为已经有synchronized了。
+更多volatile：
+http://ifeve.com/syn-jmm-volatile/
+http://ifeve.com/volatile/
+http://ifeve.com/java-memory-model-4/
+
+-------
+synchronized 关键字可以保证有序性和可见性 
+volatile关键字可以保证可见性 
+
+因此只需要使用synchronized 即可 ，不用再加volatile。
+
+
