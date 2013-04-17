@@ -31,3 +31,24 @@ When designing thread-safe classes, good object-oriented techniques- encapsulati
 
 #2.3 Points of thread safety
 * Stateless objects are always thread-safe.
+
+#2.4 What's the purpose of 'java.util.concurrent.atomic' package?
+The java.util.concurrent.atomic package contains atomic variable classes for effecting atomic state transitions on numbers and object references.
+
+#2.5 What's he diffefent between a single element of state in a stateless class with more than one?
+When a single element of state is added to a stateless class, the resulting class will be thread-safe if the state is entirely managed by a thread-safe object. But, as we¡¯ll see in the next section, going from one state variable to more than one is not necessarily as simple as going from zero to one.
+
+#2.6 The practise of managing one class's state?
+Where practical, use existing thread-safe objects, like AtomicLong, to manage your class¡¯s state. It is simpler to reason about the possible states and state transitions for existing thread-safe objects than it is for arbitrary state variables, and this makes it easier to maintain and verify thread safety.
+
+#2.7 The protocols consistently can ensure state consistency.
+* Compound actions on shared state must be made atomic to avoid race conditions.
+* Holding a lock for the entire duration of a compound action can make that compound action atomic. However, just wrapping the compount action with a synchronized lock is not sufficient.
+* If synchronization/locks is used to coordinate access to a variable, the same synchronization/lock must be used wherever that variable is accessed.
+* It's a common mistake to assume that synchronization needs to be used only when writing to shared variables.
+* Not all data needs to be guarded by locks- only mutable data that will be accessed from multiple threads.
+* When a class has invariants that involve more than one state variable, each variable participating in the invariant must be guarded by the same lock. This allows you to access or update them in a single atomic operation, perserving the invariant.
+
+#2.8 If synchronization is the cure for race conditions, why not just declare every method synchronized?
+* Merely synchronizing every method is not enough to render compound actions. While synchronized methods can make individual operations atomic, additional locking is required when multiple oprations are combined into a compund action.
+* Synchronizing every method can lead to liveness or performance problems.
