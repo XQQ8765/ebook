@@ -1,0 +1,108 @@
+Linux RAM-Based Filesystem
+
+http://www.alper.net/linuxunix/linux-ram-based-filesystem/
+
+I have been searching the Internet for the RAM-based filesystem in Linux. There are many posts and each one describes its solution and configuration well. However, after reading few of them, it may seem a little confusing because there are 3 different mechanisms -ramdisk, ramfs and tmpfs- to create a RAM-based filesystem in Linux and current posts generally describes and compares one or two. In addition, there is a name confusion, some posts used 'ramdisk' as a general name. RAM-based filesystem is more commonly known as ramdisk. However, one of the Linux mechanisms is also called as ramdisk. Therefore, I always use the word 'ramdisk' to indicate the Linux mechanism rather than general name throughout the post.
+
+I like to describe all mechanisms and compare them as well. However there are some details you may not want to know if you like to  just use it rather than to care how the Linux kernel handles it inside. That's why I don't mention all details here and keep it as simple as possible. If you like to know all details, the Linux kernel documentation files filesystems/ramfs-rootfs-initramfs.txt and filesystems/tmpfs.txt are the right places to start and then of course the Linux kernel source code itself for the definite guide.
+
+I assume you already know what the RAM-based filesystem and for what purpose it has been used. I skip the introductory information. In addition, I assume you have got some Linux background (grub, mount, shell etc.).
+
+I have been using Fedora 12 for the configuration examples, I expect, the examples work with other GNU/Linux distributions running 2.6.x kernels (compiled with ramdisk support).
+
+1 - ramdisk
+
+The ramdisk is the oldest mechanism to create RAM-based filesystem in Linux. Basically, it is a way to use the system memory as a block device. This block device is fixed size and it needs a filesystem driver such as ext2 (It is possible to create ext3 filesystem on ramdisk. However, it doesn't make sense since we don't need journal on RAM-based filesystem). The ramdisk run similar to other block devices, it means ramdisk uses  Linux's file caching mechanism similar to other block devices. Consequently, the ramdisk wastes memory and CPU time compare to ramfs and tmpfs because it caches the data that already in memory.
+
+Fedora 12 has got 16 ramdisks as default (at least mine does), the default size of the ramdisks is 16MB. If you like to increase the size of the ramdisks, you must pass a parameter -'ramdisk_size=X'- to kernel during boot. I increased to 64MB in my environment, the related grub.conf file line is below
+
+kernel /boot/vmlinuz-2.6.31.12-174.2.22.fc12.x86_64 ro root=UUID=a2142f4e-7880-4419-9051-0433bdc36277 ramdisk_size=65536 rhgb quiet
+and here is the list of default ramdisks. These ramdisks don't use any memory area until you format them and mount.
+
+[root@localhost /]# ls -l /dev/ram*
+brw-rw---- 1 root disk 1,  0 2010-03-04 03:44 /dev/ram0
+brw-rw---- 1 root disk 1,  1 2010-03-04 03:44 /dev/ram1
+brw-rw---- 1 root disk 1, 10 2010-03-04 03:44 /dev/ram10
+brw-rw---- 1 root disk 1, 11 2010-03-04 03:44 /dev/ram11
+brw-rw---- 1 root disk 1, 12 2010-03-04 03:44 /dev/ram12
+brw-rw---- 1 root disk 1, 13 2010-03-04 03:44 /dev/ram13
+brw-rw---- 1 root disk 1, 14 2010-03-04 03:44 /dev/ram14
+brw-rw---- 1 root disk 1, 15 2010-03-04 03:44 /dev/ram15
+brw-rw---- 1 root disk 1,  2 2010-03-04 03:44 /dev/ram2
+brw-rw---- 1 root disk 1,  3 2010-03-04 03:44 /dev/ram3
+brw-rw---- 1 root disk 1,  4 2010-03-04 03:44 /dev/ram4
+brw-rw---- 1 root disk 1,  5 2010-03-04 03:44 /dev/ram5
+brw-rw---- 1 root disk 1,  6 2010-03-04 03:44 /dev/ram6
+brw-rw---- 1 root disk 1,  7 2010-03-04 03:44 /dev/ram7
+brw-rw---- 1 root disk 1,  8 2010-03-04 03:44 /dev/ram8
+brw-rw---- 1 root disk 1,  9 2010-03-04 03:44 /dev/ram9
+Now, we can create the file system; in other words, format the ramdisk.
+
+[root@localhost /]# mke2fs -t ext2 -m 0 /dev/ram0
+mke2fs 1.41.9 (22-Aug-2009)
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+16384 inodes, 65536 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=1
+Maximum filesystem blocks=67108864
+8 block groups
+8192 blocks per group, 8192 fragments per group
+2048 inodes per group
+Superblock backups stored on blocks:
+        8193, 24577, 40961, 57345
+
+Writing inode tables: done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 21 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+Then, create the mount point, mount and verify.
+
+[root@localhost /]# mkdir /tmp/ramdisk
+[root@localhost /]# mount /dev/ram0 /tmp/ramdisk
+[root@localhost /]# df -h | grep ramdisk
+/dev/ram0              62M  1.3M   61M   3% /tmp/ramdisk
+[root@localhost /]# mount | grep ramdisk
+/dev/ram0 on /tmp/ramdisk type ext2 (rw)
+If you need to ramdisk on every boot up, you should do some scripting.
+
+2 - ramfs
+
+The ramfs is a very simple filesystem. It turns Linux's disk caching mechanisms into dynamically resizable RAM-based filesystem. Linux caches all files. Files read from device are kept in memory since they're likely to be needed again and they're set as clean to free in case virtual memory system needs the memory. Similarly, data written to files are kept in memory and set as clean as soon as they've been written to device. However, ramfs hasn't got any device to write back.  Files written to ramfs allocate cache structures as usual but there is nowhere to write them back. It means the cache never set as clean.
+
+One downside of ramfs is you can not set size limit. Therefore you can keep writing to ramfs until you fill up all memory. The virtual memory  system can't free it (can't move to swap space). That's why you should be very careful if you decide to chose ramfs. In addition, you should carefully set the permissions to identify which users are allowed to write the ramfs. I think no one likes to freeze the system. 
+
+Configuring ramfs is very easy compare to ramdisk, we only need to create the mount point and mount it.
+
+[root@localhost /]# mkdir /tmp/ramfs
+[root@localhost /]# mount -t ramfs ramfs /tmp/ramfs
+[root@localhost /]# mount | grep ramfs
+ramfs on /tmp/ramfs type ramfs (rw)
+[root@localhost /]# df -h | grep ramfs
+[root@localhost /]#
+It is ready to use (you can not see it in df output, it is fine). You can add an entry to /etc/fstab file to mount the ramfs during the boot.
+
+3 - tmpfs
+
+The tmpfs is derivative of ramfs. It is easy and short to describe tmpfs after ramfs. The tmpfs is created to add size limit and ability to use the swap in case of virtual memory system needs memory.
+
+Configuring tmpfs is similar to ramfs, we only need to create the mount point and mount it.
+
+[root@localhost /]# mkdir /tmp/tmpfs
+[root@localhost /]# mount -t tmpfs -o size=64m tmpfs /tmp/tmpfs
+[root@localhost /]# mount | grep tmpfs
+tmpfs on /tmp/tmpfs type tmpfs (rw,size=64m)
+[root@localhost /]# df -h | grep tmpfs
+tmpfs                  64M     0   64M   0% /tmp/tmpfs
+Similar to ramfs, you can add an entry to /etc/fstab file to mount the tmpfs during the boot. In addition, tmpfs' size limit can be adjusted on run time (mount -o remount ...).
+
+Summary
+
+ramdisk	ramfs	tmpfs
+Size Limit	Yes	No	Yes
+Resizable	Yes (on boot)	Yes (no limit!)	Yes (on runtime)
+Use swap	No	No	Yes
+
