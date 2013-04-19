@@ -1,5 +1,7 @@
 Java 理论与实践: 正确使用 Volatile 变量volatile 变量使用指南 
 
+http://www.ibm.com/developerworks/cn/java/j-jtp06197.html
+
 Brian Goetz (brian.goetz@sun.com), 高级工程师, Sun Microsystems
 Brian Goetz 作为一名专业软件开发人员已经 20 年了。他是 Sun Microsystems 的高级资深工程师 ，为多个 JCP Expert Group 服务。Brian 的著作 Java Concurrency In Practice 在 2006 年 5 月由 Addison-Wesley 出版。请参阅 Brian 在业界主流刊物上 已经发表和即将发表的文章。
 
@@ -243,4 +245,23 @@ public class CheesyCounter {
 
 与锁相比，Volatile 变量是一种非常简单但同时又非常脆弱的同步机制，它在某些情况下将提供优于锁的性能和伸缩性。如果严格遵循 volatile 的使用条件 —— 即变量真正独立于其他变量和自己以前的值 —— 在某些情况下可以使用 volatile 代替 synchronized 来简化代码。然而，使用 volatile 的代码往往比使用锁的代码更加容易出错。本文介绍的模式涵盖了可以使用 volatile 代替 synchronized 的最常见的一些用例。遵循这些模式（注意使用时不要超过各自的限制）可以帮助您安全地实现大多数用例，使用 volatile 变量获得更佳性能。 
 
+
+参考资料
+学习
+您可以参阅本文在 developerWorks 全球站点上的 英文原文 。
+
+Java Concurrency in Practice ：使用 Java 代码开发并发程序的 how-to 手册，内容包括构建并编写线程安全的类和程序、避免性能影响、管理性能和测试并发应用程序。
+
+流行的原子：介绍了 Java 5.0 中新增的原子变量类，该特性对 volatile 变量进行了扩展，从而支持原子状态转换。
+
+非阻塞算法简介：介绍如何使用原子变量而不是锁实现并发算法。
+
+Volatiles：从 Wikipedia 获得关于 volatile 变量的更多信息。
+
+Java 技术专区：提供了数百篇有关 Java 编程各个方面的文章。
+
+讨论
+参与论坛讨论。
+
+developerWorks blogs：加入 developerWorks 社区。
 

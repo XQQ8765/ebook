@@ -52,3 +52,15 @@ Where practical, use existing thread-safe objects, like AtomicLong, to manage yo
 #2.8 If synchronization is the cure for race conditions, why not just declare every method synchronized?
 * Merely synchronizing every method is not enough to render compound actions. While synchronized methods can make individual operations atomic, additional locking is required when multiple oprations are combined into a compund action.
 * Synchronizing every method can lead to liveness or performance problems.
+
+--------------------------------------------------------------------
+###Chap 3###
+#3.1 Locking and Visibility
+Intrinsic locking can be used to guarantee that one thread sees the effects of another in a predictable manner. To ensure that all threads see the most up-to-date values of shared mutable variables, the reading and writing threads must synchronize on a common lock.
+
+#3.2 Two functionalities of locks
+* Mutual exclusion
+* Memeory visibilit
+
+#3.3 Why out-of-thin-air safety doesn't apply to 64-bit numeric variables?
+The Java Memory Model requires fetch and store operations to be atomic, but for nonvolatile long and double variables, the JVM is permitted to treat a 64-bit read or write as two separate 32-bit operations. If the reads and writes occur in different threads, it is therefore possible to read a nonvolatile long and get back the high 32 bits of one value and the low 32 bits of another.[3] Thus, even if you don¡¯t care about stale values, it is not safe to use shared mutable long and double variables in multithreaded programs unless they are declared volatile or guarded by a lock.
