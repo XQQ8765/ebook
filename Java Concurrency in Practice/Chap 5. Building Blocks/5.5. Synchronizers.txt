@@ -6,11 +6,23 @@ A synchronizer is any object that coordinates the control flow of threads based 
 
 All synchronizers share certain structural properties: they encapsulate state that determines whether threads arriving at the synchronizer should be allowed to pass or forced to wait, provide methods to manipulate that state, and provide methods to wait efficiently for the synchronizer to enter the desired state.
 
+* synchronizer 同步器
+* semaphore [英] [ˈseməˌfɔ:, -ˌfəʊr] [美] [ˈsɛməˌfɔr]
+	n. 臂板信号系统，（铁道）臂板信号装置 
+	vt.& vi. 发出信号，打旗语
+* barrier [英] [ˈbæriə] [美] [ˈbæriɚ]
+	n. 障碍；屏障；栅栏；分界线 
+	vt. 把……关入栅栏；用栅栏围住
+* latch [英] [lætʃ] [美] [lætʃ]
+	n. 门闩；弹簧锁 vt.& vi. 闩上；用碰锁锁上（门等）；抓住，占有
+
+
+
 5.5.1. Latches
 
 A latch is a synchronizer that can delay the progress of threads until it reaches its terminal state [CPJ 3.4.2]. A latch acts as a gate: until the latch reaches the terminal state the gate is closed and no thread can pass, and in the terminal state the gate opens, allowing all threads to pass. Once the latch reaches the terminal state, it cannot change state again, so it remains open forever. Latches can be used to ensure that certain activities do not proceed until other one-time activities complete, such as:
 
-Ensuring that a computation does not proceed until resources it needs have been initialized. A simple binary (two-state) latch could be used to indicate ��Resource R has been initialized��, and any activity that requires R would wait first on this latch.
+Ensuring that a computation does not proceed until resources it needs have been initialized. A simple binary (two-state) latch could be used to indicate “Resource R has been initialized”, and any activity that requires R would wait first on this latch.
 
 Ensuring that a service does not start until other services on which it depends have started. Each service would have an associated binary latch; starting service S would involve first waiting on the latches for other services on which S depends, and then releasing the S latch after startup completes so any services that depend on S can then proceed.
 
@@ -18,9 +30,13 @@ Waiting until all the parties involved in an activity, for instance the players 
 
 CountDownLatch is a flexible latch implementation that can be used in any of these situations; it allows one or more threads to wait for a set of events to occur. The latch state consists of a counter initialized to a positive number, representing the number of events to wait for. The countDown method decrements the counter, indicating that an event has occurred, and the await methods wait for the counter to reach zero, which happens when all the events have occurred. If the counter is nonzero on entry, await blocks until the counter reaches zero, the waiting thread is interrupted, or the wait times out.
 
-TestHarness in Listing 5.11 illustrates two common uses for latches. TestHarness creates a number of threads that run a given task concurrently. It uses two latches, a ��starting gate�� and an ��ending gate��. The starting gate is initialized with a count of one; the ending gate is initialized with a count equal to the number of worker threads. The first thing each worker thread does is wait on the starting gate; this ensures that none of them starts working until they all are ready to start. The last thing each does is count down on the ending gate; this allows the master thread to wait efficiently until the last of the worker threads has finished, so it can calculate the elapsed time.
+TestHarness in Listing 5.11 illustrates two common uses for latches. TestHarness creates a number of threads that run a given task concurrently. It uses two latches, a “starting gate” and an “ending gate”. The starting gate is initialized with a count of one; the ending gate is initialized with a count equal to the number of worker threads. The first thing each worker thread does is wait on the starting gate; this ensures that none of them starts working until they all are ready to start. The last thing each does is count down on the ending gate; this allows the master thread to wait efficiently until the last of the worker threads has finished, so it can calculate the elapsed time.
 
-Why did we bother with the latches in TestHarness instead of just starting the threads immediately after they are created? Presumably, we wanted to measure how long it takes to run a task n times concurrently. If we simply created and started the threads, the threads started earlier would have a ��head start�� on the later threads, and the degree of contention would vary over time as the number of active threads increased or decreased. Using a starting gate allows the master thread to release all the worker threads at once, and the ending gate allows the master thread to wait for the last thread to finish rather than waiting sequentially for each thread to finish.
+* elapse [英] [iˈlæps][美] [ɪˈlæps] vi.消逝；时间过去 n.（时间的）消逝
+
+Why did we bother with the latches in TestHarness instead of just starting the threads immediately after they are created? Presumably, we wanted to measure how long it takes to run a task n times concurrently. If we simply created and started the threads, the threads started earlier would have a “head start” on the later threads, and the degree of contention would vary over time as the number of active threads increased or decreased. Using a starting gate allows the master thread to release all the worker threads at once, and the ending gate allows the master thread to wait for the last thread to finish rather than waiting sequentially for each thread to finish.
+
+* bother [英] [ˈbɔðə] [美] [ˈbɑðɚ] vt. 烦扰，打扰； vi. 操心；麻烦；烦恼 n. 麻烦，操心；累赘；
 
 5.5.2. FutureTask
 
@@ -94,6 +110,7 @@ public class Preloader {
     }
 }
 
+* potentially [英] [pəˈtenʃəlɪ] [美] [pəˈtɛnʃəlɪ] adv. 潜在地；可能地；<古>强有力地；权威地
 
 					  
 
@@ -129,13 +146,19 @@ Semaphores are useful for implementing resource pools such as database connectio
 
 Similarly, you can use a Semaphore to turn any collection into a blocking bounded collection, as illustrated by BoundedHashSet in Listing 5.14. The semaphore is initialized to the desired maximum size of the collection. The add operation acquires a permit before adding the item into the underlying collection. If the underlying add operation does not actually add anything, it releases the permit immediately. Similarly, a successful remove operation releases a permit, enabling more elements to be added. The underlying Set implementation knows nothing about the bound; this is handled by BoundedHashSet.
 
+* underlying [英] [ˌʌndəˈlaiiŋ] [美] [ˈʌndɚˌlaɪɪŋ] 
+	adj. 潜在的，含蓄的；基础的；表面下的，下层的；[法]优先的 
+	v. 优先于（underlie的ing形式）；构成……的基础（或起因），引起 
+
 5.5.4. Barriers
 
 We have seen how latches can facilitate starting a group of related activities or waiting for a group of related activities to complete. Latches are single-use objects; once a latch enters the terminal state, it cannot be reset.
 
-Barriers are similar to latches in that they block a group of threads until some event has occurred [CPJ 4.4.3]. The key difference is that with a barrier, all the threads must come together at a barrier point at the same time in order to proceed. Latches are for waiting for events; barriers are for waiting for other threads. A barrier implements the protocol some families use to rendezvous during a day at the mall: ��Everyone meet at McDonald��s at 6:00; once you get there, stay there until everyone shows up, and then we��ll figure out what we��re doing next.��
+* facilitate [英] [fəˈsiliteit] [美] [fəˈsɪlɪˌtet] vt. 促进，助长；使容易；帮助
 
-CyclicBarrier allows a fixed number of parties to rendezvous repeatedly at a barrier point and is useful in parallel iterative algorithms that break down a problem into a fixed number of independent subproblems. Threads call await when they reach the barrier point, and await blocks until all the threads have reached the barrier point. If all threads meet at the barrier point, the barrier has been successfully passed, in which case all threads are released and the barrier is reset so it can be used again. If a call to await times out or a thread blocked in await is interrupted, then the barrier is considered broken and all outstanding calls to await terminate with BrokenBarrierException. If the barrier is successfully passed, await returns a unique arrival index for each thread, which can be used to ��elect�� a leader that takes some special action in the next iteration. CyclicBar rier also lets you pass a barrier action to the constructor; this is a Runnable that is executed (in one of the subtask threads) when the barrier is successfully passed but before the blocked threads are released.
+Barriers are similar to latches in that they block a group of threads until some event has occurred [CPJ 4.4.3]. The key difference is that with a barrier, all the threads must come together at a barrier point at the same time in order to proceed. Latches are for waiting for events; barriers are for waiting for other threads. A barrier implements the protocol some families use to rendezvous during a day at the mall: “Everyone meet at McDonald’s at 6:00; once you get there, stay there until everyone shows up, and then we’ll figure out what we’re doing next.”
+
+CyclicBarrier allows a fixed number of parties to rendezvous repeatedly at a barrier point and is useful in parallel iterative algorithms that break down a problem into a fixed number of independent subproblems. Threads call await when they reach the barrier point, and await blocks until all the threads have reached the barrier point. If all threads meet at the barrier point, the barrier has been successfully passed, in which case all threads are released and the barrier is reset so it can be used again. If a call to await times out or a thread blocked in await is interrupted, then the barrier is considered broken and all outstanding calls to await terminate with BrokenBarrierException. If the barrier is successfully passed, await returns a unique arrival index for each thread, which can be used to “elect” a leader that takes some special action in the next iteration. CyclicBar rier also lets you pass a barrier action to the constructor; this is a Runnable that is executed (in one of the subtask threads) when the barrier is successfully passed but before the blocked threads are released.
 
 Listing 5.14. Using Semaphore to Bound a Collection.
 
@@ -175,11 +198,26 @@ public class BoundedHashSet<T> {
 
 Barriers are often used in simulations, where the work to calculate one step can be done in parallel but all the work associated with a given step must complete before advancing to the next step. For example, in n-body particle simulations, each step calculates an update to the position of each particle based on the locations and other attributes of the other particles. Waiting on a barrier between each update ensures that all updates for step k have completed before moving on to step k + 1.
 
-CellularAutomata in Listing 5.15 demonstrates using a barrier to compute a cellular automata simulation, such as Conway��s Life game (Gardner, 1970). When parallelizing a simulation, it is generally impractical to assign a separate thread to each element (in the case of Life, a cell); this would require too many threads, and the overhead of coordinating them would dwarf the computation. Instead, it makes sense to partition the problem into a number of subparts, let each thread solve a subpart, and then merge the results. CellularAutomata partitions the board into Ncpu parts, where Ncpu is the number of CPUs available, and assigns each part to a thread. [5] At each step, the worker threads calculate new values for all the cells in their part of the board. When all worker threads have reached the barrier, the barrier action commits the new values to the data model. After the barrier action runs, the worker threads are released to compute the next step of the calculation, which includes consulting an isDone method to determine whether further iterations are required.
+CellularAutomata in Listing 5.15 demonstrates using a barrier to compute a cellular automata simulation, such as Conway’s Life game (Gardner, 1970). When parallelizing a simulation, it is generally impractical to assign a separate thread to each element (in the case of Life, a cell); this would require too many threads, and the overhead of coordinating them would dwarf the computation. Instead, it makes sense to partition the problem into a number of subparts, let each thread solve a subpart, and then merge the results. CellularAutomata partitions the board into Ncpu parts, where Ncpu is the number of CPUs available, and assigns each part to a thread. [5] At each step, the worker threads calculate new values for all the cells in their part of the board. When all worker threads have reached the barrier, the barrier action commits the new values to the data model. After the barrier action runs, the worker threads are released to compute the next step of the calculation, which includes consulting an isDone method to determine whether further iterations are required.
+
+* impractical [英] [ɪmˈpræktɪkəl] [美] [ɪmˈpræktɪkəl] adj. 不切实际的；无用的；不现实的；不善做实际工作的
 
 [5] For computational problems like this that do no I/O and access no shared data, Ncpu or Ncpu + 1 threads yield optimal throughput; more threads do not help, and may in fact degrade performance as the threads compete for CPU and memory resources.
 
+* optimal [英] [ˈɔptəməl] [美] [ˈɑptəməl] adj. 最佳的，最优的；最理想的
+* throughput [英] [ˈθru:put] [美] [ˈθruˌpʊt] n. 生产量，生产能力，吞吐量；流率
+* degrade [英] [diˈɡreid] [美] [dɪˈɡred] 
+	vt. 降低，贬低；使降级；降低……身分；使丢脸 
+	vt.& vi. （使）退化，降解，分解；降解；撤职，免职；降低品格[身价，价值（等）] 
+
 Another form of barrier is Exchanger, a two-party barrier in which the parties exchange data at the barrier point [CPJ 3.4.3]. Exchangers are useful when the parties perform asymmetric activities, for example when one thread fills a buffer with data and the other thread consumes the data from the buffer; these threads could use an Exchanger to meet and exchange a full buffer for an empty one. When two threads exchange objects via an Exchanger, the exchange constitutes a safe publication of both objects to the other party.
+
+* asymmetric [英] [ˌæsɪˈmetrɪk] [美] [ˌæsɪˈmɛtrɪk] adj. 不对称的，不匀称的；<逻>非对称的
+* constitute [英] [ˈkɔnstitju:t] [美] [ˈkɑnstɪˌtut, -ˌtjut] vt. 构成，组成；制定，设立；等同于；指派
+* publication [英] [ˌpʌbliˈkeiʃən] [美] [ˌpʌblɪˈkeʃən] n. 出版；出版物；公布；发表
 
 The timing of the exchange depends on the responsiveness requirements of the application. The simplest approach is that the filling task exchanges when the buffer is full, and the emptying task exchanges when the buffer is empty; this minimizes the number of exchanges but can delay processing of some data if the arrival rate of new data is unpredictable. Another approach would be that the filler exchanges when the buffer is full, but also when the buffer is partially filled and a certain amount of time has elapsed.
 
+* responsiveness [英] [rɪˈspɒnsɪvnəs] [美] [rɪˈspɒnsɪvnəs] 响应性，易起反应
+* partially [英] [ˈpɑ:ʃəlɪ] [美] [ˈpɑrʃəlɪ] adv. 部分地；<古>偏袒地，偏爱地；一部分
+* elapsed [iˈlæpst] vi. ，n.经过 v. （时间）消逝，过去（ elapse的过去式和过去分词 ） 
